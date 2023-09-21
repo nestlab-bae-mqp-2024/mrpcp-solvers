@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  jupyter:
+    init: true
+    build: .
+    ports:
+      - "8888:8888"
+    volumes:
+      - "./jupyter:/app"
