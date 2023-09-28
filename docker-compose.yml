@@ -8,3 +8,4 @@ services:
       - "8888:8888"
     volumes:
       - "./jupyter:/app"
+      - "./gurobi.lic:/opt/gurobi/gurobi.lic"
