@@ -3,7 +3,7 @@ version: "3.8"
 services:
   jupyter:
     init: true
-    build: .
+    build: docker/jupyter-gurobi
     ports:
       - "8888:8888"
     volumes:

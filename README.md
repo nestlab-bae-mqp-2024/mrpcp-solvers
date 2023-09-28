@@ -6,7 +6,10 @@ This is a repo to get familiar with MILP formulation using Gurobi's APIs.
 
 First, you need to have docker and docker compose installed in your system.
 Installing Docker Desktop installs all these things.
-Then, in this folder, run this command to access all notebooks, codes:
+
+Then, you need to get a license file from Gurobi. Save this to `docker/jupyter-gurobi/gurobi.lic`
+
+Finally, in the root of the project, run this command to access all notebooks, codes:
 
 ```
 docker compose up --build jupyter
