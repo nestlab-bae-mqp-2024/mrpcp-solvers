@@ -4,6 +4,8 @@ services:
   jupyter:
     init: true
     build: docker/jupyter-gurobi
+    environment:
+      JUPYTER_TOKEN: easy
     ports:
       - "8888:8888"
     volumes:
