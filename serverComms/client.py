@@ -24,5 +24,3 @@ if __name__ == '__main__':
 
     # Send the request to the server
     send_request_to_server(server_url, param1_to_send, param2_to_send, param3_to_send)
-
-#%%

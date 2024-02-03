@@ -420,6 +420,4 @@ def solve_milp_with_optimizations(robots, interval, targets):
     for index, (milp_cost, opt_cost) in enumerate(zip(milp_costs, optimized_costs_kopt)):
         cost_reduction = milp_cost - opt_cost
         print(f"Cost reduction for Robot (k-opt) {index + 1}: {cost_reduction:.2f}")
-
-solve_milp_with_optimizations(4,0.1,4)
 #%%

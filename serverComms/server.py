@@ -1,9 +1,15 @@
 from flask import Flask, request
-from serverComms.mrpcp import *
+from serverComms.mrpcp import solve_milp_with_optimizations
+
 app = Flask(__name__)
 
 def milp_solver_function(k, q_k, n):
     print(f"Running MILP solver function with parameters: k={k}, q_k={q_k}, n={n}")
+
+    # Convert k to an integer
+    k = int(k)
+
+    # Run your MILP solver function with parameters
     solve_milp_with_optimizations(k, q_k, n)
     print("MILP solver function completed.")
 
@@ -24,4 +30,4 @@ def solve_endpoint():
 
 if __name__ == '__main__':
     print("Waiting for a request...")  # Added waiting message
-    app.run(host='127.0.0.1', port=5000)
+    app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
