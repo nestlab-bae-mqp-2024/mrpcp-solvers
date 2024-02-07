@@ -1,4 +1,6 @@
 import time
+
+import requests
 from matplotlib import pyplot as plt
 import numpy as np
 from socket import *
@@ -288,7 +290,7 @@ def solve_milp_with_optimizations(robots, interval, targets):
         return milp_paths, milp_costs
 
 
-    def visualize_individual_paths(paths, nodes, targets, depots, B_k, costs):
+    def visualize_individual_paths(paths, nodes, targets, depots, B_k, costs, save_path=None):
         num_robots = len(paths)
         num_rows = (num_robots + 1) // 2  # Two plots per row
         fig, axs = plt.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
@@ -329,7 +331,12 @@ def solve_milp_with_optimizations(robots, interval, targets):
 
         # plt.tight_layout()
         fig.suptitle(f"Paths for all robots (sum of costs={sum(costs):.3f})")
-        plt.show()
+
+        # Save the figure if save_path is provided
+        if save_path:
+            plt.savefig(save_path)
+        else:
+            plt.show()
 
     def calculate_path_cost(path, cost_matrix):
         total_cost = 0
@@ -407,8 +414,28 @@ def solve_milp_with_optimizations(robots, interval, targets):
 
     optimized_costs_kopt = [calculate_path_cost(path, cost) for path in optimized_paths_kopt] # Calculate costs for each robot with 3-opt
 
+    # Generate job ID based on parameters
+    job_id = f"{k}_{q_k}_{n}"
+
+    # Get the current working directory
+    current_dir = os.getcwd()
+    # Define the cache folder path relative to the current directory
+    cache_folder_path = os.path.join(current_dir, 'cache')
+    # Check if folder with job ID exists in the cache folder
+    job_folder_path = os.path.join(cache_folder_path, job_id)
+    # Define the folder name for saving visualizations
+    visualization_folder = 'graphs'
+
+    # Construct the folder path for visualizations
+    visualization_folder_path = os.path.join(job_folder_path, visualization_folder)
+
+    # Create the directory if it doesn't exist
+    os.makedirs(visualization_folder_path, exist_ok=True)
+
+    # Construct the save path for the visualization under the 'graphs' directory
+    save_path = os.path.join(visualization_folder_path, 'visualization.png')
     # Call the updated visualization function with costs
-    visualize_individual_paths(optimized_paths_2opt, nodes, targets, depots, B_k, optimized_costs_2opt)
+    visualize_individual_paths(optimized_paths_2opt, nodes, targets, depots, B_k, optimized_costs_2opt, save_path=save_path)
     visualize_individual_paths(optimized_paths_kopt, nodes, targets, depots, B_k, optimized_costs_kopt) # three opt
 
     # Calculate cost reduction for each robot
@@ -420,4 +447,13 @@ def solve_milp_with_optimizations(robots, interval, targets):
     for index, (milp_cost, opt_cost) in enumerate(zip(milp_costs, optimized_costs_kopt)):
         cost_reduction = milp_cost - opt_cost
         print(f"Cost reduction for Robot (k-opt) {index + 1}: {cost_reduction:.2f}")
+
+
+    print ("MILP solution completed...return paths to server endpoint /get_solution")
+
+    print("The optimized paths with 2-OPT is: ", optimized_paths_2opt)
+    print("Returning solution to be sent to a json file...")
+    return optimized_paths_2opt
+
+
 #%%
