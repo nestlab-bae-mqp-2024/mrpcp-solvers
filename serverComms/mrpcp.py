@@ -10,7 +10,7 @@ import itertools
 import gurobipy as gp
 from gurobipy import GRB
 
-def solve_milp_with_optimizations(robots, interval, targets):
+def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
     k=robots  # Chose the number of robots
     # Chose recharging proportionality constant
     q_k = interval  # This means that each robot will need to charge for 10 minutes for every 100 minutes travelled

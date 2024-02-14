@@ -29,10 +29,14 @@ cache_folder_path = os.path.join(current_dir, 'cache')
 def solve_endpoint():
     k = request.args.get('k')
     q_k = request.args.get('q_k')
-    n = request.args.get('n')
+    n_a = request.args.get('n_a')
+    rp = request.args.get('rp')
+    l = request.args.get('l')
+    d = request.args.get('d')
+    mode = request.args.get('mode')
 
     # Generate job ID based on parameters
-    job_id = f"{k}_{q_k}_{n}"
+    job_id = f"{k}_{q_k}_{n_a}_{rp}_{l}_{d}_{mode}"
 
     # Check if folder with job ID exists in the cache folder
     job_folder_path = os.path.join(cache_folder_path, job_id)
@@ -44,18 +48,33 @@ def solve_endpoint():
         print(f"Contents of the JSON file: {result}")  # Print contents of JSON file
         return jsonify(result), 200
     else:
-        print(f"Job folder does not exist: {job_folder_path}. Starting MILP solver function with parameters k={k}, q_k={q_k}, n={n}...")
+        print(f"Job folder does not exist: {job_folder_path}. Starting MILP solver function with parameters k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode={mode}... ...")
         # Run MILP solver function with parameters on a separate thread
-        milp_thread = threading.Thread(target=run_milp_solver, args=(k, q_k, n, job_id, cache_folder_path))
+        milp_thread = threading.Thread(target=run_milp_solver, args=(k, q_k, n_a, rp, l, d, mode, job_id, cache_folder_path))
         milp_thread.start()
         return 'MILP solver function started.', 200
 
-def run_milp_solver(k, q_k, n, job_id, cache_folder_path):
+
+"""
+This function runs the MILP solver function with the provided parameters on a separate thread.
+Once the solver completes, it saves the result to a JSON file in the cache folder.
+Params:
+    k (int): Number of paths
+    q_k (float): Maximum number of paths
+    n_a (int): Number of nodes per axis
+    rp (int): redundancy parameter
+    l (float): 
+    d (float): distance between nodes
+    mode (str): calculation mode (milp or heuristic)
+    job_id (str): Job ID
+    cache_folder_path (str): Cache folder path
+"""
+def run_milp_solver(k, q_k, n_a, rp, l, d, mode, job_id, cache_folder_path):
     try:
         # Run MILP solver function with parameters
-        print(f"Running MILP solver function with parameters: k={k}, q_k={q_k}, n={n}")
-        edges = solve_milp_with_optimizations(int(k), float(q_k), int(n))
-        print(f"MILP solver function completed with parameters: k={k}, q_k={q_k}, n={n}")
+        print(f"Running MILP solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode={mode}...")
+        edges = solve_milp_with_optimizations(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), mode)
+        print(f"MILP solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode={mode}.")
 
         if edges:
             # Convert edges to a serializable format
@@ -68,8 +87,8 @@ def run_milp_solver(k, q_k, n, job_id, cache_folder_path):
 
             # Save result in a JSON file within the cache folder
             with open(os.path.join(job_folder_path, 'result.json'), 'w') as file:
-                json.dump({'edges': serializable_edges}, file)
-                print("Edges saved to result.json file.")
+                json.dump({'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': mode}, 'robot_node_path': serializable_edges}, file)
+                print("Result and parameters saved to result.json file.")
 
     except Exception as e:
         print(f"Error occurred during MILP solving: {e}")
