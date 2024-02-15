@@ -10,12 +10,14 @@ import itertools
 import gurobipy as gp
 from gurobipy import GRB
 
-def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
+def solve_milp_with_optimizations(robots, interval, targets, rp, l, d):
     k=robots  # Chose the number of robots
     # Chose recharging proportionality constant
     q_k = interval  # This means that each robot will need to charge for 10 minutes for every 100 minutes travelled
     # Chose the number of targets in an axis
     n = int(targets)
+    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
+    rp = rp
 
     # nodes = targets + depots
     # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
@@ -55,8 +57,6 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
     plt.grid()
     plt.show()
 
-
-
     # Calculate c_{i,j} (c[i,j] is the cost (including recharging, q_k) from nodes i to j)
     cost = np.zeros((len(node_indices),len(node_indices)))
     for i, j in itertools.product(node_indices, node_indices):
@@ -84,8 +84,10 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
 
     # B. Degree Constraints (6), (7), (8), (9), (10)
     # (6) and (7) Only one robot arrives to and leaves from a target (B_k is a depot, so we don't need to remove it from targets)
-    _ = m.addConstrs(x[:,i,:].sum() == 1 for i in target_indices)
-    _ = m.addConstrs(x[:,:,i].sum() == 1 for i in target_indices)
+    # _ = m.addConstrs(x[:,i,:].sum() == 1 for i in target_indices)
+    # _ = m.addConstrs(x[:,:,i].sum() == 1 for i in target_indices)
+    _ = m.addConstrs(x[:,i,:].sum() == rp for i in target_indices)
+    _ = m.addConstrs(x[:,:,i].sum() == rp for i in target_indices)
 
     for ki in range(k):
         # (8) and (9) Begin and end at same position B_k
