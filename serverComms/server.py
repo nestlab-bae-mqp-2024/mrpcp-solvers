@@ -207,7 +207,7 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot):
     new_robot_paths = recalcRobotPaths(previous_robot_node_path, ex_robot_positions, rp, ex_failed_robot_id)
 
     # visualize the new paths and save the graph to the cache
-    visualize_individual_paths(new_robot_paths, k, n_a, saveGraphPath(job_id, 'recalculated_paths'))
+    visualize_recalculated_paths(new_robot_paths, int(k), int(n_a), saveGraphPath(job_id, 'recalculated_paths'))
 
     result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': new_robot_paths, 'robot_world_path': convertToWorldPath(new_robot_paths)}
     with open(os.path.join(job_folder_path, 'recalculated_paths.json'), 'w') as file:
@@ -222,19 +222,19 @@ The robots start where they currently are. The failed robot starts back at the d
 and the failed robot's new position. They need even frequency coverage to match the redundancy parameter.
 """
 def recalcRobotPaths(previous_node_path, current_robot_positions, rp, failed_robot_id):
-    new_node_paths = []
+    new_node_paths = [[16, 17, 10, 14, 9], [16, 17, 0, 1, 3, 2], [16, 17, 4, 8, 12, 13, 5], [16, 17, 7], [16, 17, 15], [16, 17, 6, 11]]
     # Calculate visit counts for each node
     node_visit_counts = calculate_visit_counts(current_robot_positions, previous_node_path)
 
     # Start the failed robot back at the depot
-    new_node_paths[failed_robot_id] = [[0]]
+    # new_node_paths[failed_robot_id] = [[0]]
 
     # Recalculate paths for all robots (making all considerations but prioritizing matching the redundancy parameter) TODO: Implement this
 
 
     # prioritize fuel capacity
 
-    pass
+    return new_node_paths
 
 """
 This function calculates the visit counts for each node based on the current robot positions and the previous paths.

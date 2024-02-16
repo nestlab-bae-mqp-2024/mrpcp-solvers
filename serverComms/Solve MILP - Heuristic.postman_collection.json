@@ -1,0 +1,104 @@
+{
+	"info": {
+		"_postman_id": "d87a2f01-bba2-4beb-8e06-cdd4b5fedc7b",
+		"name": "Solve MILP / Heuristic",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32818331"
+	},
+	"item": [
+		{
+			"name": "http://127.0.0.1:5000/solve?n_a=3&k=5&q_k=0.65&rp=1&l=1&mode=h&d=3",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:5000/solve?n_a=3&k=5&q_k=0.65&rp=1&l=1&mode=h&d=3",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"solve"
+					],
+					"query": [
+						{
+							"key": "n_a",
+							"value": "3"
+						},
+						{
+							"key": "k",
+							"value": "5"
+						},
+						{
+							"key": "q_k",
+							"value": "0.65"
+						},
+						{
+							"key": "rp",
+							"value": "1"
+						},
+						{
+							"key": "l",
+							"value": "1"
+						},
+						{
+							"key": "mode",
+							"value": "h"
+						},
+						{
+							"key": "d",
+							"value": "3"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/recalculate?job_id=6_0.83_4_1_1_3_m&curr_robots_pos=0&failed_robot_id=0",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:5000/recalculate?job_id=6_0.83_4_1_1_3_m&curr_robots_pos=0&failed_robot_id=0",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "5000",
+					"path": [
+						"recalculate"
+					],
+					"query": [
+						{
+							"key": "job_id",
+							"value": "6_0.83_4_1_1_3_m"
+						},
+						{
+							"key": "curr_robots_pos",
+							"value": "0"
+						},
+						{
+							"key": "failed_robot_id",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
