@@ -55,13 +55,13 @@ def solve_endpoint():
     elif mode == 'm':
         print(f"Job folder does not exist: {job_folder_path}. Starting MILP solver function with parameters k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode={mode}...")
         # Run MILP solver function with parameters on a separate thread
-        milp_thread = threading.Thread(target=run_milp_solver, args=(k, q_k, n_a, rp, l, d, mode, job_id, cache_folder_path))
+        milp_thread = threading.Thread(target=run_milp_solver, args=(k, q_k, n_a, rp, l, d, job_id, cache_folder_path))
         milp_thread.start()
         return 'MILP solver function started.', 200
     elif mode == 'h':
         print(f"Job folder does not exist: {job_folder_path}. Starting heuristic solver function with parameters k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode={mode}...")
         # Run heuristic solver function with parameters on a separate thread
-        heuristic_thread = threading.Thread(target=run_heuristic_solver, args=(k, q_k, n_a, rp, l, d, mode, job_id, cache_folder_path))
+        heuristic_thread = threading.Thread(target=run_heuristic_solver, args=(k, q_k, n_a, rp, l, d, job_id, cache_folder_path))
         heuristic_thread.start()
         return 'Heuristic solver function started.', 200
     else:
@@ -89,7 +89,7 @@ def run_milp_solver(k, q_k, n_a, rp, l, d, job_id, cache_folder_path):
     try:
         # Run MILP solver function with parameters
         print(f"Running MILP solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m...")
-        edges = solve_milp_with_optimizations(int(k), float(q_k), int(n_a), int(rp), float(l), float(d))
+        edges = solve_milp_with_optimizations(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
         print(f"MILP solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m.")
 
         if edges:
@@ -128,7 +128,7 @@ def run_heuristic_solver(k, q_k, n_a, rp, l, d, job_id, cache_folder_path):
     try:
         # Run Heuristic solver function with parameters
         print(f"Running Heuristic solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h...")
-        edges = solve_mrpcp_heuristic(int(k), float(q_k), int(n_a), int(rp), float(l), float(d))
+        edges = solve_mrpcp_heuristic(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
         print(f"Heuristic solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h.")
 
         if edges:
@@ -158,10 +158,10 @@ def recalc_endpoint():
     print("Recalculation request received.")
     job_id = request.args.get('job_id')
     curr_robots_pos = request.args.get('curr_robots_pos')
-    failed_robot = request.args.get('failed_robot')
+    failed_robot_id = request.args.get('failed_robot_id')
 
     # Run the function to recalculate the paths based on the input parameters
-    return recalculate_paths(job_id, curr_robots_pos, failed_robot) # Return the json result of the recalculation
+    return recalculate_paths(job_id, curr_robots_pos, failed_robot_id) # Return the json result of the recalculation
 
 """
 This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
@@ -196,7 +196,15 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot):
     l = params.get('l')
     d = params.get('d')
 
-    new_robot_paths = recalcRobotPaths()
+
+    # Lets say that the we use 6_0.5_4 for the parameters (this will be the edges)
+    #[[16, 17, 10, 14, 9], [16, 17, 0, 1, 3, 2], [16, 17, 4, 8, 12, 13, 5], [16, 17, 7], [16, 17, 15], [16, 17, 6, 11]]
+
+    # Example current robot positions
+    ex_robot_positions = [10, 16, 16, 16, 16, 16] # 1 index based
+    ex_failed_robot_id = 1
+
+    new_robot_paths = recalcRobotPaths(previous_robot_node_path, ex_robot_positions, rp, ex_failed_robot_id)
 
     result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': new_robot_paths, 'robot_world_path': convertToWorldPath(new_robot_paths)}
     with open(os.path.join(job_folder_path, 'recalculated_paths.json'), 'w') as file:
@@ -216,7 +224,9 @@ def recalcRobotPaths(previous_node_path, current_robot_positions, rp, failed_rob
 
     # Start the failed robot back at the depot
 
-    # Recalculate paths for all robots (making all considerations but prioritizing matching the redundancy parameter)
+    # Recalculate paths for all robots (making all considerations but prioritizing matching the redundancy parameter) TODO: Implement this
+
+    # prioritize fuel capacity
 
 
     pass
@@ -225,19 +235,23 @@ def recalcRobotPaths(previous_node_path, current_robot_positions, rp, failed_rob
 This function calculates the visit counts for each node based on the current robot positions and the previous paths.
 """
 def calculate_visit_counts(current_robot_positions, robot_previous_paths):
-    node_visit_counts = {}  # Dictionary to store visit counts for each node
+    # Find the largest node number
+    max_node = max(max(path) for path in robot_previous_paths)
 
-    # Iterate through each robot's current position and its previous path
+    # Count visits for each node
+    node_visit_counts = {}
     for robot_position, previous_path in zip(current_robot_positions, robot_previous_paths):
-        # Increment visit count for current position
         node_visit_counts[robot_position] = node_visit_counts.get(robot_position, 0) + 1
-
-        # Increment visit count for nodes in the previous path
         for node in previous_path:
             node_visit_counts[node] = node_visit_counts.get(node, 0) + 1
 
-    return node_visit_counts
+    # Ensure that the largest node has the same number of visits as the largest node - 1
+    max_visits = node_visit_counts.get(max_node, 0)
+    max_minus_1_visits = node_visit_counts.get(max_node - 1, 0)
+    node_visit_counts[max_node] = node_visit_counts[max_node - 1] = max(max_visits, max_minus_1_visits)
 
+    print("Node visit counts:", node_visit_counts)
+    return node_visit_counts
 
 
 if __name__ == '__main__':
