@@ -11,8 +11,8 @@ Once the solver completes, it saves the result to a JSON file in the cache folde
 """
 import threading
 from flask import Flask, request, jsonify
-from serverComms.mrpcp import solve_milp_with_optimizations
-from serverComms.heuristic import solve_mrpcp_heuristic
+from serverComms.mrpcp import *
+from serverComms.heuristic import *
 import uuid
 import requests
 import os
@@ -206,6 +206,9 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot):
 
     new_robot_paths = recalcRobotPaths(previous_robot_node_path, ex_robot_positions, rp, ex_failed_robot_id)
 
+    # visualize the new paths and save the graph to the cache
+    visualize_individual_paths(new_robot_paths, k, n_a, saveGraphPath(job_id, 'recalculated_paths'))
+
     result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': new_robot_paths, 'robot_world_path': convertToWorldPath(new_robot_paths)}
     with open(os.path.join(job_folder_path, 'recalculated_paths.json'), 'w') as file:
         json.dump(result_data, file)
@@ -218,16 +221,18 @@ This function takes in the previous_node_path and the current_robot_positions an
 The robots start where they currently are. The failed robot starts back at the depot. All the robots recalculate their paths based on the new positions
 and the failed robot's new position. They need even frequency coverage to match the redundancy parameter.
 """
-def recalcRobotPaths(previous_node_path, current_robot_positions, rp, failed_robot):
+def recalcRobotPaths(previous_node_path, current_robot_positions, rp, failed_robot_id):
+    new_node_paths = []
     # Calculate visit counts for each node
     node_visit_counts = calculate_visit_counts(current_robot_positions, previous_node_path)
 
     # Start the failed robot back at the depot
+    new_node_paths[failed_robot_id] = [[0]]
 
     # Recalculate paths for all robots (making all considerations but prioritizing matching the redundancy parameter) TODO: Implement this
 
-    # prioritize fuel capacity
 
+    # prioritize fuel capacity
 
     pass
 

@@ -1,3 +1,4 @@
+import os
 import time
 
 import requests
@@ -10,6 +11,8 @@ import itertools
 import gurobipy as gp
 from gurobipy import GRB
 
+def initGrid():
+    pass
 def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_side, job_id):
     k=robots  # Chose the number of robots
     # Chose recharging proportionality constant
@@ -46,9 +49,6 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     # Chose starting depot node
     # Make all robots start from same depot
     B_k = np.array([depot_indices[0]] * k)
-    # Make depots start from multiple depots
-    # B_k = depot_indices[:k]
-    # print(f"{B_k=}")
 
     # Graphical sanity check
     plt.figure()
@@ -65,22 +65,11 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     print(f"{cost.shape=}")
 
 
-
-
     m = gp.Model()
 
     # A. Integer Constraints (4), (5)
     # Note: All edges are now binary
     x = m.addMVar((k,len(node_indices),len(node_indices)), name='x', vtype=GRB.BINARY)
-    # for ki in range(k):
-    #     for i in target_indices:
-    #         for j in target_indices:
-    #             if i == j: continue
-    #             _ = m.addConstr(x[ki,i,j] <= 1)
-    #         for j in depot_indices:
-    #             _ = m.addConstr(x[ki,i,j] <= 1)
-    #             _ = m.addConstr(x[ki,j,i] <= 1)
-
 
     # B. Degree Constraints (6), (7), (8), (9), (10)
     # (6) and (7) Only one robot arrives to and leaves from a target (B_k is a depot, so we don't need to remove it from targets)
@@ -302,57 +291,7 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
         return milp_paths, milp_costs
 
 
-    def visualize_individual_paths(paths, nodes, targets, depots, B_k, costs, save_path=None):
-        num_robots = len(paths)
-        num_rows = (num_robots + 1) // 2  # Two plots per row
-        fig, axs = plt.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
 
-        # Flatten the axs array for easy iteration if there's more than one row
-        if num_robots > 2:
-            axs = axs.flatten()
-
-        for index, path in enumerate(paths):
-            ax = axs[index]
-
-            # Plot targets and depots
-            ax.scatter(targets[:, 0], targets[:, 1], c='blue', s=10, label='Targets')
-            ax.scatter(depots[:, 0], depots[:, 1], c='red', s=50, label='Depots')
-
-            # Plot path for this robot
-            for i in range(len(path) - 1):
-                start_node = path[i]
-                end_node = path[i + 1]
-                ax.plot([nodes[start_node, 0], nodes[end_node, 0]],
-                        [nodes[start_node, 1], nodes[end_node, 1]],
-                        color="purple", linewidth=1)
-                ax.scatter(nodes[start_node, 0], nodes[start_node, 1], c="purple", s=8)
-                ax.text(nodes[start_node, 0], nodes[start_node, 1], str(start_node), fontsize=8, ha='center', va='center')
-
-            # Plot a line returning to the starting depot
-            ax.plot([nodes[path[-1], 0], nodes[B_k[0], 0]],
-                    [nodes[path[-1], 1], nodes[B_k[0], 1]],
-                    color="purple", linewidth=1, linestyle="--", label='Return to Depot')
-
-            # Plot the starting depot
-            ax.text(nodes[B_k[0], 0], nodes[B_k[0], 1], str(B_k[0]), fontsize=8, ha='center', va='center')
-
-            # Set title with cost
-            ax.set_title(f"Robot #{index + 1} (Cost: {costs[index]:.2f})")
-            ax.grid()
-            ax.legend()
-
-        # Hide any unused subplots
-        for i in range(index + 1, num_rows * 2):
-            fig.delaxes(axs[i])
-
-        # plt.tight_layout()
-        fig.suptitle(f"Paths for all robots (sum of costs={sum(costs):.3f})")
-
-        # Save the figure if save_path is provided
-        if save_path:
-            plt.savefig(save_path)
-        else:
-            plt.show()
 
     def calculate_path_cost(path, cost_matrix):
         total_cost = 0
@@ -430,25 +369,9 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
 
     optimized_costs_kopt = [calculate_path_cost(path, cost) for path in optimized_paths_kopt] # Calculate costs for each robot with 3-opt
 
-    # Get the current working directory
-    current_dir = os.getcwd()
-    # Define the cache folder path relative to the current directory
-    cache_folder_path = os.path.join(current_dir, 'cache')
-    # Check if folder with job ID exists in the cache folder
-    job_folder_path = os.path.join(cache_folder_path, job_id)
-    # Define the folder name for saving visualizations
-    visualization_folder = 'graphs'
 
-    # Construct the folder path for visualizations
-    visualization_folder_path = os.path.join(job_folder_path, visualization_folder)
-
-    # Create the directory if it doesn't exist
-    os.makedirs(visualization_folder_path, exist_ok=True)
-
-    # Construct the save path for the visualization under the 'graphs' directory
-    save_path = os.path.join(visualization_folder_path, 'visualization.png')
     # Call the updated visualization function with costs
-    visualize_individual_paths(optimized_paths_2opt, nodes, targets, depots, B_k, optimized_costs_2opt, save_path=save_path)
+    visualize_individual_paths(optimized_paths_2opt, nodes, targets, depots, B_k, optimized_costs_2opt, save_path=saveGraphPath(job_id, 'visualization.png'))
     visualize_individual_paths(optimized_paths_kopt, nodes, targets, depots, B_k, optimized_costs_kopt) # three opt
 
     # Calculate cost reduction for each robot
@@ -468,5 +391,147 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     print("Returning solution to be sent to a json file...")
     return optimized_paths_2opt
 
+def visualize_individual_paths(paths, nodes, targets, depots, B_k, costs, save_path=None):
+    num_robots = len(paths)
+    num_rows = (num_robots + 1) // 2  # Two plots per row
+    fig, axs = plt.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
+
+    # Flatten the axs array for easy iteration if there's more than one row
+    if num_robots > 2:
+        axs = axs.flatten()
+
+    for index, path in enumerate(paths):
+        ax = axs[index]
+
+        # Plot targets and depots
+        ax.scatter(targets[:, 0], targets[:, 1], c='blue', s=10, label='Targets')
+        ax.scatter(depots[:, 0], depots[:, 1], c='red', s=50, label='Depots')
+
+        # Plot path for this robot
+        for i in range(len(path) - 1):
+            start_node = path[i]
+            end_node = path[i + 1]
+            ax.plot([nodes[start_node, 0], nodes[end_node, 0]],
+                    [nodes[start_node, 1], nodes[end_node, 1]],
+                    color="purple", linewidth=1)
+            ax.scatter(nodes[start_node, 0], nodes[start_node, 1], c="purple", s=8)
+            ax.text(nodes[start_node, 0], nodes[start_node, 1], str(start_node), fontsize=8, ha='center', va='center')
+
+        # Plot a line returning to the starting depot
+        ax.plot([nodes[path[-1], 0], nodes[B_k[0], 0]],
+                [nodes[path[-1], 1], nodes[B_k[0], 1]],
+                color="purple", linewidth=1, linestyle="--", label='Return to Depot')
+
+        # Plot the starting depot
+        ax.text(nodes[B_k[0], 0], nodes[B_k[0], 1], str(B_k[0]), fontsize=8, ha='center', va='center')
+
+        # Set title with cost
+        ax.set_title(f"Robot #{index + 1} (Cost: {costs[index]:.2f})")
+        ax.grid()
+        ax.legend()
+
+    # Hide any unused subplots
+    for i in range(index + 1, num_rows * 2):
+        fig.delaxes(axs[i])
+
+    # plt.tight_layout()
+    fig.suptitle(f"Paths for all robots (sum of costs={sum(costs):.3f})")
+
+    # Save the figure if save_path is provided
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
+
+def visualize_recalculated_paths(paths, robots, targets, save_path=None):
+    k = robots
+    # Chose the number of targets in an axis
+    n_a = int(targets)
+
+    # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
+    targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
+    targets = targets.reshape(targets.shape + (1,))
+    targets = np.concatenate((targets[0], targets[1]), axis=2)
+    targets = targets.reshape((n_a*n_a, 2))
+    print(f"{targets.shape=}")
+    depots = np.array([
+        [-1., -1.],
+    ])
+
+    depots = np.concatenate((depots, depots))
+    depot_indices = range(len(targets), len(targets)+len(depots))
+
+    nodes = np.concatenate((targets, depots))
+    B_k = np.array([depot_indices[0]] * k)
+
+    num_robots = len(paths)
+    num_rows = (num_robots + 1) // 2  # Two plots per row
+    fig, axs = plt.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
+
+    # Flatten the axs array for easy iteration if there's more than one row
+    if num_robots > 2:
+        axs = axs.flatten()
+
+    for index, path in enumerate(paths):
+        ax = axs[index]
+
+        # Plot targets and depots
+        ax.scatter(targets[:, 0], targets[:, 1], c='blue', s=10, label='Targets')
+        ax.scatter(depots[:, 0], depots[:, 1], c='red', s=50, label='Depots')
+
+        # Plot path for this robot
+        for i in range(len(path) - 1):
+            start_node = path[i]
+            end_node = path[i + 1]
+            ax.plot([nodes[start_node, 0], nodes[end_node, 0]],
+                    [nodes[start_node, 1], nodes[end_node, 1]],
+                    color="purple", linewidth=1)
+            ax.scatter(nodes[start_node, 0], nodes[start_node, 1], c="purple", s=8)
+            ax.text(nodes[start_node, 0], nodes[start_node, 1], str(start_node), fontsize=8, ha='center', va='center')
+
+        # Plot a line returning to the starting depot
+        ax.plot([nodes[path[-1], 0], nodes[B_k[0], 0]],
+                [nodes[path[-1], 1], nodes[B_k[0], 1]],
+                color="purple", linewidth=1, linestyle="--", label='Return to Depot')
+
+        # Plot the starting depot
+        ax.text(nodes[B_k[0], 0], nodes[B_k[0], 1], str(B_k[0]), fontsize=8, ha='center', va='center')
+
+        # Set title with cost
+        ax.set_title(f"Robot #{index + 1}")
+        ax.grid()
+        ax.legend()
+
+    # Hide any unused subplots
+    for i in range(index + 1, num_rows * 2):
+        fig.delaxes(axs[i])
+
+    # plt.tight_layout()
+    fig.suptitle(f"Paths for all robots")
+
+    # Save the figure if save_path is provided
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
+
+def saveGraphPath(job_id, title):
+    # Get the current working directory
+    current_dir = os.getcwd()
+    # Define the cache folder path relative to the current directory
+    cache_folder_path = os.path.join(current_dir, 'cache')
+    # Check if folder with job ID exists in the cache folder
+    job_folder_path = os.path.join(cache_folder_path, job_id)
+    # Define the folder name for saving visualizations
+    visualization_folder = 'graphs'
+
+    # Construct the folder path for visualizations
+    visualization_folder_path = os.path.join(job_folder_path, visualization_folder)
+
+    # Create the directory if it doesn't exist
+    os.makedirs(visualization_folder_path, exist_ok=True)
+
+    # Construct the save path for the visualization under the 'graphs' directory
+    return os.path.join(visualization_folder_path, title)
 
 #%%
