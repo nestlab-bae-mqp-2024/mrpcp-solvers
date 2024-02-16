@@ -10,19 +10,21 @@ import itertools
 import gurobipy as gp
 from gurobipy import GRB
 
-def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
+def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_side, job_id):
     k=robots  # Chose the number of robots
     # Chose recharging proportionality constant
     q_k = interval  # This means that each robot will need to charge for 10 minutes for every 100 minutes travelled
     # Chose the number of targets in an axis
-    n = int(targets)
+    n_a = int(targets)
+    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
+    rp = rp
 
     # nodes = targets + depots
     # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
-    targets = np.mgrid[-1:1:n * 1j, -1.:1:n * 1j]
+    targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
     targets = targets.reshape(targets.shape + (1,))
     targets = np.concatenate((targets[0], targets[1]), axis=2)
-    targets = targets.reshape((n*n, 2))
+    targets = targets.reshape((n_a*n_a, 2))
     target_indices = range(len(targets))
     print(f"{targets.shape=}")
 
@@ -55,8 +57,6 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
     plt.grid()
     plt.show()
 
-
-
     # Calculate c_{i,j} (c[i,j] is the cost (including recharging, q_k) from nodes i to j)
     cost = np.zeros((len(node_indices),len(node_indices)))
     for i, j in itertools.product(node_indices, node_indices):
@@ -84,8 +84,10 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
 
     # B. Degree Constraints (6), (7), (8), (9), (10)
     # (6) and (7) Only one robot arrives to and leaves from a target (B_k is a depot, so we don't need to remove it from targets)
-    _ = m.addConstrs(x[:,i,:].sum() == 1 for i in target_indices)
-    _ = m.addConstrs(x[:,:,i].sum() == 1 for i in target_indices)
+    # _ = m.addConstrs(x[:,i,:].sum() == 1 for i in target_indices)
+    # _ = m.addConstrs(x[:,:,i].sum() == 1 for i in target_indices)
+    _ = m.addConstrs(x[:,i,:].sum() == rp for i in target_indices)
+    _ = m.addConstrs(x[:,:,i].sum() == rp for i in target_indices)
 
     for ki in range(k):
         # (8) and (9) Begin and end at same position B_k
@@ -219,28 +221,38 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
         return total_cost
 
     def two_opt(route, cost_matrix):
-        best_distance = calculate_total_distance(route, cost_matrix)
-        best_route = route.copy()
+        # Ensure n^2 and n^2+1 stay together at the beginning of the path
+        if pow(n_a, 2) in route and pow(n_a, 2) + 1 in route:
+            # Find the indices of n^2 and n^2+1
+            index_n2 = route.index(pow(n_a, 2))
+            index_n2_plus_1 = route.index(pow(n_a, 2) + 1)
 
-        improved = True
-        while improved:
-            improved = False
-            for i in range(1, len(route) - 2):
-                for j in range(i + 1, len(route)):
-                    if j - i == 1: continue  # Skip adjacent edges
-                    new_route = route.copy()
-                    new_route[i:j] = route[j - 1:i - 1:-1]  # Reverse the segment between i and j
-                    new_distance = calculate_total_distance(new_route, cost_matrix)
+            # Ensure they are at the beginning of the route
+            if index_n2 > 0:
+                route.insert(0, route.pop(index_n2))
+            if index_n2_plus_1 > 1:
+                route.insert(1, route.pop(index_n2_plus_1))
 
-                    if new_distance < best_distance:
-                        best_distance = new_distance
-                        best_route = new_route.copy()
-                        improved = True
+            best_distance = calculate_total_distance(route, cost_matrix)
+            best_route = route.copy()
 
-            route = best_route.copy()
+            improved = True
+            while improved:
+                improved = False
+                for i in range(1, len(route) - 2):
+                    for j in range(i + 1, len(route)):
+                        if j - i == 1:
+                            continue  # Skip adjacent edges
+                        new_route = route.copy()
+                        new_route[i:j] = route[j - 1:i - 1:-1]  # Reverse the segment between i and j
+                        new_distance = calculate_total_distance(new_route, cost_matrix)
 
-        return best_route, best_distance
+                        if new_distance < best_distance:
+                            best_distance = new_distance
+                            best_route = new_route.copy()
+                            improved = True
 
+            return best_route, best_distance
     def k_opt(route, cost_matrix, k):
         best_distance = calculate_total_distance(route, cost_matrix)
         best_route = route.copy()
@@ -314,11 +326,15 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
                         [nodes[start_node, 1], nodes[end_node, 1]],
                         color="purple", linewidth=1)
                 ax.scatter(nodes[start_node, 0], nodes[start_node, 1], c="purple", s=8)
+                ax.text(nodes[start_node, 0], nodes[start_node, 1], str(start_node), fontsize=8, ha='center', va='center')
 
             # Plot a line returning to the starting depot
             ax.plot([nodes[path[-1], 0], nodes[B_k[0], 0]],
                     [nodes[path[-1], 1], nodes[B_k[0], 1]],
                     color="purple", linewidth=1, linestyle="--", label='Return to Depot')
+
+            # Plot the starting depot
+            ax.text(nodes[B_k[0], 0], nodes[B_k[0], 1], str(B_k[0]), fontsize=8, ha='center', va='center')
 
             # Set title with cost
             ax.set_title(f"Robot #{index + 1} (Cost: {costs[index]:.2f})")
@@ -413,9 +429,6 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, d, mode):
     optimized_costs_2opt = [calculate_path_cost(path, cost) for path in optimized_paths_2opt] #two opt
 
     optimized_costs_kopt = [calculate_path_cost(path, cost) for path in optimized_paths_kopt] # Calculate costs for each robot with 3-opt
-
-    # Generate job ID based on parameters
-    job_id = f"{k}_{q_k}_{n}"
 
     # Get the current working directory
     current_dir = os.getcwd()
