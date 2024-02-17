@@ -11,8 +11,9 @@ import itertools
 import gurobipy as gp
 from gurobipy import GRB
 
-def initGrid():
-    pass
+from serverComms.json_handlers import saveGraphPath
+
+
 def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_side, job_id):
     k=robots  # Chose the number of robots
     # Chose recharging proportionality constant
@@ -443,95 +444,10 @@ def visualize_individual_paths(paths, nodes, targets, depots, B_k, costs, save_p
     else:
         plt.show()
 
-def visualize_recalculated_paths(paths, robots, targets, save_path=None):
-    k = robots
-    # Chose the number of targets in an axis
-    n_a = int(targets)
-
-    # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
-    targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
-    targets = targets.reshape(targets.shape + (1,))
-    targets = np.concatenate((targets[0], targets[1]), axis=2)
-    targets = targets.reshape((n_a*n_a, 2))
-    print(f"{targets.shape=}")
-    depots = np.array([
-        [-1., -1.],
-    ])
-
-    depots = np.concatenate((depots, depots))
-    depot_indices = range(len(targets), len(targets)+len(depots))
-
-    nodes = np.concatenate((targets, depots))
-    B_k = np.array([depot_indices[0]] * k)
-
-    num_robots = len(paths)
-    num_rows = (num_robots + 1) // 2  # Two plots per row
-    fig, axs = plt.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
-
-    # Flatten the axs array for easy iteration if there's more than one row
-    if num_robots > 2:
-        axs = axs.flatten()
-
-    for index, path in enumerate(paths):
-        ax = axs[index]
-
-        # Plot targets and depots
-        ax.scatter(targets[:, 0], targets[:, 1], c='blue', s=10, label='Targets')
-        ax.scatter(depots[:, 0], depots[:, 1], c='red', s=50, label='Depots')
-
-        # Plot path for this robot
-        for i in range(len(path) - 1):
-            start_node = path[i]
-            end_node = path[i + 1]
-            ax.plot([nodes[start_node, 0], nodes[end_node, 0]],
-                    [nodes[start_node, 1], nodes[end_node, 1]],
-                    color="purple", linewidth=1)
-            ax.scatter(nodes[start_node, 0], nodes[start_node, 1], c="purple", s=8)
-            ax.text(nodes[start_node, 0], nodes[start_node, 1], str(start_node), fontsize=8, ha='center', va='center')
-
-        # Plot a line returning to the starting depot
-        ax.plot([nodes[path[-1], 0], nodes[B_k[0], 0]],
-                [nodes[path[-1], 1], nodes[B_k[0], 1]],
-                color="purple", linewidth=1, linestyle="--", label='Return to Depot')
-
-        # Plot the starting depot
-        ax.text(nodes[B_k[0], 0], nodes[B_k[0], 1], str(B_k[0]), fontsize=8, ha='center', va='center')
-
-        # Set title with cost
-        ax.set_title(f"Robot #{index + 1}")
-        ax.grid()
-        ax.legend()
-
-    # Hide any unused subplots
-    for i in range(index + 1, num_rows * 2):
-        fig.delaxes(axs[i])
-
-    # plt.tight_layout()
-    fig.suptitle(f"Paths for all robots")
-
-    # Save the figure if save_path is provided
-    if save_path:
-        plt.savefig(save_path)
-    else:
-        plt.show()
-
-def saveGraphPath(job_id, title):
-    # Get the current working directory
-    current_dir = os.getcwd()
-    # Define the cache folder path relative to the current directory
-    cache_folder_path = os.path.join(current_dir, 'cache')
-    # Check if folder with job ID exists in the cache folder
-    job_folder_path = os.path.join(cache_folder_path, job_id)
-    # Define the folder name for saving visualizations
-    visualization_folder = 'graphs'
-
-    # Construct the folder path for visualizations
-    visualization_folder_path = os.path.join(job_folder_path, visualization_folder)
-
-    # Create the directory if it doesn't exist
-    os.makedirs(visualization_folder_path, exist_ok=True)
-
-    # Construct the save path for the visualization under the 'graphs' directory
-    return os.path.join(visualization_folder_path, title)
+def convertToWorldPath(paths):
+    worldPath = []
+    for path in paths:
+        worldPath.append([path[0], path[1]])
+    return worldPath
 
 #%%
