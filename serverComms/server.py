@@ -86,7 +86,7 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
             print(f"MILP solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m.")
             # Convert edges to a node format
             robot_node_path = [[int(edge) for edge in path] for path in edges]
-            robot_world_path = convertToWorldPath(robot_node_path)
+            robot_world_path = convertToWorldPath(int(n_a), robot_node_path)
 
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path, 'status': 'completed'}
@@ -100,7 +100,7 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
 
             # Convert edges to a node format
             robot_node_path = [[int(edge) for edge in path] for path in edges]
-            robot_world_path = convertToWorldPath(robot_node_path)
+            robot_world_path = convertToWorldPath(n_a, robot_node_path)
 
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path, 'status': 'completed'}
