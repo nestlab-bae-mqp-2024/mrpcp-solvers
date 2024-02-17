@@ -449,5 +449,3 @@ def convertToWorldPath(paths):
     for path in paths:
         worldPath.append([path[0], path[1]])
     return worldPath
-
-#%%

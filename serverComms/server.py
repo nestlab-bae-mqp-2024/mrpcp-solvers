@@ -84,22 +84,29 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
             print(f"Running MILP solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m...")
             edges = solve_milp_with_optimizations(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
             print(f"MILP solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m.")
+            # Convert edges to a node format
+            robot_node_path = [[int(edge) for edge in path] for path in edges]
+            robot_world_path = convertToWorldPath(robot_node_path)
+
+            # Save result in a JSON file within the cache folder
+            result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path, 'status': 'completed'}
+            json_handlers.saveResultsToCache(job_id, result_data, 'result.json') # Save the results to the cache
+
         elif mode == 'h':
             # Run Heuristic solver function with parameters
             print(f"Running Heuristic solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h...")
             edges = solve_mrpcp_heuristic(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
             print(f"Heuristic solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h.")
 
-            if edges:
-                # Convert edges to a node format
-                robot_node_path = [[int(edge) for edge in path] for path in edges]
-                robot_world_path = convertToWorldPath(robot_node_path)
+            # Convert edges to a node format
+            robot_node_path = [[int(edge) for edge in path] for path in edges]
+            robot_world_path = convertToWorldPath(robot_node_path)
 
-                # Save result in a JSON file within the cache folder
-                result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path, 'status': 'completed'}
+            # Save result in a JSON file within the cache folder
+            result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path, 'status': 'completed'}
+            json_handlers.saveResultsToCache(job_id, result_data, 'result.json') # Save the results to the cache
 
-                json_handlers.saveResultsToCache(job_id, result_data, 'result.json') # Save the results to the cache
-                return result_data # Return the content of the JSON file
+            return result_data # Return the content of the JSON file
 
     except Exception as e:
         print(f"Error occurred during solving: {e}")
