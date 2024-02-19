@@ -56,6 +56,11 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     plt.scatter(targets[:,0], targets[:,1], c='blue', s=10)
     plt.scatter(depots[:,0], depots[:,1], c='red', s=50)
     plt.grid()
+
+    # Label nodes with node IDs and their positions
+    for i, node in enumerate(nodes):
+        plt.text(node[0], node[1], f'{i}', fontsize=8, ha='center')
+
     plt.show()
 
     # Calculate c_{i,j} (c[i,j] is the cost (including recharging, q_k) from nodes i to j)
@@ -462,7 +467,6 @@ def convertToWorldPath(n_a, robot_node_path):
     targets = np.concatenate((targets[0], targets[1]), axis=2)
     targets = targets.reshape((n_a*n_a, 2))
     target_indices = range(len(targets))
-    print(f"{targets.shape=}")
 
     # Specify depots
     # One depot node in the corner
@@ -471,26 +475,36 @@ def convertToWorldPath(n_a, robot_node_path):
     ])
 
     depots = np.concatenate((depots, depots))
-    depot_indices = range(len(targets), len(targets)+len(depots))
-
     nodes = np.concatenate((targets, depots))
+
+    # Graphical sanity check
+    plt.figure()
+    plt.scatter(targets[:,0], targets[:,1], c='blue', s=10)
+    plt.scatter(depots[:,0], depots[:,1], c='red', s=50)
+    plt.grid()
+
+    # Label nodes with node IDs and their positions
+    for i, node in enumerate(nodes):
+        plt.text(node[0], node[1], f'{i}', fontsize=8, ha='center')
+
+    plt.show()
+
 
     robot_world_path = []
     for path in robot_node_path:
         world_path = []
         for i, node in enumerate(path):
             x, y = nodes[node]
-            if i == 0:
-                world_path.append([int(x), int(y)])  # Convert to integers for the starting node
-            else:
-                world_path.append([float(x), float(y)])  # Convert to floats for other nodes
-        world_path.append([int(nodes[path[0]][0]), int(nodes[path[0]][1])])  # Return to starting node
+            world_path.append([float(x), float(y)])  # Convert to floats
+        world_path.append(world_path[0])  # Return to starting node
         robot_world_path.append(world_path)
+    for i in range(pow(n_a,2)+1):
+        print(f"{i=}, {nodes[i]}")
     return robot_world_path
 
 
 #%%
-convertToWorldPath(4, [[16,15]])
+# convertToWorldPath(3, [[9, 10, 7, 6, 3]]) # Returns: [[[-1.0, -1.0], [1, 0], [1,-1], [0,-1], [-1,-1]]]
 #%%
 
 #%%
