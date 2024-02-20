@@ -57,7 +57,7 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot):
     # Example new robot paths if the robots just need to finish where they left off
     # [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7, 16], [15, 16], [11, 16]]
 
-    new_robot_paths = recalcRobotPaths(previous_robot_node_path, ex_robot_positions, int(rp), ex_failed_robot_id)
+    new_robot_paths = recalcRobotPaths(previous_robot_node_path, ex_robot_positions, int(rp), int(n_a), ex_failed_robot_id)
     print("New robot paths:", new_robot_paths)
     # visualize the new paths and save the graph to the cache
     visualize_recalculated_paths(new_robot_paths, int(k), int(n_a), saveGraphPath(job_id, 'recalculated_paths'))
@@ -76,17 +76,19 @@ and the failed robot's new position. They need even frequency coverage to match 
 """
 
 
-def recalcRobotPaths(previous_node_path, current_robot_positions, rp, failed_robot_id):
+def recalcRobotPaths(previous_node_path, current_robot_positions, rp, n_a, failed_robot_id):
     new_node_paths = []
 
     # Determine the depot node
-    depot_node = 16
+    depot_node = n_a**2  # The depot node is the last node in the grid
 
     # Recalculate paths for all robots
     for robot_id, path in enumerate(previous_node_path):
-        if robot_id == failed_robot_id-1:
-            # Failed robot starts from the depot
-            new_path = [depot_node]
+        if robot_id == failed_robot_id - 1:
+            # Failed robot starts from the depot and continues the rest of its path
+            current_position = current_robot_positions[robot_id]
+            index = getIndexOf(path, current_position)
+            new_path = [depot_node] + path[index:] if index != -1 else [depot_node]
         else:
             # Other robots continue from where they left off or start from the beginning
             current_position = current_robot_positions[robot_id]
