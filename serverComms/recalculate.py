@@ -6,16 +6,17 @@ This program defines the methods relating to recalculating the paths for robots 
 """
 
 import os
-
 import numpy as np
 from flask import json
 from matplotlib import pyplot as plt
-
+from serverComms.json_handlers import saveResultsToCache
 from serverComms.mrpcp import saveGraphPath, convertToWorldPath
 
 """
 This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
 """
+
+
 def recalculate_paths(job_id, curr_robots_pos, failed_robot):
     # Define the cache folder path relative to the current directory
     cache_folder_path = os.path.join(os.getcwd(), 'cache')
@@ -46,49 +47,78 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot):
     l = params.get('l')
     d = params.get('d')
 
-
     # Lets say that the we use 6_0.5_4 for the parameters (this will be the edges)
-    #[[16, 17, 10, 14, 9], [16, 17, 0, 1, 3, 2], [16, 17, 4, 8, 12, 13, 5], [16, 17, 7], [16, 17, 15], [16, 17, 6, 11]]
+    # [[16, 17, 10, 14, 9], [16, 17, 0, 1, 3, 2], [16, 17, 4, 8, 12, 13, 5], [16, 17, 7], [16, 17, 15], [16, 17, 6, 11]]
 
     # Example current robot positions
-    ex_robot_positions = [10, 16, 16, 16, 16, 16] # 1 index based
+    ex_robot_positions = [10, 0, 12, 7, 15, 11]  # 1 index based
     ex_failed_robot_id = 1
 
-    new_robot_paths = recalcRobotPaths(previous_robot_node_path, ex_robot_positions, rp, ex_failed_robot_id)
+    # Example new robot paths if the robots just need to finish where they left off
+    # [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7, 16], [15, 16], [11, 16]]
 
+    new_robot_paths = recalcRobotPaths(previous_robot_node_path, ex_robot_positions, int(rp), ex_failed_robot_id)
+    print("New robot paths:", new_robot_paths)
     # visualize the new paths and save the graph to the cache
     visualize_recalculated_paths(new_robot_paths, int(k), int(n_a), saveGraphPath(job_id, 'recalculated_paths'))
 
-    result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': new_robot_paths, 'robot_world_path': convertToWorldPath(new_robot_paths)}
-    with open(os.path.join(job_folder_path, 'recalculated_paths.json'), 'w') as file:
-        json.dump(result_data, file)
-        print("Result and parameters saved to recalculated_paths.json file.")
+    result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
+                   'robot_node_path': new_robot_paths,
+                   'robot_world_path': convertToWorldPath(int(n_a), new_robot_paths)}
+    saveResultsToCache(job_id, result_data, 'recalculated_paths.json')
     return result_data  # Return the content of the JSON file
+
 
 """
 This function takes in the previous_node_path and the current_robot_positions and recalculates the paths based on the new positions.
 The robots start where they currently are. The failed robot starts back at the depot. All the robots recalculate their paths based on the new positions
 and the failed robot's new position. They need even frequency coverage to match the redundancy parameter.
 """
+
+
 def recalcRobotPaths(previous_node_path, current_robot_positions, rp, failed_robot_id):
-    new_node_paths = [[16, 17, 10, 14, 9], [16, 17, 0, 1, 3, 2], [16, 17, 4, 8, 12, 13, 5], [16, 17, 7], [16, 17, 15], [16, 17, 6, 11]]
-    # Calculate visit counts for each node
-    node_visit_counts = calculate_visit_counts(current_robot_positions, previous_node_path)
+    new_node_paths = []
 
-    # Start the failed robot back at the depot
-    # new_node_paths[failed_robot_id] = [[0]]
+    # Determine the depot node
+    depot_node = 16
 
-    # Recalculate paths for all robots (making all considerations but prioritizing matching the redundancy parameter) TODO: Implement this
+    # Recalculate paths for all robots
+    for robot_id, path in enumerate(previous_node_path):
+        if robot_id == failed_robot_id-1:
+            # Failed robot starts from the depot
+            new_path = [depot_node]
+        else:
+            # Other robots continue from where they left off or start from the beginning
+            current_position = current_robot_positions[robot_id]
+            index = getIndexOf(path, current_position)
+            new_path = path[index:] if index != -1 else [depot_node]
+        new_node_paths.append(new_path)
 
-
-    # prioritize fuel capacity
-
+    # Ensure all paths have a length equal to the redundancy parameter
+    for i in range(len(new_node_paths)):
+        while len(new_node_paths[i]) < rp:
+            new_node_paths[i].append(depot_node)  # Repeat the depot node if needed
+    print(new_node_paths)
     return new_node_paths
 
+def getIndexOf(path, position):
+    try:
+        return path.index(position)
+    except ValueError:
+        return -1
+
+
+# recalcRobotPaths(
+#     [[16, 17, 10, 14, 9], [16, 17, 0, 1, 3, 2], [16, 17, 4, 8, 12, 13, 5], [16, 17, 7], [16, 17, 15], [16, 17, 6, 11]],
+#     [10, 0, 12, 7, 15, 11], 1, 1)
+# Example new robot paths if the robots just need to finish where they left off
+# [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7], [15], [11]]
 
 """
 This function calculates the visit counts for each node based on the current robot positions and the previous paths.
 """
+
+
 def calculate_visit_counts(current_robot_positions, robot_previous_paths):
     # Find the largest node number
     max_node = max(max(path) for path in robot_previous_paths)
@@ -108,6 +138,7 @@ def calculate_visit_counts(current_robot_positions, robot_previous_paths):
     print("Node visit counts:", node_visit_counts)
     return node_visit_counts
 
+
 def visualize_recalculated_paths(paths, robots, targets, save_path=None):
     k = robots
     # Chose the number of targets in an axis
@@ -117,14 +148,14 @@ def visualize_recalculated_paths(paths, robots, targets, save_path=None):
     targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
     targets = targets.reshape(targets.shape + (1,))
     targets = np.concatenate((targets[0], targets[1]), axis=2)
-    targets = targets.reshape((n_a*n_a, 2))
+    targets = targets.reshape((n_a * n_a, 2))
     print(f"{targets.shape=}")
     depots = np.array([
         [-1., -1.],
     ])
 
     depots = np.concatenate((depots, depots))
-    depot_indices = range(len(targets), len(targets)+len(depots))
+    depot_indices = range(len(targets), len(targets) + len(depots))
 
     nodes = np.concatenate((targets, depots))
     B_k = np.array([depot_indices[0]] * k)
@@ -180,11 +211,18 @@ def visualize_recalculated_paths(paths, robots, targets, save_path=None):
     else:
         plt.show()
 
-def worldPathToNodePath(world_path):
+
+def convertToNodePath(world_path):
     node_path = []
     for i in range(len(world_path)):
         if i == 0:
             node_path.append([world_path[i]])
         else:
-            node_path.append([world_path[i], world_path[i-1]])
+            node_path.append([world_path[i], world_path[i - 1]])
     return node_path
+
+
+def convertToNodePosition(world_position):
+    return world_position
+
+# %%
