@@ -17,7 +17,10 @@ This function recalculates the paths based on the current positions and where th
 """
 
 
-def recalculate_paths(job_id, curr_robots_pos, failed_robot):
+def recalculate_paths(job_id, curr_robots_pos, failed_robot_id):
+    # Convert the current robot positions back to an integer array
+    curr_robots_pos = [int(pos) for pos in curr_robots_pos]
+
     # Define the cache folder path relative to the current directory
     cache_folder_path = os.path.join(os.getcwd(), 'cache')
 
@@ -56,8 +59,9 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot):
 
     # Example new robot paths if the robots just need to finish where they left off
     # [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7, 16], [15, 16], [11, 16]]
-
-    new_robot_paths = recalcRobotPaths(previous_robot_node_path, ex_robot_positions, int(rp), int(n_a), ex_failed_robot_id)
+    print("Previous robot paths:", previous_robot_node_path)
+    print("Current robot positions:", curr_robots_pos)
+    new_robot_paths = recalcRobotPaths(previous_robot_node_path, curr_robots_pos, int(rp), int(n_a), int(failed_robot_id))
     print("New robot paths:", new_robot_paths)
     # visualize the new paths and save the graph to the cache
     visualize_recalculated_paths(new_robot_paths, int(k), int(n_a), saveGraphPath(job_id, 'recalculated_paths'))

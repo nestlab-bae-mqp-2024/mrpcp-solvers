@@ -120,6 +120,7 @@ def recalc_endpoint():
     print("Recalculation request received.")
     job_id = request.args.get('job_id')
     curr_robots_pos = request.args.get('curr_robots_pos')
+    curr_robots_pos = json.loads(curr_robots_pos)
     failed_robot_id = request.args.get('failed_robot_id')
 
     # Run the function to recalculate the paths based on the input parameters
