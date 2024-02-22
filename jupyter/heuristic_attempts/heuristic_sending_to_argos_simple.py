@@ -51,7 +51,7 @@ def neighbors(curr):
 
 def heuristic(node):
     if node in nodes_covered:
-        return 0
+        return -1
     else:
         return -10
 
@@ -59,7 +59,8 @@ def heuristic(node):
 def a_star_search(start, goal):
     robot_failed = False
     frontier = PriorityQueue()
-    frontier.put((start[0],start[1]), 0)
+    frontier.put((0, (start[0],start[1])))
+
     came_from = dict()
     cost_so_far = dict()
     came_from[(start[0],start[1])] = None
@@ -67,21 +68,18 @@ def a_star_search(start, goal):
 
 
     while not frontier.empty():
-        #print(frontier.queue)
         current = frontier.get()
         if current == (goal[0], goal[1]):
             break
 
-        for next in neighbors(current):
-            new_cost = cost_so_far[current] + math.dist(current, next)
+        for next in neighbors(current[1]):
+            new_cost = cost_so_far[current[1]] + math.dist(current[1], next)
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
                 priority = new_cost + heuristic(next)
-                #priority = new_cost + math.dist(current, next)
 
-                #print(priority)
-                frontier.put(next, priority)
-                came_from[next] = current
+                frontier.put((priority, next))
+                came_from[next] = current[1]
 
 
     curr_val = goal
@@ -89,6 +87,7 @@ def a_star_search(start, goal):
     dist = 0
     while curr_val != start and robot_failed != True:
         final_path.append(curr_val)
+
         dist = dist + math.dist(curr_val, came_from[curr_val])
         curr_val = came_from[curr_val]
 
@@ -99,6 +98,8 @@ def a_star_search(start, goal):
     final_path.reverse()
 
     return final_path, dist, robot_failed
+
+
 
 #define a costmap of the field in terms of distance from depot, in the form
 def calculate_costmap():
@@ -240,6 +241,7 @@ def visualize_paths_brute_force():
         pyplot.grid()
 
         pyplot.savefig("data/"+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) +"e_"+str(ki)+".png")
+
 
 generate_robot_paths_redundancy()
 
