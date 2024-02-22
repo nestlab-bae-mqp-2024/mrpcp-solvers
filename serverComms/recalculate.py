@@ -61,6 +61,9 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot_id):
     # [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7, 16], [15, 16], [11, 16]]
     print("Previous robot paths:", previous_robot_node_path)
     print("Current robot positions:", curr_robots_pos)
+
+    # Convert the current (x,y) world positions to node positions. For the failed robot, round down to the nearest node position. For others, just do normal calculation.
+
     new_robot_paths = recalcRobotPaths(previous_robot_node_path, curr_robots_pos, int(rp), int(n_a), int(failed_robot_id))
     print("New robot paths:", new_robot_paths)
     # visualize the new paths and save the graph to the cache

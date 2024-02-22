@@ -124,8 +124,10 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
         _ = m.addConstrs(p[ki,i,j] <= len(target_indices) * x[ki,i,j] for i in node_indices for j in node_indices)
 
     # # D. Fuel Constraints (15), (16), (17), (18), (19), (20)
-    max_fuel_cost_to_node = np.sqrt(8)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
-    L = max_fuel_cost_to_node * 2.  # Fuel capacity (1 unit of fuel = 1 unit of distance)
+    max_fuel_cost_to_node = dist_per_side*np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
+    if l < 1:
+        return "Fuel capacity must be at least 1"
+    L = l*max_fuel_cost_to_node * 2  # Fuel capacity (1 unit of fuel = 1 unit of distance)
     M = L + max_fuel_cost_to_node
     r = m.addMVar((len(node_indices)), name='r', vtype=GRB.CONTINUOUS, lb=0, ub=L) # (20)
 
@@ -392,10 +394,13 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
 
 
     print ("MILP solution completed...return paths to server endpoint /get_solution")
-
+    worldPath = convertToWorldPath(n_a, optimized_paths_2opt)
     print("The optimized paths with 2-OPT is: ", optimized_paths_2opt)
+    print("The optimized paths converted to world path is: ", worldPath)
     print("Returning solution to be sent to a json file...")
-    return optimized_paths_2opt
+    return optimized_paths_2opt, worldPath
+
+    # return world paths
 
 def visualize_individual_paths(paths, nodes, targets, depots, B_k, costs, save_path=None):
     num_robots = len(paths)

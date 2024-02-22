@@ -82,11 +82,11 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
         if mode == 'm':
             # Run MILP solver function with parameters
             print(f"Running MILP solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m...")
-            edges = solve_milp_with_optimizations(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
+            edges, world = solve_milp_with_optimizations(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
             print(f"MILP solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m.")
             # Convert edges to a node format
             robot_node_path = [[int(edge) for edge in path] for path in edges]
-            robot_world_path = convertToWorldPath(int(n_a), robot_node_path)
+            robot_world_path = world
 
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path, 'status': 'completed'}
@@ -95,12 +95,12 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
         elif mode == 'h':
             # Run Heuristic solver function with parameters
             print(f"Running Heuristic solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h...")
-            edges = solve_mrpcp_heuristic(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
+            edges, world = solve_mrpcp_heuristic(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
             print(f"Heuristic solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h.")
 
             # Convert edges to a node format
             robot_node_path = [[int(edge) for edge in path] for path in edges]
-            robot_world_path = convertToWorldPath(n_a, robot_node_path)
+            robot_world_path = world
 
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'}, 'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path, 'status': 'completed'}
