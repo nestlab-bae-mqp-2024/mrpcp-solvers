@@ -8,42 +8,75 @@ from collections import Counter
 
 from matplotlib import pyplot, colors, animation
 
+from serverComms.mrpcp import convertToWorldPath
+
 # Global variables
 all_nodes = set()
-robot_fuel = []
 nodes_covered = set()  # nodes covered is a set of every node that has been covered so far
 alpha = 0.05
 robot_failure_percent = 0.1  # percent of robots that will fail as a value from 0 to 1
 
 
-def recalcRobotPaths(previous_node_path, current_robot_positions, rp, n_a, failed_robot_id):
+def run_heuristic_solver(k, q_k, n_a, rp, l, d, job_id):
+    """
+    This function runs the Heuristic solver function with the provided parameters.
+    :param k: 
+    :param q_k: 
+    :param n_a: 
+    :param rp: 
+    :param l: 
+    :param d: 
+    :param job_id: 
+    :return: The optimized paths and the world path
+    """
+    # robot fuel is a list storing each robot's fuel at the present moment
+    robot_fuel = [l for ki in range(k)]
+
+    robot_paths = generate_robot_paths_redundancy(n_a, k, rp, l)
+
+    visualize_paths_brute_force(k, n_a, robot_paths, d)
+
+    print("Heuristic solution completed...returning paths to server endpoint /solve")
+    worldPath = convertToWorldPath(n_a, robot_paths)
+    print("The optimized paths are: ", robot_paths)
+    print("The optimized paths converted to world path are: ", worldPath)
+    print("Returning solution to be sent to a json file...")
+
+    print("Recalculated paths: ", robot_paths)
+    pass
+
+
+def recalcRobotPaths(previous_node_path, current_robot_positions, rp, n_a, l, d):
     """
     This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
+    :param previous_node_path:
+    :param current_robot_positions:
+    :param rp:
+    :param n_a:
+    :param l:
+    :param d:
+    :return: The recalculated node and world paths
     """
-    k = len(current_robot_positions)
-    nodes_per_axis = n_a
-    rp = rp
-    # physical size in meters of the field. the area will then be defined to go from -edge_length/2 to edge_length/2
-    edge_length = 2
-
-    robot_paths = [[] for ki in range(k)]
-
-    # distance the robot can travel without needing to return to depot
-    fuel_capacity = math.sqrt(edge_length ^ 2 + edge_length ^ 2)
-
-    # robot fuel is a list storing each robot's fuel at the present moment
-    robot_fuel = [fuel_capacity for ki in range(k)]
+    k = len(current_robot_positions)  # number of robots
+    robot_fuel = [l for ki in range(k)]  # fuel capacity of each robot
+    robot_paths = previous_node_path  # previous robot paths
 
     # initialize all nodes
     initAllNodes(n_a)
 
-    generate_robot_paths_redundancy(n_a, k, rp, robot_paths, fuel_capacity)
+    new_robot_paths = generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l)
 
-    visualize_paths_brute_force(k, n_a, robot_paths, edge_length)
+    visualize_paths_brute_force(k, n_a, new_robot_paths)
 
-    print("Recalculated paths: ", robot_paths)
+    print("Heuristic recalculation completed...returning paths to server endpoint /solve")
+    worldPath = convertToWorldPath(n_a, new_robot_paths)
+    print("The optimized paths are: ", new_robot_paths)
+    print("The optimized paths converted to world path are: ", worldPath)
+    print("Returning solution to be sent to a json file...")
 
-    return robot_paths
+    print("Recalculated paths: ", new_robot_paths)
+
+    return new_robot_paths
 
 
 def initAllNodes(n_a):
@@ -168,7 +201,7 @@ def find_max(n_a, k):
     return max
 
 
-def generate_robot_paths(n_a, k, robot_paths, fuel_capacity):
+def generate_robot_paths(n_a, k, robot_paths, robot_fuel, l):
     last_node = [(0, 0) for ki in range(k)]
 
     while n_a * n_a - len(nodes_covered) > 0:
@@ -194,12 +227,12 @@ def generate_robot_paths(n_a, k, robot_paths, fuel_capacity):
 
             # managing fuel levels
             if (0, 0) == last_node[ki]:
-                robot_fuel[ki] = fuel_capacity
+                robot_fuel[ki] = l
 
     return robot_paths
 
 
-def generate_robot_paths_redundancy(n_a, k, rp, robot_paths, fuel_capacity):
+def generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l):
     last_node = [(0, 0) for ki in range(k)]
     nodes_seen = []
     while n_a * n_a - len(nodes_covered) > 0:
@@ -231,7 +264,7 @@ def generate_robot_paths_redundancy(n_a, k, rp, robot_paths, fuel_capacity):
 
             # managing fuel levels
             if (0, 0) == last_node[ki]:
-                robot_fuel[ki] = fuel_capacity
+                robot_fuel[ki] = l
 
     return robot_paths, nodes_seen
 
@@ -261,8 +294,7 @@ def collision_resolver():
 """
 
 
-# visualizes robot paths
-def visualize_paths_brute_force(k, n_a, robot_paths, edge_length):
+def visualize_paths_brute_force(k, n_a, robot_paths):
     for ki in range(k):
         fig = pyplot.figure()
         fig.suptitle(f"Path for robot #{ki}")

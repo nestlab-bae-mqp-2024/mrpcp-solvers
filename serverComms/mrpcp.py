@@ -23,6 +23,17 @@ from serverComms.json_handlers import saveGraphPath
 
 
 def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_side, job_id):
+    """
+    This function solves the MRPCP using MILP (Mixed-Integer Linear Programming) and TSP (Travelling Salesman Problem) using 2-OPT and k-OPT algorithms.
+    :param robots:
+    :param interval:
+    :param targets:
+    :param rp:
+    :param l:
+    :param dist_per_side:
+    :param job_id:
+    :return: The optimized paths with 2-OPT and the world path
+    """
     k = robots  # Chose the number of robots
     # Chose recharging proportionality constant
     q_k = interval  # This means that each robot will need to charge for 10 minutes for every 100 minutes travelled
@@ -221,6 +232,12 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
         plt.show()
 
     def calculate_total_distance(path, cost_matrix):
+        """
+        Calculate the total distance of a path using the cost matrix
+        :param path:
+        :param cost_matrix:
+        :return: total_cost
+        """
         total_cost = 0
         for i in range(len(path) - 1):
             total_cost += cost_matrix[path[i], path[i + 1]]
@@ -405,10 +422,10 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
         cost_reduction = milp_cost - opt_cost
         print(f"Cost reduction for Robot (k-opt) {index + 1}: {cost_reduction:.2f}")
 
-    print("MILP solution completed...return paths to server endpoint /get_solution")
+    print("MILP solution completed...returning paths to server endpoint /solve")
     worldPath = convertToWorldPath(n_a, optimized_paths_2opt)
-    print("The optimized paths with 2-OPT is: ", optimized_paths_2opt)
-    print("The optimized paths converted to world path is: ", worldPath)
+    print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
+    print("The optimized paths converted to world path are: ", worldPath)
     print("Returning solution to be sent to a json file...")
     return optimized_paths_2opt, worldPath
 

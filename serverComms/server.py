@@ -11,6 +11,8 @@ Once the solver completes, it saves the result to a JSON file in the cache folde
 """
 import threading
 from flask import Flask, request, jsonify, json
+
+from serverComms import recalc_heuristic
 from serverComms.mrpcp import *
 from serverComms.heuristic import *
 import uuid
@@ -83,13 +85,12 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
             # Run MILP solver function with parameters
             print(
                 f"Running MILP solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m...")
-            edges, world = solve_milp_with_optimizations(int(k), float(q_k), int(n_a), int(rp), float(l), float(d),
+            edges, robot_world_path = solve_milp_with_optimizations(int(k), float(q_k), int(n_a), int(rp), float(l), float(d),
                                                          job_id)
             print(
                 f"MILP solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m.")
             # Convert edges to a node format
             robot_node_path = [[int(edge) for edge in path] for path in edges]
-            robot_world_path = world
 
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
@@ -102,13 +103,12 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
             # Run Heuristic solver function with parameters
             print(
                 f"Running Heuristic solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h...")
-            edges, world = solve_mrpcp_heuristic(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
+            edges, robot_world_path = solve_mrpcp_heuristic(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
             print(
                 f"Heuristic solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h.")
 
             # Convert edges to a node format
             robot_node_path = [[int(edge) for edge in path] for path in edges]
-            robot_world_path = world
 
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
@@ -134,8 +134,29 @@ def recalc_endpoint():
     curr_robots_pos = json.loads(curr_robots_pos)
     failed_robot_id = request.args.get('failed_robot_id')
 
+    robot_node_path, robot_world_path = recalc_heuristic.recalcRobotPaths(job_id, curr_robots_pos, failed_robot_id)
+
+    k, q_k, n_a, rp, l, d, mode = getParamsFromJobId(job_id)
+
+    result_data = {'job_id': job_id,
+                   'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
+                   'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
+                   'status': 'completed'}
+
+    json_handlers.saveResultsToCache(job_id, result_data, 'recalculation_result.json')  # Save the results to the cache
+
     # Run the function to recalculate the paths based on the input parameters
     return recalculate_paths(job_id, curr_robots_pos, failed_robot_id)  # Return the json result of the recalculation
+
+def getParamsFromJobId(job_id):
+    """
+    Function to return all the MRPCP and Heuristic parameters based on the job id
+    It takes the job id and splits the id into the parameters
+    :param job_id:
+    :return:
+    """
+    k, q_k, n_a, rp, l, d, mode = job_id.split('_')
+    return k, q_k, n_a, rp, l, d, mode
 
 
 if __name__ == '__main__':
