@@ -12,12 +12,14 @@ from matplotlib import pyplot as plt
 from serverComms.json_handlers import saveResultsToCache
 from serverComms.mrpcp import saveGraphPath, convertToWorldPath
 
-"""
-This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
-"""
 
+def recalculate_paths(job_id, curr_robots_pos, failed_robot_id):
+    """
+    This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
+    """
+    # Convert the current robot positions back to an integer array
+    curr_robots_pos = [int(pos) for pos in curr_robots_pos]
 
-def recalculate_paths(job_id, curr_robots_pos, failed_robot):
     # Define the cache folder path relative to the current directory
     cache_folder_path = os.path.join(os.getcwd(), 'cache')
 
@@ -56,8 +58,13 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot):
 
     # Example new robot paths if the robots just need to finish where they left off
     # [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7, 16], [15, 16], [11, 16]]
+    print("Previous robot paths:", previous_robot_node_path)
+    print("Current robot positions:", curr_robots_pos)
 
-    new_robot_paths = recalcRobotPaths(previous_robot_node_path, ex_robot_positions, int(rp), int(n_a), ex_failed_robot_id)
+    # Convert the current (x,y) world positions to node positions. For the failed robot, round down to the nearest node position. For others, just do normal calculation.
+
+    new_robot_paths = recalcRobotPaths(previous_robot_node_path, curr_robots_pos, int(rp), int(n_a),
+                                       int(failed_robot_id))
     print("New robot paths:", new_robot_paths)
     # visualize the new paths and save the graph to the cache
     visualize_recalculated_paths(new_robot_paths, int(k), int(n_a), saveGraphPath(job_id, 'recalculated_paths'))
@@ -69,18 +76,16 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot):
     return result_data  # Return the content of the JSON file
 
 
-"""
-This function takes in the previous_node_path and the current_robot_positions and recalculates the paths based on the new positions.
-The robots start where they currently are. The failed robot starts back at the depot. All the robots recalculate their paths based on the new positions
-and the failed robot's new position. They need even frequency coverage to match the redundancy parameter.
-"""
-
-
 def recalcRobotPaths(previous_node_path, current_robot_positions, rp, n_a, failed_robot_id):
+    """
+    This function takes in the previous_node_path and the current_robot_positions and recalculates the paths based on the new positions.
+    The robots start where they currently are. The failed robot starts back at the depot. All the robots recalculate their paths based on the new positions
+    and the failed robot's new position. They need even frequency coverage to match the redundancy parameter.
+    """
     new_node_paths = []
 
     # Determine the depot node
-    depot_node = n_a**2  # The depot node is the last node in the grid
+    depot_node = n_a ** 2  # The depot node is the last node in the grid
 
     # Recalculate paths for all robots
     for robot_id, path in enumerate(previous_node_path):
@@ -103,6 +108,7 @@ def recalcRobotPaths(previous_node_path, current_robot_positions, rp, n_a, faile
     print(new_node_paths)
     return new_node_paths
 
+
 def getIndexOf(path, position):
     try:
         return path.index(position)
@@ -116,12 +122,10 @@ def getIndexOf(path, position):
 # Example new robot paths if the robots just need to finish where they left off
 # [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7], [15], [11]]
 
-"""
-This function calculates the visit counts for each node based on the current robot positions and the previous paths.
-"""
-
-
 def calculate_visit_counts(current_robot_positions, robot_previous_paths):
+    """
+    This function calculates the visit counts for each node based on the current robot positions and the previous paths.
+    """
     # Find the largest node number
     max_node = max(max(path) for path in robot_previous_paths)
 
