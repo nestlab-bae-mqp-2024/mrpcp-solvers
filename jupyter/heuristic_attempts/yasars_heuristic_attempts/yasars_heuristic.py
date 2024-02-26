@@ -162,19 +162,15 @@ def yasars_heuristic(num_of_robots: int,
     optimized_node_paths, optimized_node_path_costs, maxSum = divideArrayByP(tsp_costs, k, countRobotPartitions, force_p_equals=True)
     # for i, optimized_node_path in enumerate(optimized_node_paths):
     #     print(f"[{i}] {len(optimized_node_path)=} cost=({optimized_node_path_costs[i]})")
-    print(f"Step 5 took {time.time() - start} seconds.")
-
     visualize_paths(optimized_node_paths, nodes, node_indices, target_indices, depot_indices, cost, mode="faster")
+
     optimized_world_paths = []
-    for ki in range(k):
-        print(f"--- {ki=} ---")
+    for ki in range(num_of_robots):
         robot_world_path = []
         for i, subtour in enumerate(optimized_node_paths[ki]):
-            print(f"\t{i=} {subtour=}")
-            print(f"\t{i=} {nodes[subtour].tolist()=}")
             robot_world_path.append(nodes[subtour].tolist())
-
         optimized_world_paths.append(robot_world_path)
+    print(f"Step 5 took {time.time() - start} seconds.")
 
     return optimized_node_paths, optimized_world_paths
 
@@ -270,9 +266,18 @@ def divideArrayByP(array, maxp, countf, low=None, high=None, force_p_equals=Fals
 if __name__ == "__main__":
     num_of_robots = 10
     num_of_targets_per_side = 10
-    dist_per_side = 10.
+    dist_per_side = 3.
     redundancy_parameter = 3
     fuel_capacity_ratio = 1.5
 
-    yasars_heuristic(num_of_robots, num_of_targets_per_side, dist_per_side, redundancy_parameter, fuel_capacity_ratio)
+    optimized_node_paths, optimized_world_paths = yasars_heuristic(num_of_robots,
+                                                                   num_of_targets_per_side,
+                                                                   dist_per_side,
+                                                                   redundancy_parameter,
+                                                                   fuel_capacity_ratio)
 
+    for ki in range(num_of_robots):
+        print(f"--- {ki=} ---")
+        for i in range(len(optimized_node_paths[ki])):
+            print(f"\t{i=} {optimized_node_paths[ki][i]=}")
+            print(f"\t\t{i=} {optimized_world_paths[ki][i]=}")
