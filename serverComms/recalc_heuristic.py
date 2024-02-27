@@ -32,7 +32,7 @@ def run_heuristic_solver(k, q_k, n_a, rp, l, d, job_id):
     # robot fuel is a list storing each robot's fuel at the present moment
     robot_fuel = [l for ki in range(k)]
 
-    robot_paths = generate_robot_paths_redundancy(n_a, k, rp, l)
+    robot_paths = generate_robot_paths_redundancy(n_a, k, rp, robot_fuel, l)
 
     visualize_paths_brute_force(k, n_a, robot_paths, d)
 
@@ -201,37 +201,6 @@ def find_max(n_a, k):
     return max
 
 
-def generate_robot_paths(n_a, k, robot_paths, robot_fuel, l):
-    last_node = [(0, 0) for ki in range(k)]
-
-    while n_a * n_a - len(nodes_covered) > 0:
-        for ki in range(0, k):
-            goal = (0, 0)
-            while goal in nodes_covered and math.dist(goal, (0, 0)) < robot_fuel[ki] and len(
-                    nodes_covered) < n_a * n_a:  # if goal is already covered, find a different one
-                nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
-                goal = random.choice(nodes_uncovered)
-
-            path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal)
-
-            robot_paths[ki] = robot_paths[ki] + path
-            nodes_covered.update(path)
-
-            robot_fuel[ki] = robot_fuel[ki] - distance_travelled
-
-            last_node[ki] = robot_paths[ki][len(robot_paths[ki]) - 1]
-
-            if robot_failed == True:
-                # print("ROBOT", ki, "FAILED")
-                last_node[ki] = (0, 0)
-
-            # managing fuel levels
-            if (0, 0) == last_node[ki]:
-                robot_fuel[ki] = l
-
-    return robot_paths
-
-
 def generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l):
     last_node = [(0, 0) for ki in range(k)]
     nodes_seen = []
@@ -266,7 +235,7 @@ def generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l):
             if (0, 0) == last_node[ki]:
                 robot_fuel[ki] = l
 
-    return robot_paths, nodes_seen
+    return robot_paths
 
 
 """

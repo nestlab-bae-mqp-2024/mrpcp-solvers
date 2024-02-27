@@ -4,16 +4,37 @@ import itertools
 import numpy as np
 import random
 
+import cv2
+
 from collections import Counter
 
-from matplotlib import pyplot, colors, animation
+from matplotlib import pyplot, colors, animation, functools
+
+from PIL import Image
+import io
+
+import cProfile, pstats, io
+from pstats import SortKey
+pr = cProfile.Profile()
+pr.enable()
+
 #number of robots
-k = 3
+k = 4
 #nodes per axis
-nodes_per_axis = 7
+nodes_per_axis = 4
 #physical size in meters of the field. the area will then be defined to go from -edge_length/2 to edge_length/2
 edge_length = 2
 
+RP = 2
+
+#FAILURES
+#we really should write this as an interrupt or in a thread, but want to discuss before doing that
+#chance robot will fail as a value from 0 to 1
+alpha = 0.05
+#percent of robots that will fail as a value from 0 to 1
+robot_failure_percent = 0.5
+
+from PIL import Image
 #robot paths as a list of lists
 robot_paths = [[] for ki in range(k)]
 #distance the robot can travel without needing to return to depot
@@ -28,14 +49,6 @@ all_nodes = set()
 for x in range(0,nodes_per_axis):
     for y in range(0,nodes_per_axis):
         all_nodes.add((x,y))
-
-#FAILURES
-#we really should write this as an interrupt or in a thread, but want to discuss before doing that
-#chance robot will fail as a value from 0 to 1
-alpha = 0.05
-#percent of robots that will fail as a value from 0 to 1
-robot_failure_percent = 0.1
-
 
 #THE MAP IS ASSUMED TO BE STRUCTURED SUCH THAT (0,0) IS THE DEPOT AND THE LOWER LEFT HAND CORNER OF THE GRID
 
@@ -72,7 +85,8 @@ def a_star_search(start, goal):
         if current == (goal[0], goal[1]):
             break
 
-        for next in neighbors(current[1]):
+        neighbor_list = neighbors(current[1])
+        for next in neighbor_list:
             new_cost = cost_so_far[current[1]] + math.dist(current[1], next)
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
@@ -81,23 +95,30 @@ def a_star_search(start, goal):
                 frontier.put((priority, next))
                 came_from[next] = current[1]
 
-
     curr_val = goal
     final_path = []
     dist = 0
-    while curr_val != start and robot_failed != True:
+    while curr_val != start:
         final_path.append(curr_val)
 
         dist = dist + math.dist(curr_val, came_from[curr_val])
         curr_val = came_from[curr_val]
 
-        if random.random() <= alpha:
-            robot_failed = True
 
+    #while i in range(0,len(final_path)+1) and robot_failed != True:
+    #    if random.random() < alpha:
+    #        robot_failed = True
+    #        i += 1
     final_path.append(start)
     final_path.reverse()
 
-    return final_path, dist, robot_failed
+    i = len(final_path)
+    #generate random number
+    if random.random() < alpha:
+        i = random.randrange(1, len(final_path), 1)
+        robot_failed = True
+
+    return final_path[:i], dist, robot_failed
 
 
 
@@ -131,7 +152,7 @@ def find_max():
                     max[2] = [curr, (x,y)]
     return max
 
-
+"""
 def generate_robot_paths():
     last_node = [(0,0) for ki in range(k)]
 
@@ -139,8 +160,16 @@ def generate_robot_paths():
         for ki in range(0,k):
             goal = (0,0)
             while goal in nodes_covered and math.dist(goal, (0,0)) < robot_fuel[ki] and len(nodes_covered) < nodes_per_axis*nodes_per_axis: #if goal is already covered, find a different one
-                nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
-                goal = random.choice(nodes_uncovered)
+                #nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
+                #goal = random.choice(nodes_uncovered)
+
+                max_dist = 0
+                goal = (0,0)
+                for n in nodes_uncovered:
+                    if math.dist((0,0),n) > max_dist:
+                        max_dist = math.dist((0,0),n)
+                        goal = n
+
 
             path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal)
 
@@ -161,8 +190,8 @@ def generate_robot_paths():
 
 
     return robot_paths
+"""
 
-RP = 1 #every node visited once
 def generate_robot_paths_redundancy():
     last_node = [(0,0) for ki in range(k)]
     nodes_seen = []
@@ -171,7 +200,14 @@ def generate_robot_paths_redundancy():
             goal = (0,0)
             while goal in nodes_covered and math.dist(goal, (0,0)) < robot_fuel[ki] and len(nodes_covered) < nodes_per_axis*nodes_per_axis: #if goal is already covered, find a different one
                 nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
-                goal = random.choice(nodes_uncovered)
+
+                max_dist = 0
+                goal = (0,0)
+                for n in nodes_uncovered:
+                    if math.dist((0,0),n) > max_dist:
+                        max_dist = math.dist((0,0),n)
+                        goal = n
+
 
             path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal)
 
@@ -180,8 +216,9 @@ def generate_robot_paths_redundancy():
             [nodes_seen.append(p) for p in path]
 
             counted_nodes_seen = Counter(nodes_seen)
+
             for n in nodes_seen:
-                if counted_nodes_seen[n] > RP:
+                if counted_nodes_seen[n] >= RP:
                     nodes_covered.add(n)
 
             robot_fuel[ki] = robot_fuel[ki] - distance_travelled
@@ -189,7 +226,6 @@ def generate_robot_paths_redundancy():
             last_node[ki] = robot_paths[ki][len(robot_paths[ki])-1]
 
             if robot_failed == True:
-                #print("ROBOT", ki, "FAILED")
                 last_node[ki] = (0,0)
 
             #managing fuel levels
@@ -223,6 +259,9 @@ def collision_resolver():
                     if vectors[k][1] == vectors[k2][0] and vectors[k][0] == vectors[k2][1]: #going to each other's nodes
 """
 
+
+##VISUALIZATION
+
 #visualizes robot paths
 def visualize_paths_brute_force():
     for ki in range(k):
@@ -240,18 +279,24 @@ def visualize_paths_brute_force():
 
         pyplot.grid()
 
-        pyplot.savefig("data/"+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) +"e_"+str(ki)+".png")
+        pyplot.savefig("data/"+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) +"e_"+str(ki)+ "rp" + str(RP) + "failure"+ str(alpha) + "_" + str(robot_failure_percent) + ".png")
 
-
+print("generating paths")
 generate_robot_paths_redundancy()
 
+print("visualizing paths")
 visualize_paths_brute_force()
 
-pyplot.ion()
+print("creating videos of heatmaps")
+#pyplot.ion()
 
+#creates initial heatmap which just counts every time a node is visited over the period of the simulation
 heatmap = np.zeros((nodes_per_axis, nodes_per_axis))
 figure = pyplot.figure(figsize=(5,5))
 plt = pyplot.imshow(heatmap[:,:], norm=colors.Normalize(0,25))
+ax = pyplot.subplot()
+
+txt = ax.text(-1, -1,"frame: ", fontsize=12)
 
 pyplot.colorbar().set_ticks([0,25])
 
@@ -262,14 +307,92 @@ def animate(z):
             heatmap[x][y] = heatmap[x][y] + 1
 
     plt = pyplot.imshow(heatmap[:,:], norm=colors.Normalize(0,25))
+    txt.set_text("frame: " + str(z))
 
-    return plt
+    with io.BytesIO() as buffer:
+        pyplot.savefig(buffer, format = "png")
+        buffer.seek(0)
+        image = Image.open(buffer)
+        ar = np.asarray(image)
+
+    return ar
 
 number_of_steps = max(len(robot_paths[ki]) for ki in range(k))
-ani = animation.FuncAnimation(figure, animate, interval=number_of_steps, frames=number_of_steps)
-ani.save("data/"+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) +".gif", fps = 10)
+#ani = animation.FuncAnimation(figure, animate, interval=number_of_steps, frames=number_of_steps)
+#ani.save("data/"+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) + "e" + str(RP) + "rp" + str(alpha) + "_" + str(robot_failure_percent) + "failure"+".gif", fps = 10)
+
+#im = cv2.imread('text.png')
+#print(im.shape[1])
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+video = cv2.VideoWriter('test.mp4', fourcc, 10, (500, 500))
+
+for z in range(0,number_of_steps):
+    img = animate(z)
+    img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)
+
+    video.write(img)
 
 print(heatmap)
+
+#COUNTDOWN HEATMAP
+#creates secondary heatmap that shows each node on a timer
+countdown_heatmap = np.zeros((nodes_per_axis, nodes_per_axis))
+step_requirement = 7 #trying to maintain at least 1 visit per step_requirement steps
+
+countdown_figure = pyplot.figure(figsize=(5,5))
+countdown_ax = pyplot.subplot()
+countdown_plt = pyplot.imshow(countdown_heatmap[:,:], norm=colors.Normalize(0,25))
+
+pyplot.colorbar().set_ticks([0,25])
+countdown_txt = countdown_ax.text(-1, -1,"0", fontsize=12)
+
+def animate_countdown(z):
+    for a in range(0, nodes_per_axis):
+        for b in range(0, nodes_per_axis):
+            countdown_heatmap[a][b] = max(0, countdown_heatmap[a][b] - 1)
+    #print(np.subtract(heatmap,1))
+
+    for ki in range(k):
+        if z < len(robot_paths[ki]):
+            (x,y) = robot_paths[ki][z]
+            countdown_heatmap[x][y] = step_requirement
+
+    countdown_txt.set_text("frame: " + str(z) + ", node coverage: " + str(round(100*len(countdown_heatmap[countdown_heatmap > 0])/(nodes_per_axis*nodes_per_axis),2)) + "%")
+    countdown_plt = pyplot.imshow(countdown_heatmap[:,:], norm=colors.Normalize(0,25))
+
+    with io.BytesIO() as buffer:
+        pyplot.savefig(buffer, format = "png")
+        buffer.seek(0)
+        image = Image.open(buffer)
+        ar = np.asarray(image)
+
+    return ar
+
+#print(im.shape[1])
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+video = cv2.VideoWriter('countdown.mp4', fourcc, 10, (500, 500))
+
+for z in range(0,number_of_steps):
+    img = animate_countdown(z)
+    img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)
+
+    video.write(img)
+
+cv2.destroyAllWindows()
+video.release()
+
+
+# display image with opencv or any operation you like
+
+#ani = animation.FuncAnimation(countdown_figure, animate_countdown, interval=number_of_steps, frames=number_of_steps)
+#ani.save("data/"+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) + "e" + str(RP) + "rp" + str(alpha) + "_" + str(robot_failure_percent) + "failure_countdown.gif", fps = 10)
+
+pr.disable()
+s = io.StringIO()
+sortby = SortKey.TIME
+ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+ps.print_stats()
+print(s.getvalue())
 
 
 #sending to ArGoS
