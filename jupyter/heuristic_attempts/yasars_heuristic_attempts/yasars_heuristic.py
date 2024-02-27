@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 from scipy.spatial import distance
 import numpy as np
 from utils.tsp_solver import k_opt
-from utils.visualize import visualize_paths, visualize_subtours
+from utils.visualize import visualize_paths, visualize_subtours, visualize_visitation_frequency
 from concurrent.futures import ProcessPoolExecutor
 import time
 import os
@@ -97,28 +97,28 @@ def yasars_heuristic(num_of_robots: int,
 
     # Step 3: Further optimize the subtours by running tsp on them
     start = time.time()
-    tsp_subtours_prev, tsp_costs_prev = tsp_subtours, tsp_costs
-    tsp_subtours = []
-    tsp_costs = []
-    with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
-        futures = []
-        for heur_subtour in tsp_subtours_prev:
-            futures.append(executor.submit(k_opt, *[heur_subtour, cost, 2]))
-
-        uncompleted_jobs = list(range(len(futures)))
-        while len(uncompleted_jobs) != 0:
-            new_uncompleted_jobs = uncompleted_jobs
-            for future_i in uncompleted_jobs:
-                if futures[future_i].done():
-                    best_subtour, c = futures[future_i].result()
-                    print(
-                        f"\t[subtour {future_i + 1}/{len(futures)}] took {time.time() - start:.3f} seconds and improved {(1 - c / tsp_costs_prev[future_i]) * 100:.3f}%.")
-                    tsp_subtours.append(best_subtour)
-                    tsp_costs.append(c)
-                    new_uncompleted_jobs.remove(future_i)
-                else:
-                    time.sleep(0.1)
-            uncompleted_jobs = new_uncompleted_jobs
+    # tsp_subtours_prev, tsp_costs_prev = tsp_subtours, tsp_costs
+    # tsp_subtours = []
+    # tsp_costs = []
+    # with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
+    #     futures = []
+    #     for heur_subtour in tsp_subtours_prev:
+    #         futures.append(executor.submit(k_opt, *[heur_subtour, cost, 2]))
+    #
+    #     uncompleted_jobs = list(range(len(futures)))
+    #     while len(uncompleted_jobs) != 0:
+    #         new_uncompleted_jobs = uncompleted_jobs
+    #         for future_i in uncompleted_jobs:
+    #             if futures[future_i].done():
+    #                 best_subtour, c = futures[future_i].result()
+    #                 print(
+    #                     f"\t[subtour {future_i + 1}/{len(futures)}] took {time.time() - start:.3f} seconds and improved {(1 - c / tsp_costs_prev[future_i]) * 100:.3f}%.")
+    #                 tsp_subtours.append(best_subtour)
+    #                 tsp_costs.append(c)
+    #                 new_uncompleted_jobs.remove(future_i)
+    #             else:
+    #                 time.sleep(0.1)
+    #         uncompleted_jobs = new_uncompleted_jobs
     tsp_indices = np.array(tsp_costs).argsort().tolist()
 
     # visualize_subtours(tsp_subtours, nodes, node_indices, target_indices, depot_indices, cost, mode="faster")
@@ -170,7 +170,10 @@ def yasars_heuristic(num_of_robots: int,
             robot_world_path.append(nodes[subtour].tolist())
         optimized_world_paths.append(robot_world_path)
     print(f"Step 5 took {time.time() - start} seconds.")
-    visualize_paths(optimized_node_paths, nodes, node_indices, target_indices, depot_indices, cost, mode="faster")
+    # visualize_paths(optimized_node_paths, nodes, node_indices, target_indices, depot_indices, cost, mode="faster")
+
+    visualize_visitation_frequency(optimized_node_paths, nodes)
+
 
     return optimized_node_paths, optimized_world_paths
 
@@ -264,10 +267,10 @@ def divideArrayByP(array, maxp, countf, low=None, high=None, force_p_equals=Fals
 
 
 if __name__ == "__main__":
-    num_of_robots = 10
-    num_of_targets_per_side = 10
+    num_of_robots = 100
+    num_of_targets_per_side = 150
     dist_per_side = 3.
-    redundancy_parameter = 3
+    redundancy_parameter = 20
     fuel_capacity_ratio = 1.5
 
     optimized_node_paths, optimized_world_paths = yasars_heuristic(num_of_robots,

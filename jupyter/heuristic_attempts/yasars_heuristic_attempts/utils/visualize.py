@@ -172,3 +172,33 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
     elif mode == "faster":
         visualize_paths_faster(paths, nodes, node_indices, target_indices, depot_indices, cost)
 
+
+def visualize_visitation_frequency(paths, nodes):
+    all_nodes = []
+
+    for ki in range(len(paths)):
+        for path in paths[ki]:
+            for curr_node_i in range(1, len(path) - 2):
+                next_node_i = curr_node_i + 1
+                curr_node_pos = nodes[path[curr_node_i]]
+                next_node_pos = nodes[path[next_node_i]]
+                all_nodes.append(curr_node_pos)
+                all_nodes.append(next_node_pos)
+
+                delta_node_pos = (next_node_pos - curr_node_pos) / 10.
+                for i in range(1, 10):
+                    all_nodes.append(curr_node_pos + delta_node_pos * i)
+
+    all_nodes = np.array(all_nodes)
+    print(f"{all_nodes=}")
+    # node_visitation_freq = 1. / nodes_counter
+    # print(f"{nodes_counter=}")
+
+    heatmap, xedges, yedges = np.histogram2d(all_nodes[:, 0], all_nodes[:, 1], bins=int(nodes.shape[0] // 128))
+    extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+
+    plt.imshow(heatmap.T, extent=extent, origin='lower')
+    plt.show()
+
+
+
