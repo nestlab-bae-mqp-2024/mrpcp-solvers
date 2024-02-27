@@ -2,6 +2,7 @@ import datetime
 import numpy as np
 from matplotlib import pyplot as plt
 import itertools
+from tqdm import tqdm
 
 
 def visualize_paths_edges_brute_force(edges, nodes, node_indices, target_indices, depot_indices, cost):
@@ -88,7 +89,7 @@ def visualize_paths_faster(paths, nodes, node_indices, target_indices, depot_ind
     total_cost = 0
     hor_i = 0
     vert_i = 0
-    for robot_i, ki in enumerate(active_robots):
+    for robot_i, ki in tqdm(enumerate(active_robots)):
         # print(f"Robot #{ki}\n-------")
         # print(f"Staring position: {B_k[ki]} -> {[nodes[B_k[ki, 0], B_k[ki, 1], 0], nodes[B_k[ki, 0], B_k[ki, 1], 1]]}")
         if subplot_per_hor_axis == 1 and subplot_per_vert_axis == 1:
