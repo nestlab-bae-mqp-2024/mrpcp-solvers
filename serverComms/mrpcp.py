@@ -5,15 +5,9 @@ Date: 2/17/2024
 This program defines the methods relating to solving the MRPCP (Multi-Robot Path Coverage Problem) using MILP (Mixed-Integer Linear Programming)
 and TSP (Travelling Salesman Problem) using 2-OPT and k-OPT algorithms.
 """
-import os
-import time
 
-import requests
 from matplotlib import pyplot as plt
 import numpy as np
-from socket import *
-import threading
-from queue import Queue
 import itertools
 import gurobipy as gp
 from gurobipy import GRB
@@ -41,33 +35,30 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     n_a = int(targets)
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     rp = rp
+    d = dist_per_side  # Distance per side of the square
 
-    # nodes = targets + depots
     # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
-    targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
+    # targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
+    targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
     targets = targets.reshape(targets.shape + (1,))
     targets = np.concatenate((targets[0], targets[1]), axis=2)
     targets = targets.reshape((n_a * n_a, 2))
     target_indices = range(len(targets))
-    print(f"{targets.shape=}")
+    # print(f"{targets.shape=}")
 
-    # Specify depots
-    # One depot node in the corner
+    # # Specify depots
+    # # One depot node in the corner
     depots = np.array([
-        [-1., -1.],
+        [-d, -d],
     ])
 
     depots = np.concatenate((depots, depots))
     depot_indices = range(len(targets), len(targets) + len(depots))
 
     nodes = np.concatenate((targets, depots))
-    # print(f"{nodes.shape=}")
     node_indices = range(len(targets) + len(depots))
 
-    # print(f"{list(target_indices)=}\n{list(depot_indices)=}\n{list(node_indices)=}")
-
     # Chose starting depot node
-    # Make all robots start from same depot
     B_k = np.array([depot_indices[0]] * k)
 
     # Graphical sanity check
@@ -82,11 +73,9 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
 
     plt.show()
 
-    # Calculate c_{i,j} (c[i,j] is the cost (including recharging, q_k) from nodes i to j)
     cost = np.zeros((len(node_indices), len(node_indices)))
     for i, j in itertools.product(node_indices, node_indices):
         cost[i, j] = np.sqrt((nodes[i, 0] - nodes[j, 0]) ** 2 + (nodes[i, 1] - nodes[j, 1]) ** 2)
-        # print(f"({i},{j}):({nodes[i,0]},{nodes[i,1]},{nodes[j,0]},{nodes[j,1]}): {cost[i,j]}")
     print(f"{cost.shape=}")
 
     m = gp.Model()
@@ -97,16 +86,12 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
 
     # B. Degree Constraints (6), (7), (8), (9), (10)
     # (6) and (7) Only one robot arrives to and leaves from a target (B_k is a depot, so we don't need to remove it from targets)
-    # _ = m.addConstrs(x[:,i,:].sum() == 1 for i in target_indices)
-    # _ = m.addConstrs(x[:,:,i].sum() == 1 for i in target_indices)
     _ = m.addConstrs(x[:, i, :].sum() == rp for i in target_indices)
     _ = m.addConstrs(x[:, :, i].sum() == rp for i in target_indices)
 
     for ki in range(k):
         # (8) and (9) Begin and end at same position B_k
-        # _ = m.addConstr(x[ki,B_k[ki,0],B_k[ki,1],:,:].sum() >= 1)
         _ = m.addConstr(x[ki, B_k[ki], :].sum() <= 1)
-        # _ = m.addConstr(x[ki,:,:,B_k[ki,0],B_k[ki,1]].sum() >= 1)
         _ = m.addConstr(x[ki, :, B_k[ki]].sum() <= 1)
 
         # (10) Every robot that visits a target leaves the target
@@ -190,8 +175,6 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
         hor_i = 0
         vert_i = 0
         for robot_i, ki in enumerate(active_robots):
-            # print(f"Robot #{ki}\n-------")
-            # print(f"Staring position: {B_k[ki]} -> {[nodes[B_k[ki, 0], B_k[ki, 1], 0], nodes[B_k[ki, 0], B_k[ki, 1], 1]]}")
             if subplot_per_hor_axis == 1 and subplot_per_vert_axis == 1:
                 ax = axs
             elif subplot_per_vert_axis == 1:
@@ -228,7 +211,6 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
 
         fig.suptitle(
             f"Paths for all robots (# of active/available robots={len(active_robots)}/{k}, sum of costs={(cost * edges).sum():.3f})")
-        # fig.savefig(f"../../data/2015_mrpcp_k={k}_n={n}_{datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}.png")
         plt.show()
 
     def calculate_total_distance(path, cost_matrix):
