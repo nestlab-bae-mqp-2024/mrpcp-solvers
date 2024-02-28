@@ -12,14 +12,11 @@ Once the solver completes, it saves the result to a JSON file in the cache folde
 import threading
 from flask import Flask, request, jsonify, json
 
-from serverComms import recalc_heuristic
+from serverComms.recalculate import *
 from serverComms.mrpcp import *
 from serverComms.heuristic import *
-import uuid
-import requests
 import os
 import serverComms.json_handlers as json_handlers
-from serverComms.recalculate import recalculate_paths
 
 app = Flask(__name__)
 
@@ -105,6 +102,7 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
             print(
                 f"Running Heuristic solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h...")
             edges, robot_world_path = solve_mrpcp_heuristic(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)
+            # edges, robot_world_path = heuristic2.run_heuristic_solver(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)  # Run the other heuristic solver
             print(
                 f"Heuristic solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h.")
             robot_node_path = []
@@ -138,10 +136,9 @@ def recalc_endpoint():
     curr_robots_pos = request.args.get('curr_robots_pos')
     curr_robots_pos = json.loads(curr_robots_pos)
     failed_robot_id = request.args.get('failed_robot_id')
-
-    robot_node_path, robot_world_path = recalc_heuristic.recalcRobotPaths(job_id, curr_robots_pos, failed_robot_id)
-
     k, q_k, n_a, rp, l, d, mode = getParamsFromJobId(job_id)
+
+    robot_node_path, robot_world_path = recalculate_paths(job_id, curr_robots_pos, failed_robot_id)
 
     result_data = {'job_id': job_id,
                    'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
@@ -152,6 +149,7 @@ def recalc_endpoint():
 
     # Run the function to recalculate the paths based on the input parameters
     return recalculate_paths(job_id, curr_robots_pos, failed_robot_id)  # Return the json result of the recalculation
+
 
 def getParamsFromJobId(job_id):
     """
@@ -167,3 +165,7 @@ def getParamsFromJobId(job_id):
 if __name__ == '__main__':
     print("Waiting for a request...")  # Added waiting message
     app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+
+#%%
+
+#%%

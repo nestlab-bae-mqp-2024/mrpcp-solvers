@@ -6,7 +6,7 @@ import random
 
 from collections import Counter
 
-from matplotlib import pyplot, colors, animation
+from matplotlib import pyplot, colors, animation, pyplot as plt
 
 from serverComms.mrpcp import convertToWorldPath
 
@@ -116,9 +116,10 @@ def heuristic(node):
         return -10
 
 
-def a_star_search(start, goal):
+def a_star_search(start, goal, n_a):
     """
     https://www.redblobgames.com/pathfinding/a-star/implementation.html#python-astar
+    :param n_a:
     :param start:
     :param goal:
     :param alpha:
@@ -138,7 +139,7 @@ def a_star_search(start, goal):
         if current == (goal[0], goal[1]):
             break
 
-        for next in neighbors(current[1]):
+        for next in neighbors(current[1], n_a):
             new_cost = cost_so_far[current[1]] + math.dist(current[1], next)
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
@@ -150,19 +151,16 @@ def a_star_search(start, goal):
     curr_val = goal
     final_path = []
     dist = 0
-    while curr_val != start and robot_failed != True:
+    while curr_val != start:
         final_path.append(curr_val)
 
         dist = dist + math.dist(curr_val, came_from[curr_val])
         curr_val = came_from[curr_val]
 
-        if random.random() <= alpha:
-            robot_failed = True
-
     final_path.append(start)
     final_path.reverse()
 
-    return final_path, dist, robot_failed
+    return final_path, dist
 
 
 def calculate_costmap(n_a):
@@ -212,7 +210,7 @@ def generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l):
                 nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
                 goal = random.choice(nodes_uncovered)
 
-            path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal)
+            path, distance_travelled = a_star_search(last_node[ki], goal, n_a)
 
             robot_paths[ki] = robot_paths[ki] + path
 
@@ -227,9 +225,9 @@ def generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l):
 
             last_node[ki] = robot_paths[ki][len(robot_paths[ki]) - 1]
 
-            if robot_failed:
-                # print("ROBOT", ki, "FAILED")
-                last_node[ki] = (0, 0)
+            # if robot_failed:
+            #     # print("ROBOT", ki, "FAILED")
+            #     last_node[ki] = (0, 0)
 
             # managing fuel levels
             if (0, 0) == last_node[ki]:
@@ -238,32 +236,7 @@ def generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l):
     return robot_paths
 
 
-"""
-def collision_resolver():
-    for i in range(0, max(len(robot_paths[ki]) for ki in range(k))):
-        vectors = []
-        for ki in range(k):
-            if i < len(robot_paths[ki])-1:
-                #extract vector information
-                curr = robot_paths[ki][i]
-                next = robot_paths[ki][i+1]
-
-                vectors[ki] = (curr, next)
-
-        #compare vector results from each robot for each step
-        for k in range(0, len(vectors)):
-            for k2 in range(0, len(vectors)):
-                if k != k2: # want to compare every vector to every other vector without comparing any vector to itself
-                    if vectors[k][0] == vector[k2][0]: #starting node same
-                        print("something has gone extremely wrong! starting node of two robots is the same")
-                    if vectors[k][1] == vectors[k2][1]: #ending node same
-                        #pick one, find nearest open node and send there instead
-
-                    if vectors[k][1] == vectors[k2][0] and vectors[k][0] == vectors[k2][1]: #going to each other's nodes
-"""
-
-
-def visualize_paths_brute_force(k, n_a, robot_paths):
+def visualize_paths_brute_force(k, n_a, robot_paths, save_path=None):
     for ki in range(k):
         fig = pyplot.figure()
         fig.suptitle(f"Path for robot #{ki}")
@@ -278,8 +251,10 @@ def visualize_paths_brute_force(k, n_a, robot_paths):
             past_node = (node[0], node[1])
 
         pyplot.grid()
-
-        # pyplot.savefig("data/" + str(n_a) + "n" + str(k) + "r" + str(edge_length) + "e_" + str(ki) + ".png")
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
 
 
 def animate(z, n_a, k, robot_paths):
