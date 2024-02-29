@@ -73,7 +73,7 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot_id):
 
     result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
                    'robot_node_path': new_robot_paths,
-                   'robot_world_path': convertToWorldPath(int(n_a), new_robot_paths)}
+                   'robot_world_path': convertToWorldPath(int(n_a), d, new_robot_paths)}
     saveResultsToCache(job_id, result_data, 'recalculated_paths.json')
     return result_data  # Return the content of the JSON file
 
@@ -135,7 +135,7 @@ def recalcRobotPaths2(previous_node_path, current_robot_positions, rp, n_a, l, d
     # visualize_paths_brute_force(k, n_a, new_robot_paths)
 
     print("Heuristic recalculation completed...returning paths to server endpoint /solve")
-    worldPath = convertToWorldPath(n_a, new_robot_paths)
+    worldPath = convertToWorldPath(n_a, d, new_robot_paths)
     print("The optimized paths are: ", new_robot_paths)
     print("The optimized paths converted to world path are: ", worldPath)
     print("Returning solution to be sent to a json file...")

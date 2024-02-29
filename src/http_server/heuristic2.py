@@ -36,7 +36,7 @@ def run_heuristic_solver(k, q_k, n_a, rp, l, d, job_id):
     visualize_paths_brute_force(k, n_a, robot_paths, d)
 
     print("Heuristic solution completed...returning paths to server endpoint /solve")
-    worldPath = convertToWorldPath(n_a, robot_paths)
+    worldPath = convertToWorldPath(n_a, d, robot_paths)
     print("The optimized paths are: ", robot_paths)
     print("The optimized paths converted to world path are: ", worldPath)
     print("Returning solution to be sent to a json file...")
@@ -68,7 +68,7 @@ def recalcRobotPaths(previous_node_path, current_robot_positions, rp, n_a, l, d)
     visualize_paths_brute_force(k, n_a, new_robot_paths)
 
     print("Heuristic recalculation completed...returning paths to server endpoint /solve")
-    worldPath = convertToWorldPath(n_a, new_robot_paths)
+    worldPath = convertToWorldPath(n_a, d, new_robot_paths)
     print("The optimized paths are: ", new_robot_paths)
     print("The optimized paths converted to world path are: ", worldPath)
     print("Returning solution to be sent to a json file...")

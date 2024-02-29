@@ -11,8 +11,11 @@ import numpy as np
 import itertools
 import gurobipy as gp
 from gurobipy import GRB
+from scipy.spatial import distance
 import os
+import time
 
+from src.heuristic_attempts.yasars_heuristic_attempts.yasars_heuristic import construct_map
 from src.http_server.json_handlers import saveGraphPath
 
 
@@ -34,31 +37,32 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     # Chose the number of targets in an axis
     n_a = int(targets)
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
-    rp = rp
+    rp = min(rp, k)
     d = dist_per_side  # Distance per side of the square
 
+    # # 1. Create map and get node indices
+    # nodes, node_indices, target_indices, depot_indices = construct_map(n_a, d)
+    #
+    # # 2. Calculate cost between each node
+    # cost = distance.cdist(nodes, nodes, 'euclidean')
+
     # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
-    # targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
     targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
+    # targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
     targets = targets.reshape(targets.shape + (1,))
     targets = np.concatenate((targets[0], targets[1]), axis=2)
     targets = targets.reshape((n_a * n_a, 2))
     target_indices = range(len(targets))
-    # print(f"{targets.shape=}")
-
-    # # Specify depots
-    # # One depot node in the corner
+    # depots = np.array([
+    #     [-1., -1.],
+    # ])
     depots = np.array([
-        [-d, -d],
-    ])
-
+        [-1., -1.],
+    ]) * d
     depots = np.concatenate((depots, depots))
     depot_indices = range(len(targets), len(targets) + len(depots))
-
     nodes = np.concatenate((targets, depots))
     node_indices = range(len(targets) + len(depots))
-
-    # Chose starting depot node
     B_k = np.array([depot_indices[0]] * k)
 
     # Graphical sanity check
@@ -73,9 +77,11 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
 
     plt.show()
 
+    # Calculate c_{i,j} (c[i,j] is the cost (including recharging, q_k) from nodes i to j)
     cost = np.zeros((len(node_indices), len(node_indices)))
     for i, j in itertools.product(node_indices, node_indices):
         cost[i, j] = np.sqrt((nodes[i, 0] - nodes[j, 0]) ** 2 + (nodes[i, 1] - nodes[j, 1]) ** 2)
+        # print(f"({i},{j}):({nodes[i,0]},{nodes[i,1]},{nodes[j,0]},{nodes[j,1]}): {cost[i,j]}")
     print(f"{cost.shape=}")
 
     m = gp.Model()
@@ -351,14 +357,14 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
         def solve(self):
             self.model.optimize(MILPSolver.cb)
 
-    num_threads_available = os.cpu_count() # Get the number of available CPU threads
+    num_threads_available = os.cpu_count()  # Get the number of available CPU threads
 
     # Print the number of available CPU threads
     print(f"Number of available CPU threads: {num_threads_available}")
 
     num_threads = 15  # Adjust the number of threads as needed
 
-    solver = MILPSolver(m, num_threads) # Create an instance of your MILP solver with multi-threading
+    solver = MILPSolver(m, num_threads)  # Create an instance of your MILP solver with multi-threading
 
     import gurobipy as grb
 
@@ -405,7 +411,7 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
         print(f"Cost reduction for Robot (k-opt) {index + 1}: {cost_reduction:.2f}")
 
     print("MILP solution completed...returning paths to server endpoint /solve")
-    worldPath = convertToWorldPath(n_a, optimized_paths_2opt)
+    worldPath = convertToWorldPath(n_a, d, optimized_paths_2opt)
     print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
     print("The optimized paths converted to world path are: ", worldPath)
     print("Returning solution to be sent to a json file...")
@@ -465,7 +471,7 @@ def visualize_individual_paths(paths, nodes, targets, depots, b_k, costs, save_p
         plt.show()
 
 
-def convertToWorldPath(n_a, robot_node_path):
+def convertToWorldPath(n_a, d, robot_node_path):
     """
     This function takes in the node paths and should return X and Y coordinates for the robots to follow in ArgOS
     Example:
@@ -478,7 +484,7 @@ def convertToWorldPath(n_a, robot_node_path):
             [[-1, -1], [-0.5, -0.5], [-1, -1]]
         ]
     """
-    targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
+    targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
     targets = targets.reshape(targets.shape + (1,))
     targets = np.concatenate((targets[0], targets[1]), axis=2)
     targets = targets.reshape((n_a * n_a, 2))
@@ -488,7 +494,7 @@ def convertToWorldPath(n_a, robot_node_path):
     # One depot node in the corner
     depots = np.array([
         [-1., -1.],
-    ])
+    ]) * d
 
     depots = np.concatenate((depots, depots))
     nodes = np.concatenate((targets, depots))

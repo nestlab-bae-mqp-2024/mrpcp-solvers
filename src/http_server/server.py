@@ -12,9 +12,10 @@ Once the solver completes, it saves the result to a JSON file in the cache folde
 import threading
 from flask import Flask, request, jsonify
 
+from src.heuristic_attempts.yasars_heuristic_attempts.yasars_heuristic import yasars_heuristic
+from src.http_server import heuristic2
 from src.http_server.recalculate import *
 from src.http_server.mrpcp import *
-from src.http_server.heuristic import *
 import os
 import src.http_server.json_handlers as json_handlers
 
@@ -97,11 +98,11 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
                            'status': 'completed'}
             json_handlers.saveResultsToCache(job_id, result_data, 'result.json')  # Save the results to the cache
 
-        elif mode == 'h':
+        elif mode == 'h1':
             # Run Heuristic solver function with parameters
             print(
                 f"Running Heuristic solver function with parameters: {k=}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h, {job_id=}...")
-            robot_node_path_w_subtours, robot_world_path = solve_mrpcp_heuristic(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), saveGraphPath(job_id, "visualization.png"))
+            robot_node_path_w_subtours, robot_world_path = yasars_heuristic(int(k), int(n_a), float(d), int(rp), float(l), saveGraphPath(job_id, "visualization.png"))
             # edges, robot_world_path = heuristic2.run_heuristic_solver(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)  # Run the other heuristic solver
             print(
                 f"Heuristic solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h.")
@@ -112,17 +113,30 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
                     for node in subtour:
                         robot_path.append(int(node))
                 robot_node_path.append(robot_path)
-                # if isinstance(path[0], list):
-                #
-                #     robot_node_path.append([int(edge) for sub_path in path for edge in sub_path])
-                # else:
-                #     robot_node_path.append([int(edge) for edge in path])
             print("Robot node path", robot_node_path)
             print("Robot world path", robot_world_path)
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
                            'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
                            'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
+                           'status': 'completed'}
+            json_handlers.saveResultsToCache(job_id, result_data, 'result.json')
+
+            return result_data  # Return the content of the JSON file
+
+        elif mode == 'h2':
+            # Run Heuristic solver function with parameters
+            print(
+                f"Running Heuristic solver function with parameters: {k=}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h, {job_id=}...")
+            edges, robot_world_path = heuristic2.run_heuristic_solver(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)  # Run the other heuristic solver
+            print(
+                f"Heuristic solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h.")
+            print("Robot node path", edges)
+            print("Robot world path", robot_world_path)
+            # Save result in a JSON file within the cache folder
+            result_data = {'job_id': job_id,
+                           'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
+                           'robot_node_path': edges, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             json_handlers.saveResultsToCache(job_id, result_data, 'result.json')
 
