@@ -38,7 +38,7 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     n_a = int(targets)
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     rp = min(rp, k)
-    d = dist_per_side  # Distance per side of the square
+    d = dist_per_side / 2.  # Distance per side of the square
 
     # # 1. Create map and get node indices
     # nodes, node_indices, target_indices, depot_indices = construct_map(n_a, d)
@@ -74,15 +74,10 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     # Label nodes with node IDs and their positions
     for i, node in enumerate(nodes):
         plt.text(node[0], node[1], f'{i}', fontsize=8, ha='center')
-
     plt.show()
 
-    # Calculate c_{i,j} (c[i,j] is the cost (including recharging, q_k) from nodes i to j)
-    cost = np.zeros((len(node_indices), len(node_indices)))
-    for i, j in itertools.product(node_indices, node_indices):
-        cost[i, j] = np.sqrt((nodes[i, 0] - nodes[j, 0]) ** 2 + (nodes[i, 1] - nodes[j, 1]) ** 2)
-        # print(f"({i},{j}):({nodes[i,0]},{nodes[i,1]},{nodes[j,0]},{nodes[j,1]}): {cost[i,j]}")
-    print(f"{cost.shape=}")
+    # 2. Calculate cost between each node
+    cost = distance.cdist(nodes, nodes, 'euclidean')
 
     m = gp.Model()
 
@@ -133,8 +128,7 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
         _ = m.addConstrs(p[ki, i, j] <= len(target_indices) * x[ki, i, j] for i in node_indices for j in node_indices)
 
     # # D. Fuel Constraints (15), (16), (17), (18), (19), (20)
-    max_fuel_cost_to_node = dist_per_side * np.sqrt(
-        2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
+    max_fuel_cost_to_node = dist_per_side * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     if l < 1:
         return "Fuel capacity must be at least 1"
     L = l * max_fuel_cost_to_node * 2  # Fuel capacity (1 unit of fuel = 1 unit of distance)
@@ -362,19 +356,17 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     # Print the number of available CPU threads
     print(f"Number of available CPU threads: {num_threads_available}")
 
-    num_threads = 15  # Adjust the number of threads as needed
+    solver = MILPSolver(m, num_threads_available-1)  # Create an instance of your MILP solver with multi-threading
 
-    solver = MILPSolver(m, num_threads)  # Create an instance of your MILP solver with multi-threading
-
-    import gurobipy as grb
+    # import gurobipy as grb
 
     # Set the number of threads for Gurobi
-    grb.setParam('Threads', num_threads)
+    # grb.setParam('Threads', num_threads_available-1)
     m._x = x
     # solver = MILPSolver(m)
     solver.solve()  # Optimize until the first optimal solution is found
 
-    milp_solution_x = np.array([x[ki].X for ki in range(k)]).reshape(k, len(node_indices), len(node_indices))
+    milp_solution_x = np.array([x[ki].x for ki in range(k)]).reshape(k, len(node_indices), len(node_indices))
     milp_paths, milp_costs = extract_and_calculate_milp_costs(milp_solution_x, B_k, k, len(node_indices), cost)
 
     # Apply 2-opt/3-opt algorithm to each path -> iteratively remove two/three edges and reconnect the two paths in a
