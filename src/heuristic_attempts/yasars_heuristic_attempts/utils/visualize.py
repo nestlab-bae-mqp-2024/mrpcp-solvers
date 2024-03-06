@@ -3,6 +3,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import itertools
 from tqdm import tqdm
+import math
 
 
 def visualize_paths_edges_brute_force(edges, nodes, node_indices, target_indices, depot_indices, cost, visualization_path=None):
@@ -186,19 +187,24 @@ def visualize_visitation_frequency(paths, nodes, visualization_path=None):
                 next_node_i = curr_node_i + 1
                 curr_node_pos = nodes[path[curr_node_i]]
                 next_node_pos = nodes[path[next_node_i]]
-                all_nodes.append(curr_node_pos)
-                all_nodes.append(next_node_pos)
 
-                delta_node_pos = (next_node_pos - curr_node_pos) / 10.
-                for i in range(1, 10):
-                    all_nodes.append(curr_node_pos + delta_node_pos * i)
+                step_size = 0.1
+                dist = ((curr_node_pos[0]-next_node_pos[0]) ** 2 + (curr_node_pos[1]-next_node_pos[1]) ** 2) ** 0.5
+                num_of_strides = np.ceil(dist / step_size).astype(int)
+                # print(f"{curr_node_pos[0]=} {next_node_pos[0]=} {num_of_strides=}")
+
+                for intermediate_node_pos in np.concatenate((np.linspace(curr_node_pos[0], next_node_pos[0], num_of_strides+1).reshape(-1, 1), np.linspace(curr_node_pos[1], next_node_pos[1], num_of_strides+1).reshape(-1, 1)), axis=1):
+                    # Skip for locations close to depot for better visualization.
+                    if np.isclose(intermediate_node_pos, nodes[path[0]], atol=step_size).all():
+                        continue
+                    all_nodes.append(intermediate_node_pos)
 
     all_nodes = np.array(all_nodes)
     # print(f"{all_nodes=}")
     # node_visitation_freq = 1. / nodes_counter
     # print(f"{nodes_counter=}")
 
-    heatmap, xedges, yedges = np.histogram2d(all_nodes[:, 0], all_nodes[:, 1], bins=50)
+    heatmap, xedges, yedges = np.histogram2d(all_nodes[:, 0], all_nodes[:, 1], bins=30)
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
 
     plt.imshow(heatmap.T, extent=extent, origin='lower')
