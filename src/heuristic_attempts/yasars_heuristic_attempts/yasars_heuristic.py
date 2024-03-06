@@ -26,6 +26,7 @@ def yasars_heuristic(num_of_robots: int,
     max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
+    print(f"{L_min=} {L=}")
 
     # 1. Create map and get node indices
     nodes, node_indices, target_indices, depot_indices = construct_map(n, d)
@@ -54,14 +55,13 @@ def yasars_heuristic(num_of_robots: int,
     # Step 2: Divide nodes to subtours s.t. cost <= L
     start = time.time()
     # https://takeuforward.org/arrays/split-array-largest-sum/
-    def countSubtourPartitions(a, maxSum):
+    def countSubtourPartitions(maxSum, maxp):
         # n = len(a)  # size of array
         partitions = 1
         partitions_array = [[depot_indices[0], depot_indices[0]]]
         partitions_cost = []
-        node_addition_cost = 0
-        subarraySum = 0
-        for i in sorted_indices:
+        max_partitions_cost = 0
+        for i, n_i in enumerate(sorted_indices):
             node_addition_index = 1
             node_addition_cost = np.inf
             subarraySum = 0
@@ -69,25 +69,36 @@ def yasars_heuristic(num_of_robots: int,
                 n_k = partitions_array[partitions - 1][j + 1]
                 edge_cost = cost[n_j, n_k]
                 subarraySum += edge_cost
-                new_edge_cost = cost[n_j, i] + cost[i, n_k]
+                new_edge_cost = cost[n_j, n_i] + cost[n_i, n_k]
                 if new_edge_cost - edge_cost < node_addition_cost:
                     node_addition_cost = new_edge_cost - edge_cost
                     node_addition_index = j + 1
 
             if subarraySum + node_addition_cost >= maxSum:
                 # if not, insert element to next subarray
-                partitions_cost.append(subarraySum)
                 partitions += 1
+                if partitions > maxp:
+                    # print(f"\tearly stopping...")
+                    return np.inf, None, None, np.inf
+
+                partitions_cost.append(subarraySum)
+                max_partitions_cost = max(max_partitions_cost, subarraySum)
                 node_addition_index = 1
                 partitions_array.append([depot_indices[0], depot_indices[0]])
-            partitions_array[partitions - 1].insert(node_addition_index, i)
+            partitions_array[partitions - 1].insert(node_addition_index, n_i)
             # print(f"{partitions_array[partitions-1]}")
 
         if len(partitions_array) != len(partitions_cost):
-            partitions_cost.append(subarraySum + node_addition_cost)
-        return partitions, partitions_array, partitions_cost
+            subarraySum = 0
+            for j, n_j in enumerate(partitions_array[partitions - 1][:-1]):
+                n_k = partitions_array[partitions - 1][j + 1]
+                subarraySum += cost[n_j, n_k]
+            partitions_cost.append(subarraySum)
+            max_partitions_cost = max(max_partitions_cost, subarraySum)
 
-    tsp_subtours, tsp_costs, maxSum = divideArrayByP(nodes_costs, k, countSubtourPartitions, low=L_min, high=L)
+        return partitions, partitions_array, partitions_cost, max_partitions_cost
+
+    tsp_subtours, tsp_costs, maxSum = divideArrayByP(k, countSubtourPartitions, low=L_min, high=L)
     print(f"Step 2: Found {len(tsp_subtours)} subtours.")
     # print(f"{L=}")
     # print(f"{len(tsp_subtours)=} {maxSum=}")
@@ -95,6 +106,8 @@ def yasars_heuristic(num_of_robots: int,
     # print(f"{tsp_upper_bound=}")
     # visualize_subtours(tsp_subtours, nodes, node_indices, target_indices, depot_indices, cost, mode="faster")
     print(f"Step 2 took {time.time() - start} seconds.")
+
+    # exit()
 
     # Step 3: Further optimize the subtours by running tsp on them
     start = time.time()
@@ -128,7 +141,7 @@ def yasars_heuristic(num_of_robots: int,
     # Step 4: Ensure rp
     start = time.time()
     num_of_subtours = len(tsp_subtours)
-    for i in range(num_of_subtours, num_of_subtours * rp):
+    for i in range(num_of_subtours, max(np.ceil(k / num_of_subtours), num_of_subtours * rp)):
         tsp_subtours.append(tsp_subtours[i % num_of_subtours])
         tsp_costs.append(tsp_costs[i % num_of_subtours])
         tsp_indices.append(i)
@@ -137,45 +150,53 @@ def yasars_heuristic(num_of_robots: int,
     # Step 5: Divide subtours between robots
     start = time.time()
 
-    def countRobotPartitions(a, maxSum):
+    def countRobotPartitions(maxSum, maxp):
         # n = len(a)  # size of array
         partitions = 1
         subarraySum = 0
         partitions_array = [[]]
         partitions_cost = []
+        max_partitions_cost = 0
         for i in tsp_indices:
-            if subarraySum + a[i] <= maxSum:
+            if subarraySum + tsp_costs[i] <= maxSum:
                 # insert element to current subarray
-                subarraySum += a[i]
+                subarraySum += tsp_costs[i]
             else:
                 # if not, insert element to next subarray
-                partitions_cost.append(subarraySum)
                 partitions += 1
-                subarraySum = a[i]
+                if partitions > maxp:
+                    # print(f"\tearly stopping...")
+                    return np.inf, None, None, np.inf
+
+                partitions_cost.append(subarraySum)
+                max_partitions_cost = max(max_partitions_cost, subarraySum)
+                subarraySum = tsp_costs[i]
                 partitions_array.append([])
             partitions_array[partitions - 1].append(tsp_subtours[i])
 
         if len(partitions_array) != len(partitions_cost):
             partitions_cost.append(subarraySum)
+            max_partitions_cost = max(max_partitions_cost, subarraySum)
 
-        return partitions, partitions_array, partitions_cost
+        return partitions, partitions_array, partitions_cost, max_partitions_cost
 
-    optimized_node_paths, optimized_node_path_costs, maxSum = divideArrayByP(tsp_costs, k, countRobotPartitions, force_p_equals=True)
-    # for i, optimized_node_path in enumerate(optimized_node_paths):
+    # TODO: A better estimate for high could be given to speed up binary search
+    opt_node_paths, opt_node_path_costs, maxSum = divideArrayByP(k, countRobotPartitions, low=max(tsp_costs), high=sum(tsp_costs), force_p_equals=True)
+    # for i, optimized_node_path in enumerate(opt_node_paths):
     #     print(f"[{i}] {len(optimized_node_path)=} cost=({optimized_node_path_costs[i]})")
-    print(f"{sum(optimized_node_path_costs)=} {max(optimized_node_path_costs)=}")
-    optimized_world_paths = []
+    print(f"{sum(opt_node_path_costs)=} {max(opt_node_path_costs)=}")
+    opt_world_paths = []
     for ki in range(k):
         robot_world_path = []
-        for i, subtour in enumerate(optimized_node_paths[ki]):
+        for i, subtour in enumerate(opt_node_paths[ki]):
             robot_world_path.append(nodes[subtour].tolist())
-        optimized_world_paths.append(robot_world_path)
+        opt_world_paths.append(robot_world_path)
     print(f"Step 5 took {time.time() - start} seconds.")
-    visualize_paths(optimized_node_paths, nodes, node_indices, target_indices, depot_indices, cost, mode="faster", visualization_path=visualization_path)
+    visualize_paths(opt_node_paths, nodes, node_indices, target_indices, depot_indices, cost, mode="faster", visualization_path=visualization_path)
 
-    visualize_visitation_frequency(optimized_node_paths, nodes, visualization_path)
+    visualize_visitation_frequency(opt_node_paths, nodes, visualization_path)
 
-    return optimized_node_paths, optimized_world_paths
+    return opt_node_paths, opt_world_paths
 
 
 def construct_map(n, d):
@@ -210,52 +231,35 @@ def construct_map(n, d):
     return nodes, node_indices, target_indices, depot_indices
 
 
-def divideArrayByP(array, maxp, countf, low=None, high=None, force_p_equals=False):
-    if low is None:
-        low = min(array)
-    if high is None:
-        high = sum(array)
-
+def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
     # condition = True
     maxSum = low
     maxSum_max = high
     maxSum_min = low
     err_thresh = 0.01
-    pc_prev = None
-    same_pc_counter = 0
-    best_p, best_p_a, best_p_c = np.inf, None, [np.inf]
+    best_p, best_p_a, best_p_c, best_max_p_c = np.inf, None, [np.inf], np.inf
+    # print(f"{best_p=}")
     while True:
         # print(f"{maxSum_max=} {delta=} {maxSum=}")
-        p, p_a, p_c = countf(array, maxSum)
+        p, p_a, p_c, max_p_c = countf(maxSum, maxp)
+
         if p > maxp:
             maxSum_min = maxSum
-        elif p < maxp:
-            maxSum_max = min(maxSum, maxSum_max)
-        else:
-            maxSum_max = min(maxSum, maxSum_max)
+        elif p <= maxp:
+            maxSum_max = min(max_p_c, maxSum_max)
+            maxSum = max_p_c
 
-        if force_p_equals:
-            if maxp <= p <= best_p:
-                best_p = p
-                best_p_a = p_a
-                best_p_c = p_c
-        else:
-            if p <= best_p:
-                best_p = p
-                best_p_a = p_a
-                best_p_c = p_c
+        if (force_p_equals and maxp >= p and max_p_c <= best_max_p_c) or (not force_p_equals and p <= best_p):
+            best_p = p
+            best_p_a = p_a
+            best_p_c = p_c
+            best_max_p_c = max_p_c
 
-        # print(f"{p=} {max(p_c)=} {maxSum=} {maxSum_min=} {maxSum_max=} {maxSum_max - maxSum_min=} {best_p=}")
+        # print(f"{p=} {best_p=} {maxSum=} {maxSum_min=} {maxSum_max=} {maxSum_max - maxSum_min=} {max_p_c=} {p_c=}")
         # print(f"{p=} {p_a=} {p_c=}")
         # time.sleep(0.5)
 
-        if p_c == pc_prev:
-            same_pc_counter += 1
-        else:
-            same_pc_counter = 0
-
-        pc_prev = p_c
-        if (best_p <= maxp or same_pc_counter > 2) and maxSum_max - maxSum_min < err_thresh:
+        if best_p <= maxp and maxSum_max - maxSum_min < err_thresh:
             return best_p_a, best_p_c, maxSum
 
         if p > maxp and maxSum <= high:
@@ -267,8 +271,8 @@ def divideArrayByP(array, maxp, countf, low=None, high=None, force_p_equals=Fals
 
 
 if __name__ == "__main__":
-    num_of_robots = 100
-    num_of_targets_per_side = 150
+    num_of_robots = 30
+    num_of_targets_per_side = 20
     dist_per_side = 3.
     redundancy_parameter = 20
     fuel_capacity_ratio = 1.5
