@@ -28,15 +28,14 @@ def solve_endpoint():
     """
     print("Solution request received.")
     k = request.args.get('k')
-    q_k = request.args.get('q_k')
-    n_a = request.args.get('n_a')
-    rp = request.args.get('rp')
-    l = request.args.get('l')
-    d = request.args.get('d')
+    nk = request.args.get('nk')
+    ssd = request.args.get('ssd')
+    fcr = request.args.get('fcr')
+    fr = request.args.get('fr')
     mode = request.args.get('mode')
 
     # Generate job ID based on parameters
-    job_id = f"{k}_{q_k}_{n_a}_{rp}_{l}_{d}_{mode}"
+    job_id = f"{k}_{nk}_{ssd}_{fcr}_{fr}_{mode}"
 
     # Get the current working directory
     current_dir = os.getcwd()
@@ -56,44 +55,54 @@ def solve_endpoint():
         return jsonify(result), 200
 
     print(
-        f"Job folder does not exist: {job_folder_path}. Starting solver function with parameters k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode={mode}...")
+        f"Job folder does not exist: {job_folder_path}. Starting solver function with parameters k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode={mode}...")
+
+    # Check if there's an ongoing solver thread with the same parameters
+    for thread in threading.enumerate():
+        if thread.name == job_id:
+            print(f"Solver thread with the same parameters is already running. Waiting for completion...")
+            thread.join()  # Wait for the thread to complete
+            # Once the thread completes, read the result from the JSON file
+            with open(os.path.join(job_folder_path, 'result.json'), 'r') as file:
+                result = json.load(file)
+            return jsonify(result), 200
+
     # Run MILP solver function with parameters on a separate thread
-    solve_thread = threading.Thread(target=run_solver, args=(k, q_k, n_a, rp, l, d, mode, job_id))
+    solve_thread = threading.Thread(name=job_id, target=run_solver, args=(k, nk, ssd, fcr, fr, mode, job_id))
     solve_thread.start()
-    result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
+    result_data = {'job_id': job_id, 'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': mode},
                    'robot_node_path': None, 'robot_world_path': None, 'status': 'in progress'}
     return jsonify(result_data), 200
 
 
-def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
+def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
     """
     This function runs the MILP solver function with the provided parameters.
     Once the solver completes, it saves the result to a JSON file in the cache folder.
     Params:
-        k (int): Number of paths
-        q_k (float): Maximum number of paths
-        n_a (int): Number of nodes per axis
-        rp (int): redundancy parameter
-        l (float):
-        d (float): distance between nodes
-        job_id (str): Job ID
+        num_of_robots: int,
+        nodes_to_robot_ratio: int,
+        square_side_dist: int,
+        fuel_capacity_ratio: float,
+        failure_rate: int,
+        job_id: str
     """
     try:
         if mode == 'm':
             # Run MILP solver function with parameters
             print(
-                f"Running MILP solver function with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m...")
-            edges, robot_world_path = solve_milp_with_optimizations(int(k), float(q_k), int(n_a), int(rp), float(l), float(d),
+                f"Running MILP solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode=m...")
+            edges, robot_world_path = solve_milp_with_optimizations(int(k), int(nk), float(ssd), float(fcr), int(fr),
                                                          job_id)
             print(
-                f"MILP solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=m.")
+                f"MILP solver function completed with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, mode=m.")
             # Convert edges to a node format
             robot_node_path = [[int(edge) for edge in path] for path in edges]
             print("Robot node path", robot_node_path)
             print("Robot world path", robot_world_path)
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
-                           'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
+                           'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'm'},
                            'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             json_handlers.saveResultsToCache(job_id, result_data, 'result.json')  # Save the results to the cache
@@ -101,11 +110,11 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
         elif mode == 'h1':
             # Run Heuristic solver function with parameters
             print(
-                f"Running Heuristic solver function with parameters: {k=}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h, {job_id=}...")
-            robot_node_path_w_subtours, robot_world_path = yasars_heuristic(int(k), int(n_a), float(d), int(rp), float(l), saveGraphPath(job_id, "visualization.png"))
+                f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h1...")
+            robot_node_path_w_subtours, robot_world_path = yasars_heuristic(int(k), int(nk), float(ssd), float(fcr), int(fr), saveGraphPath(job_id, "visualization.png"))
             # edges, robot_world_path = heuristic2.run_heuristic_solver(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)  # Run the other heuristic solver
             print(
-                f"Heuristic solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h.")
+                f"Heuristic solver function completed with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode=h1")
             robot_node_path = []
             for subtours in robot_node_path_w_subtours:
                 robot_path = []
@@ -117,7 +126,7 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
             print("Robot world path", robot_world_path)
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
-                           'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
+                           'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'h1'},
                            'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             json_handlers.saveResultsToCache(job_id, result_data, 'result.json')
@@ -127,15 +136,15 @@ def run_solver(k, q_k, n_a, rp, l, d, mode, job_id):
         elif mode == 'h2':
             # Run Heuristic solver function with parameters
             print(
-                f"Running Heuristic solver function with parameters: {k=}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h, {job_id=}...")
-            edges, robot_world_path = heuristic2.run_heuristic_solver(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)  # Run the other heuristic solver
+                f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h2...")
+            edges, robot_world_path = heuristic2.run_heuristic_solver(int(k), int(nk), int(ssd), float(fcr), int(fr), job_id)  # Run the other heuristic solver
             print(
-                f"Heuristic solver function completed with parameters: k={k}, q_k={q_k}, n={n_a}, rp={rp}, l={l}, d={d}, mode=h.")
+                f"Heuristic solver function completed with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, mode=h2.")
             print("Robot node path", edges)
             print("Robot world path", robot_world_path)
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
-                           'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
+                           'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'h2'},
                            'robot_node_path': edges, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             json_handlers.saveResultsToCache(job_id, result_data, 'result.json')
@@ -178,8 +187,8 @@ def getParamsFromJobId(job_id):
     :param job_id:
     :return:
     """
-    k, q_k, n_a, rp, l, d, mode = job_id.split('_')
-    return k, q_k, n_a, rp, l, d, mode
+    k, nk, ssd, fcr, fr, mode = job_id.split('_')
+    return k, nk, ssd, fcr, fr, mode
 
 
 if __name__ == '__main__':

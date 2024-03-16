@@ -13,38 +13,31 @@ import gurobipy as gp
 from gurobipy import GRB
 from scipy.spatial import distance
 import os
-import time
-
-from src.heuristic_attempts.yasars_heuristic_attempts.yasars_heuristic import construct_map
 from src.http_server.json_handlers import saveGraphPath
 
 
-def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_side, job_id):
+def solve_milp_with_optimizations(num_of_robots: int,
+                                  nodes_to_robot_ratio: int,
+                                  square_side_dist: float,
+                                  fuel_capacity_ratio: float,
+                                  failure_rate: int,
+                                  job_id: str = None):
     """
     This function solves the MRPCP using MILP (Mixed-Integer Linear Programming) and TSP (Travelling Salesman Problem) using 2-OPT and k-OPT algorithms.
-    :param robots:
-    :param interval:
-    :param targets:
-    :param rp:
-    :param l:
-    :param dist_per_side:
-    :param job_id:
     :return: The optimized paths with 2-OPT and the world path
     """
-    k = robots  # Chose the number of robots
-    # Chose recharging proportionality constant
-    q_k = interval  # This means that each robot will need to charge for 10 minutes for every 100 minutes travelled
-    # Chose the number of targets in an axis
-    n_a = int(targets)
+    k = num_of_robots  # Chose the number of robots
+    n_a = k * nodes_to_robot_ratio  # Chose the number of targets in an axis
+    MDBF = 100.0  # Mean Distance Between Failures
+    alpha = 0.0001
+    rpp = alpha * MDBF  # redundancy parameter percentage
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
-    rp = min(rp, k)
-    d = dist_per_side / 2.  # Distance per side of the square
-
-    # # 1. Create map and get node indices
-    # nodes, node_indices, target_indices, depot_indices = construct_map(n_a, d)
-    #
-    # # 2. Calculate cost between each node
-    # cost = distance.cdist(nodes, nodes, 'euclidean')
+    rp = np.ceil(k * rpp) + 1
+    d = square_side_dist / 2.  # Distance per side of the square
+    max_fuel_cost_to_node = square_side_dist * np.sqrt(
+        2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
+    L = fuel_capacity_ratio * max_fuel_cost_to_node * 2  # Fuel capacity (1 unit of fuel = 1 unit of distance)
+    M = L + max_fuel_cost_to_node
 
     # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
     targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
@@ -53,9 +46,6 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     targets = np.concatenate((targets[0], targets[1]), axis=2)
     targets = targets.reshape((n_a * n_a, 2))
     target_indices = range(len(targets))
-    # depots = np.array([
-    #     [-1., -1.],
-    # ])
     depots = np.array([
         [-1., -1.],
     ]) * d
@@ -128,11 +118,6 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
         _ = m.addConstrs(p[ki, i, j] <= len(target_indices) * x[ki, i, j] for i in node_indices for j in node_indices)
 
     # # D. Fuel Constraints (15), (16), (17), (18), (19), (20)
-    max_fuel_cost_to_node = dist_per_side * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
-    if l < 1:
-        return "Fuel capacity must be at least 1"
-    L = l * max_fuel_cost_to_node * 2  # Fuel capacity (1 unit of fuel = 1 unit of distance)
-    M = L + max_fuel_cost_to_node
     r = m.addMVar((len(node_indices)), name='r', vtype=GRB.CONTINUOUS, lb=0, ub=L)  # (20)
 
     for ki in range(k):
@@ -145,7 +130,7 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
 
         # (17) and (18)
         for i, j in itertools.product(depot_indices, target_indices):
-            left_side = r[j] - L + cost[i, j]
+            left_side = r[j] - M + cost[i, j]
             right_side = M * (1 - x[ki, i, j])
             _ = m.addConstr(left_side >= -right_side)
             _ = m.addConstr(left_side <= right_side)
@@ -356,7 +341,7 @@ def solve_milp_with_optimizations(robots, interval, targets, rp, l, dist_per_sid
     # Print the number of available CPU threads
     print(f"Number of available CPU threads: {num_threads_available}")
 
-    solver = MILPSolver(m, num_threads_available-1)  # Create an instance of your MILP solver with multi-threading
+    solver = MILPSolver(m, num_threads_available - 1)  # Create an instance of your MILP solver with multi-threading
 
     # import gurobipy as grb
 
@@ -476,17 +461,15 @@ def convertToWorldPath(n_a, d, robot_node_path):
             [[-1, -1], [-0.5, -0.5], [-1, -1]]
         ]
     """
+    d = d / 2.  # Distance per side of the square
     targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
     targets = targets.reshape(targets.shape + (1,))
     targets = np.concatenate((targets[0], targets[1]), axis=2)
     targets = targets.reshape((n_a * n_a, 2))
-    target_indices = range(len(targets))
-
-    # Specify depots
-    # One depot node in the corner
     depots = np.array([
         [-1., -1.],
     ]) * d
+    depots = np.concatenate((depots, depots))
 
     depots = np.concatenate((depots, depots))
     nodes = np.concatenate((targets, depots))

@@ -69,7 +69,7 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot_id):
                                         int(failed_robot_id))
     print("New robot paths:", new_robot_paths)
     # visualize the new paths and save the graph to the cache
-    visualize_recalculated_paths(new_robot_paths, int(k), int(n_a), saveGraphPath(job_id, 'recalculated_paths'))
+    visualize_recalculated_paths(new_robot_paths, int(k), int(n_a), int(d), saveGraphPath(job_id, 'recalculated_paths'))
 
     result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
                    'robot_node_path': new_robot_paths,
@@ -132,6 +132,7 @@ def recalcRobotPaths2(previous_node_path, current_robot_positions, rp, n_a, l, d
 
     new_robot_paths = generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l)
 
+    print("New robot paths:", new_robot_paths)
     # visualize_paths_brute_force(k, n_a, new_robot_paths)
 
     print("Heuristic recalculation completed...returning paths to server endpoint /solve")
@@ -159,22 +160,22 @@ def getIndexOf(path, position):
 # [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7], [15], [11]]
 
 
-def visualize_recalculated_paths(paths, robots, targets, save_path=None):
+def visualize_recalculated_paths(paths, robots, targets, d, save_path=None):
     k = robots
     # Chose the number of targets in an axis
     n_a = int(targets)
-
-    # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
-    targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
+    d = d / 2.  # Distance per side of the square
+    targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
     targets = targets.reshape(targets.shape + (1,))
     targets = np.concatenate((targets[0], targets[1]), axis=2)
     targets = targets.reshape((n_a * n_a, 2))
-    print(f"{targets.shape=}")
     depots = np.array([
         [-1., -1.],
-    ])
+    ]) * d
+    depots = np.concatenate((depots, depots))
 
     depots = np.concatenate((depots, depots))
+    nodes = np.concatenate((targets, depots))
     depot_indices = range(len(targets), len(targets) + len(depots))
 
     nodes = np.concatenate((targets, depots))

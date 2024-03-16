@@ -9,19 +9,23 @@ import os
 
 
 def yasars_heuristic(num_of_robots: int,
-                     num_of_targets_per_side: int,
-                     dist_per_side: float,
-                     redundancy_parameter: int,
+                     nodes_to_robot_ratio: int,
+                     square_side_dist: float,
                      fuel_capacity_ratio: float,
+                     failure_rate: int,
                      visualization_path: str = None):
     # Chose number of robots
     k = num_of_robots
     # Chose the number of targets in an axis
-    n = num_of_targets_per_side
+    n = k * nodes_to_robot_ratio
     # Chose the length of distance of each side of the square arena
-    d = dist_per_side
+    d = square_side_dist
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
-    rp = min(redundancy_parameter, k)
+    MDBF = 100.0  # Mean Distance Between Failures
+    alpha = 0.0001
+    rpp = alpha * MDBF  # redundancy parameter percentage
+    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
+    rp = np.ceil(k * rpp) + 1
     # Fuel Capacity Parameters
     max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
