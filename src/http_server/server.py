@@ -47,7 +47,7 @@ def solve_endpoint():
     # Check if folder with job ID exists in the cache folder
     job_folder_path = os.path.join(cache_folder_path, job_id)
 
-    if os.path.exists(job_folder_path):
+    if os.path.exists(os.path.join(job_folder_path, 'result.json')):
         print(f"Job folder exists: {job_folder_path}. Returning the content of the JSON file...")
         # If folder exists, read JSON file and return its content
         with open(os.path.join(job_folder_path, 'result.json'), 'r') as file:
@@ -61,7 +61,7 @@ def solve_endpoint():
     solve_thread = threading.Thread(target=run_solver, args=(k, q_k, n_a, rp, l, d, mode, job_id))
     solve_thread.start()
     result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
-                   'robot_node_path': 'in progress', 'robot_world_path': 'in progress', 'status': 'in progress'}
+                   'robot_node_path': None, 'robot_world_path': None, 'status': 'in progress'}
     return jsonify(result_data), 200
 
 
