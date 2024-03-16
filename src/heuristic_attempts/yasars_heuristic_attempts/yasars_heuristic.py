@@ -27,6 +27,7 @@ def yasars_heuristic(num_of_robots: int,
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
     print(f"{L_min=} {L=}")
+    print(f"{k=} {n=} {d=} {rp=}")
 
     # 1. Create map and get node indices
     nodes, node_indices, target_indices, depot_indices = construct_map(n, d)
@@ -141,7 +142,8 @@ def yasars_heuristic(num_of_robots: int,
     # Step 4: Ensure rp
     start = time.time()
     num_of_subtours = len(tsp_subtours)
-    for i in range(num_of_subtours, max(np.ceil(k / num_of_subtours), num_of_subtours * rp)):
+    rp = int(np.ceil(k / num_of_subtours))
+    for i in range(num_of_subtours, num_of_subtours * rp):
         tsp_subtours.append(tsp_subtours[i % num_of_subtours])
         tsp_costs.append(tsp_costs[i % num_of_subtours])
         tsp_indices.append(i)
