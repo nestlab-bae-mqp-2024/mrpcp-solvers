@@ -146,7 +146,7 @@ def yasars_heuristic(num_of_robots: int,
     # Step 4: Ensure rp
     start = time.time()
     num_of_subtours = len(tsp_subtours)
-    rp = int(np.ceil(k / num_of_subtours))
+    rp = max(int(np.ceil(k / num_of_subtours)), rp)
     for i in range(num_of_subtours, num_of_subtours * rp):
         tsp_subtours.append(tsp_subtours[i % num_of_subtours])
         tsp_costs.append(tsp_costs[i % num_of_subtours])
