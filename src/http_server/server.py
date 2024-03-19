@@ -177,7 +177,6 @@ def recalc_endpoint():
     curr_robots_pos = json.loads(curr_robots_pos)
     failed_robot_id = request.args.get('failed_robot_id')
     k, nk, ssd, fcr, fr, mode = getParamsFromJobId(job_id)
-
     start_time = time.time()
     robot_node_path, robot_world_path = recalculate_paths(job_id, curr_robots_pos, failed_robot_id)
     runtime = time.time() - start_time
@@ -200,8 +199,8 @@ def getParamsFromJobId(job_id):
     :param job_id:
     :return:
     """
-    k, nk, ssd, fcr, fr, mode = job_id.split('_')
-    return k, nk, ssd, fcr, fr, mode
+    params = job_id.split('_')
+    return tuple(params)
 
 
 def log_runtime(func_name, params, runtime):

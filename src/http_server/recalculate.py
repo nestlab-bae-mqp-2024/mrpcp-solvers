@@ -47,90 +47,58 @@ def recalculate_paths(job_id, curr_robots_pos, failed_robot_id):
         previous_robot_node_path = result_data.get('robot_node_path')
 
     # Use the extracted parameters for recalculation
-    k, q_k, n_a, rp, l, d, mode = getParamsFromJobId(job_id)
+    params_tuple = getParamsFromJobId(job_id)
+    k, nk, ssd, fcr, fr, mode = params_tuple
 
-    # Lets say that the we use 6_0.5_4 for the parameters (this will be the edges)
-    # [[16, 17, 10, 14, 9], [16, 17, 0, 1, 3, 2], [16, 17, 4, 8, 12, 13, 5], [16, 17, 7], [16, 17, 15], [16, 17, 6, 11]]
-
-    # Example current robot positions
-    ex_robot_positions = [10, 0, 12, 7, 15, 11]  # 1 index based
-    ex_failed_robot_id = 1
-
-    # Example new robot paths if the robots just need to finish where they left off
-    # [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7, 16], [15, 16], [11, 16]]
     print("Previous robot paths:", previous_robot_node_path)
     print("Current robot positions:", curr_robots_pos)
 
     # Convert the current (x,y) world positions to node positions. For the failed robot, round down to the nearest node position. For others, just do normal calculation.
-
-    # new_robot_paths = recalcRobotPaths(previous_robot_node_path, curr_robots_pos, int(rp), int(n_a),
-    #                                    int(failed_robot_id))
-    new_robot_paths = recalcRobotPaths2(previous_robot_node_path, curr_robots_pos, int(rp), int(n_a), int(l), int(d),
-                                        int(failed_robot_id))
+    new_robot_paths = recalcRobotPaths(previous_robot_node_path, curr_robots_pos, int(k), int(nk), int(ssd), float(fcr), int(fr), int(failed_robot_id))
     print("New robot paths:", new_robot_paths)
     # visualize the new paths and save the graph to the cache
-    visualize_recalculated_paths(new_robot_paths, int(k), int(n_a), int(d), saveGraphPath(job_id, 'recalculated_paths'))
+    visualize_recalculated_paths(new_robot_paths, int(k), int(nk), int(ssd), saveGraphPath(job_id, 'recalculated_paths'))
 
-    result_data = {'job_id': job_id, 'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
+    result_data = {'job_id': job_id, 'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'recalc'},
                    'robot_node_path': new_robot_paths,
-                   'robot_world_path': convertToWorldPath(int(n_a), d, new_robot_paths)}
+                   'robot_world_path': convertToWorldPath(int(nk), ssd, new_robot_paths)}
     saveResultsToCache(job_id, result_data, 'recalculated_paths.json')
     return result_data  # Return the content of the JSON file
 
 
-def recalcRobotPaths(previous_node_path, current_robot_positions, rp, n_a, failed_robot_id):
-    """
-    This function takes in the previous_node_path and the current_robot_positions and recalculates the paths based on the new positions.
-    The robots start where they currently are. The failed robot starts back at the depot. All the robots recalculate their paths based on the new positions
-    and the failed robot's new position. They need even frequency coverage to match the redundancy parameter.
-    """
-    new_node_paths = []
-
-    # Determine the depot node
-    depot_node = n_a ** 2  # The depot node is the last node in the grid
-
-    # Recalculate paths for all robots
-    for robot_id, path in enumerate(previous_node_path):
-        if robot_id == failed_robot_id - 1:
-            # Failed robot starts from the depot and continues the rest of its path
-            current_position = current_robot_positions[robot_id]
-            index = getIndexOf(path, current_position)
-            new_path = [depot_node] + path[index:] if index != -1 else [depot_node]
-        else:
-            # Other robots continue from where they left off or start from the beginning
-            current_position = current_robot_positions[robot_id]
-            index = getIndexOf(path, current_position)
-            new_path = path[index:] if index != -1 else [depot_node]
-        new_node_paths.append(new_path)
-
-    # Ensure all paths have a length equal to the redundancy parameter
-    for i in range(len(new_node_paths)):
-        while len(new_node_paths[i]) < rp:
-            new_node_paths[i].append(depot_node)  # Repeat the depot node if needed
-    print(new_node_paths)
-    return new_node_paths
-
-
-def recalcRobotPaths2(previous_node_path, current_robot_positions, rp, n_a, l, d, failed_robot_id):
+def recalcRobotPaths(previous_robot_node_path, curr_robots_pos, num_of_robots: int,
+                     nodes_to_robot_ratio: int,
+                     square_side_dist: float,
+                     fuel_capacity_ratio: float,
+                     failure_rate: int):
     """
     This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
     :param previous_node_path:
     :param current_robot_positions:
-    :param rp:
-    :param n_a:
-    :param l:
-    :param d:
     :param failed_robot_id:
     :return: The recalculated node and world paths
     """
-    k = len(current_robot_positions)  # number of robots
-    robot_fuel = [l for ki in range(k)]  # fuel capacity of each robot
-    robot_paths = previous_node_path  # previous robot paths
+    k = num_of_robots  # number of robots
+    n_a = k * nodes_to_robot_ratio  # number of targets in an axis
+    d = square_side_dist # Chose the length of distance of each side of the square arena
+    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
+    MDBF = 100.0  # Mean Distance Between Failures
+    alpha = 0.00001*failure_rate
+    rpp = alpha * MDBF  # redundancy parameter percentage
+    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
+    rp = np.ceil(k * rpp) + 1
+    # Fuel Capacity Parameters
+    max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
+    L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
+    L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
+
+    robot_fuel = [L for ki in range(k)] #robot fuel is a list storing each robot's fuel at the present moment
+    robot_paths = previous_robot_node_path  # previous robot paths
 
     # initialize all nodes
-    initAllNodes(n_a)
+    initAllNodes(k, nodes_to_robot_ratio)
 
-    new_robot_paths = generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l)
+    new_robot_paths = generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, L)
 
     print("New robot paths:", new_robot_paths)
     # visualize_paths_brute_force(k, n_a, new_robot_paths)
@@ -151,14 +119,6 @@ def getIndexOf(path, position):
         return path.index(position)
     except ValueError:
         return -1
-
-
-# recalcRobotPaths(
-#     [[16, 17, 10, 14, 9], [16, 17, 0, 1, 3, 2], [16, 17, 4, 8, 12, 13, 5], [16, 17, 7], [16, 17, 15], [16, 17, 6, 11]],
-#     [10, 0, 12, 7, 15, 11], 1, 1)
-# Example new robot paths if the robots just need to finish where they left off
-# [[16, 14, 9], [0, 1, 3, 2], [12, 13, 5], [7], [15], [11]]
-
 
 def visualize_recalculated_paths(paths, robots, targets, d, save_path=None):
     k = robots

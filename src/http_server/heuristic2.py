@@ -19,13 +19,6 @@ robot_failure_percent = 0.1  # percent of robots that will fail as a value from 
 def run_heuristic_solver(k, q_k, n_a, rp, l, d, job_id):
     """
     This function runs the Heuristic solver function with the provided parameters.
-    :param k: 
-    :param q_k: 
-    :param n_a: 
-    :param rp: 
-    :param l: 
-    :param d: 
-    :param job_id: 
     :return: The optimized paths and the world path
     """
     # robot fuel is a list storing each robot's fuel at the present moment
@@ -78,12 +71,13 @@ def recalcRobotPaths(previous_node_path, current_robot_positions, rp, n_a, l, d)
     return new_robot_paths
 
 
-def initAllNodes(n_a):
+def initAllNodes(k, nk):
     """
     # set containing all possible nodes in the map -- not a particularly efficient way of doing this
-    :param n_a:
+    :param nk:
     :return:
     """
+    n_a = k * nk
     for x in range(0, n_a):
         for y in range(0, n_a):
             all_nodes.add((x, y))
