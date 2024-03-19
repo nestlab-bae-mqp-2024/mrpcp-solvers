@@ -10,6 +10,8 @@ If not, it runs the MILP solver function 'solve_milp_with_optimizations' with th
 Once the solver completes, it saves the result to a JSON file in the cache folder and returns the result to the client.
 """
 import threading
+import time
+
 from flask import Flask, request, jsonify
 
 from src.heuristic_attempts.yasars_heuristic_attempts.yasars_heuristic import yasars_heuristic
@@ -20,6 +22,7 @@ import os
 import src.http_server.json_handlers as json_handlers
 
 app = Flask(__name__)
+analysis_file = "runtime_analysis.txt" # File path for storing runtime analysis
 
 @app.route('/solve', methods=['POST'])
 def solve_endpoint():
@@ -90,10 +93,13 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
     try:
         if mode == 'm':
             # Run MILP solver function with parameters
+            start_time = time.time()
             print(
                 f"Running MILP solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode=m...")
             edges, robot_world_path = solve_milp_with_optimizations(int(k), int(nk), float(ssd), float(fcr), int(fr),
                                                          job_id)
+            runtime = time.time() - start_time
+            log_runtime("MILP", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
             print(
                 f"MILP solver function completed with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, mode=m.")
             # Convert edges to a node format
@@ -109,10 +115,12 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
 
         elif mode == 'h1':
             # Run Heuristic solver function with parameters
+            start_time = time.time()
             print(
                 f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h1...")
             robot_node_path_w_subtours, robot_world_path = yasars_heuristic(int(k), int(nk), float(ssd), float(fcr), int(fr), saveGraphPath(job_id, "visualization.png"))
-            # edges, robot_world_path = heuristic2.run_heuristic_solver(int(k), float(q_k), int(n_a), int(rp), float(l), float(d), job_id)  # Run the other heuristic solver
+            runtime = time.time() - start_time
+            log_runtime("h1 heuristic", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
             print(
                 f"Heuristic solver function completed with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode=h1")
             robot_node_path = []
@@ -135,9 +143,12 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
 
         elif mode == 'h2':
             # Run Heuristic solver function with parameters
+            start_time = time.time()
             print(
                 f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h2...")
             edges, robot_world_path = heuristic2.run_heuristic_solver(int(k), int(nk), int(ssd), float(fcr), int(fr), job_id)  # Run the other heuristic solver
+            runtime = time.time() - start_time
+            log_runtime("h2 heuristic", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
             print(
                 f"Heuristic solver function completed with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, mode=h2.")
             print("Robot node path", edges)
@@ -165,12 +176,14 @@ def recalc_endpoint():
     curr_robots_pos = request.args.get('curr_robots_pos')
     curr_robots_pos = json.loads(curr_robots_pos)
     failed_robot_id = request.args.get('failed_robot_id')
-    k, q_k, n_a, rp, l, d, mode = getParamsFromJobId(job_id)
+    k, nk, ssd, fcr, fr, mode = getParamsFromJobId(job_id)
 
+    start_time = time.time()
     robot_node_path, robot_world_path = recalculate_paths(job_id, curr_robots_pos, failed_robot_id)
-
+    runtime = time.time() - start_time
+    log_runtime("solve_endpoint", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
     result_data = {'job_id': job_id,
-                   'params': {'k': k, 'q_k': q_k, 'n_a': n_a, 'rp': rp, 'l': l, 'd': d, 'mode': 'h'},
+                   'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'recalc'},
                    'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                    'status': 'completed'}
 
@@ -191,7 +204,26 @@ def getParamsFromJobId(job_id):
     return k, nk, ssd, fcr, fr, mode
 
 
+def log_runtime(func_name, params, runtime):
+    """
+    Logs the runtime of a function along with its parameters to a text file.
+    """
+    # Convert runtime to minutes and seconds
+    minutes = int(runtime // 60)
+    seconds = runtime % 60
+
+    with open(analysis_file, "a") as f:
+        f.write(f"Function: {func_name}\n")
+        f.write(f"Parameters: {params}\n")
+        f.write(f"Runtime: {minutes} minutes {seconds:.6f} seconds\n")
+        f.write("\n")
+
+
 if __name__ == '__main__':
+    # Create or overwrite the analysis file
+    with open(analysis_file, "w") as f:
+        f.write("Runtime Analysis\n")
+        f.write("----------------\n\n")
     print("Waiting for a request...")  # Added waiting message
     app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
 
