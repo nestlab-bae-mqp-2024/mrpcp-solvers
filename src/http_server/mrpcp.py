@@ -29,7 +29,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
     k = num_of_robots  # Chose the number of robots
     n_a = k * nodes_to_robot_ratio  # Chose the number of targets in an axis
     MDBF = 100.0  # Mean Distance Between Failures
-    alpha = 0.0001
+    alpha = 0.00001*failure_rate
     rpp = alpha * MDBF  # redundancy parameter percentage
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     rp = np.ceil(k * rpp) + 1

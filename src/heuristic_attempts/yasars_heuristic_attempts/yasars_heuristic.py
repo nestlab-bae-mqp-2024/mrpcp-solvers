@@ -22,7 +22,7 @@ def yasars_heuristic(num_of_robots: int,
     d = square_side_dist
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     MDBF = 100.0  # Mean Distance Between Failures
-    alpha = 0.0001
+    alpha = 0.00001*failure_rate
     rpp = alpha * MDBF  # redundancy parameter percentage
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     rp = np.ceil(k * rpp) + 1
