@@ -19,18 +19,18 @@ pr = cProfile.Profile()
 pr.enable()
 
 #number of robots
-k = 4
+k = 5
 #nodes per axis
 nodes_per_axis = 30
 #physical size in meters of the field. the area will then be defined to go from -edge_length/2 to edge_length/2
 edge_length = 2
 
-RP = 2
+RP = 1
 
 #FAILURES
 #we really should write this as an interrupt or in a thread, but want to discuss before doing that
 #chance robot will fail as a value from 0 to 1
-alpha = 0.05
+alpha = 0
 #percent of robots that will fail as a value from 0 to 1
 robot_failure_percent = 0.5
 
@@ -284,25 +284,26 @@ def visualize_paths_brute_force():
 print("generating paths")
 generate_robot_paths_redundancy()
 
-print("visualizing paths")
-visualize_paths_brute_force()
+#print("visualizing paths")
+#visualize_paths_brute_force()
 
 print("creating videos of heatmaps")
 #pyplot.ion()
 
 #creates initial heatmap which just counts every time a node is visited over the period of the simulation
+"""
 heatmap = np.zeros((nodes_per_axis, nodes_per_axis))
 figure = pyplot.figure(figsize=(5,5))
-plt = pyplot.imshow(heatmap[:,:], norm=colors.Normalize(0,25))
+plt = pyplot.imshow(heatmap[:,:], norm=colors.Normalize(0,50))
 ax = pyplot.subplot()
 
 txt = ax.text(-1, -1,"frame: ", fontsize=12)
 
-pyplot.colorbar().set_ticks([0,50])
-
+pyplot.colorbar().set_ticks([0,])
 def animate(z):
     plt = pyplot.imshow(heatmap[:,:], norm=colors.Normalize(0,50))
-    txt.set_text("frame: " + str(z) + " node coverage: " + str(round(100*len(countdown_heatmap[countdown_heatmap > 0])/(nodes_per_axis*nodes_per_axis),2)) + "%")
+
+    txt.set_text("frame: " + str(z) + " node coverage: " + str(round(100*len(heatmap[heatmap > 0])/(nodes_per_axis*nodes_per_axis),2)) + "%")
 
     with io.BytesIO() as buffer:
         pyplot.savefig(buffer, format = "png")
@@ -312,34 +313,31 @@ def animate(z):
 
     return ar
 
-number_of_steps = max(len(robot_paths[ki]) for ki in range(k))
-#ani = animation.FuncAnimation(figure, animate, interval=number_of_steps, frames=number_of_steps)
-#ani.save("data/"+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) + "e" + str(RP) + "rp" + str(alpha) + "_" + str(robot_failure_percent) + "failure"+".gif", fps = 10)
+number_of_steps = min(len(robot_paths[ki]) for ki in range(k))
+#number_of_steps = 200
 
-#im = cv2.imread('text.png')
-#print(im.shape[1])
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-video = cv2.VideoWriter('data/2'+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) + "e" + str(RP) + "rp" + str(alpha) + "_" + str(robot_failure_percent) + 'failure.mp4', fourcc, 10, (500, 500))
+video = cv2.VideoWriter('data/prepath'+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) + "e" + str(RP) + "rp" + str(alpha) + "_" + str(robot_failure_percent) + 'failure.mp4', fourcc, 10, (500, 500))
 
 for z in range(0,number_of_steps):
     for ki in range(k):
-        if z < len(robot_paths[ki]):
-            (x,y) = robot_paths[ki][z]
-            heatmap[x][y] = heatmap[x][y] + 1
+        (x,y) = robot_paths[ki][z]
+        heatmap[x][y] = heatmap[x][y] + 1
 
-    if z%5 == 0:
+    if z%1 == 0:
         img = animate(z)
         img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)
 
         video.write(img)
 
 print(heatmap)
-
+"""
 #COUNTDOWN HEATMAP
 #creates secondary heatmap that shows each node on a timer
 
+"""
 countdown_heatmap = np.zeros((nodes_per_axis, nodes_per_axis))
-step_requirement = 7 #trying to maintain at least 1 visit per step_requirement steps
+step_requirement = 50 #trying to maintain at least 1 visit per step_requirement steps
 
 countdown_figure = pyplot.figure(figsize=(5,5))
 countdown_ax = pyplot.subplot()
@@ -351,7 +349,7 @@ countdown_txt = countdown_ax.text(-1, -1,"0", fontsize=12)
 def animate_countdown(z):
 
     countdown_txt.set_text("frame: " + str(z) + ", node coverage: " + str(round(100*len(countdown_heatmap[countdown_heatmap > 0])/(nodes_per_axis*nodes_per_axis),2)) + "%")
-    countdown_plt = pyplot.imshow(countdown_heatmap[:,:], norm=colors.Normalize(0,25))
+    countdown_plt = pyplot.imshow(countdown_heatmap[:,:], norm=colors.Normalize(0,1))
 
     with io.BytesIO() as buffer:
         pyplot.savefig(buffer, format = "png")
@@ -363,28 +361,59 @@ def animate_countdown(z):
 
 #print(im.shape[1])
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-video = cv2.VideoWriter('countdown.mp4', fourcc, 10, (500, 500))
+video = cv2.VideoWriter('data/prepath_binary'+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) + "e" + str(RP) + "rp" + str(alpha) + "_" + str(robot_failure_percent) + '.mp4', fourcc, 10, (500, 500))
+"""
+countdown_heatmap = np.zeros((nodes_per_axis, nodes_per_axis))
 
+number_of_steps = max(len(robot_paths[ki]) for ki in range(k))
+
+step_requirement = 45 #trying to maintain at least 1 visit per step_requirement steps
+
+coverage_list = []
 for z in range(0,number_of_steps):
     for a in range(0, nodes_per_axis):
         for b in range(0, nodes_per_axis):
             countdown_heatmap[a][b] = max(0, countdown_heatmap[a][b] - 1)
     #print(np.subtract(heatmap,1))
 
+    coverage = round(100*len(countdown_heatmap[countdown_heatmap > 0])/(nodes_per_axis*nodes_per_axis),2)
+    coverage_list.append(coverage)
+
     for ki in range(k):
         if z < len(robot_paths[ki]):
             (x,y) = robot_paths[ki][z]
             countdown_heatmap[x][y] = step_requirement
 
-    if z % 5 == 0:
-        img = animate_countdown(z)
+    #if z % 1 == 0:
+    #    img = animate_countdown(z)
 
-        img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)
-        video.write(img)
+    #    img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)
+    #    video.write(img)
+
+pyplot.close()
+
+
+coverage_figure = pyplot.figure(figsize=(5,5))
+coverage_ax = pyplot.subplot()
+pyplot.xlabel('number of steps')
+pyplot.ylabel('% coverage')
+
+comparison = 100*step_requirement/(nodes_per_axis*nodes_per_axis/k)
+
+def animate_coverage(z):
+    r = [*range(0, len(coverage_list))]
+    coverage_ax.plot(r, coverage_list[0:z])
+    coverage_ax.plot(r, [comparison]*number_of_steps, '--')
+
+    pyplot.savefig("data/prepath_coverage_graph"+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) +"e_"+str(ki)+ "rp" + str(RP) + "failure"+ str(alpha) + "_" + str(robot_failure_percent) + "st_rq" + str(step_requirement)  + ".png")
+
+
+animate_coverage(number_of_steps)
 
 cv2.destroyAllWindows()
-video.release()
+#video.release()
 
+#graph of binary node distribution (whether or not node is covered at any one timestep)
 
 # display image with opencv or any operation you like
 
@@ -392,11 +421,11 @@ video.release()
 #ani.save("data/"+ str(nodes_per_axis) + "n" + str(k) + "r" + str(edge_length) + "e" + str(RP) + "rp" + str(alpha) + "_" + str(robot_failure_percent) + "failure_countdown.gif", fps = 10)
 
 pr.disable()
-s = io.StringIO()
-sortby = SortKey.TIME
-ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-ps.print_stats()
-print(s.getvalue())
+#s = io.StringIO()
+#sortby = SortKey.TIME
+#ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+#ps.print_stats()
+#print(s.getvalue())
 
 
 #sending to ArGoS
