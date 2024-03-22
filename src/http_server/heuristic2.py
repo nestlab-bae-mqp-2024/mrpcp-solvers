@@ -16,59 +16,78 @@ alpha = 0.05
 robot_failure_percent = 0.1  # percent of robots that will fail as a value from 0 to 1
 
 
-def run_heuristic_solver(k, q_k, n_a, rp, l, d, job_id):
+def generate_robot_paths_redundancy(num_of_robots: int,
+                                    nodes_to_robot_ratio: int,
+                                    square_side_dist: float,
+                                    fuel_capacity_ratio: float,
+                                    failure_rate: int):
     """
-    This function runs the Heuristic solver function with the provided parameters.
+    This function solves the MRPCP problem using the heuristic approach with redundancy and failure rate. This is NOT recalculation
     :return: The optimized paths and the world path
     """
-    # robot fuel is a list storing each robot's fuel at the present moment
-    robot_fuel = [l for ki in range(k)]
+    # Define the parameters
+    k = num_of_robots  # number of robots
+    n_a = k * nodes_to_robot_ratio  # number of targets in an axis
+    d = square_side_dist # Chose the length of distance of each side of the square arena
+    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
+    MDBF = 100.0  # Mean Distance Between Failures
+    alpha = 0.00001*failure_rate
+    rpp = alpha * MDBF  # redundancy parameter percentage
+    rp = np.ceil(k * rpp) + 1
 
-    robot_paths = generate_robot_paths_redundancy(n_a, k, rp, robot_fuel, l)
+    # Fuel Capacity Parameters
+    max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
+    L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
+    L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
 
-    visualize_paths_brute_force(k, n_a, robot_paths, d)
+    initAllNodes()
 
-    print("Heuristic solution completed...returning paths to server endpoint /solve")
-    worldPath = convertToWorldPath(n_a, d, robot_paths)
-    print("The optimized paths are: ", robot_paths)
-    print("The optimized paths converted to world path are: ", worldPath)
-    print("Returning solution to be sent to a json file...")
-
-    print("Recalculated paths: ", robot_paths)
-    pass
+    robot_fuel = [L for ki in range(k)] #robot fuel is a list storing each robot's fuel at the present moment
 
 
-def recalcRobotPaths(previous_node_path, current_robot_positions, rp, n_a, l, d):
-    """
-    This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
-    :param previous_node_path:
-    :param current_robot_positions:
-    :param rp:
-    :param n_a:
-    :param l:
-    :param d:
-    :return: The recalculated node and world paths
-    """
-    k = len(current_robot_positions)  # number of robots
-    robot_fuel = [l for ki in range(k)]  # fuel capacity of each robot
-    robot_paths = previous_node_path  # previous robot paths
+    last_node = [(0,0) for ki in range(k)]
+    nodes_seen = []
+    while n_a*n_a - len(nodes_covered) > 0:
+        for ki in range(0,k):
+            goal = (0,0)
+            while goal in nodes_covered and math.dist(goal, (0,0)) < robot_fuel[ki] and len(nodes_covered) < n_a*n_a: #if goal is already covered, find a different one
+                nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
 
-    # initialize all nodes
-    initAllNodes(n_a)
+                max_dist = 0
+                goal = (0,0)
+                for n in nodes_uncovered:
+                    if math.dist((0,0),n) > max_dist:
+                        max_dist = math.dist((0,0),n)
+                        goal = n
 
-    new_robot_paths = generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l)
 
-    visualize_paths_brute_force(k, n_a, new_robot_paths)
+            path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal)
 
-    print("Heuristic recalculation completed...returning paths to server endpoint /solve")
-    worldPath = convertToWorldPath(n_a, d, new_robot_paths)
-    print("The optimized paths are: ", new_robot_paths)
-    print("The optimized paths converted to world path are: ", worldPath)
-    print("Returning solution to be sent to a json file...")
+            robot_paths[ki] = robot_paths[ki] + path
 
-    print("Recalculated paths: ", new_robot_paths)
+            [nodes_seen.append(p) for p in path]
 
-    return new_robot_paths
+            counted_nodes_seen = Counter(nodes_seen)
+
+            for n in nodes_seen:
+                if counted_nodes_seen[n] >= RP:
+                    nodes_covered.add(n)
+
+            robot_fuel[ki] = robot_fuel[ki] - distance_travelled
+
+            last_node[ki] = robot_paths[ki][len(robot_paths[ki])-1]
+
+            if robot_failed == True:
+                last_node[ki] = (0,0)
+
+            #managing fuel levels
+            if (0,0) == last_node[ki]:
+                robot_fuel[ki] = fuel_capacity
+
+    #visualize_paths_brute_force(k, n_a, new_robot_paths)
+
+    return robot_paths, nodes_seen
+    #return new_robot_paths, robot_world_paths
 
 
 def initAllNodes(k, nk):
@@ -84,31 +103,6 @@ def initAllNodes(k, nk):
     return all_nodes
 
 
-def neighbors(curr, n_a):
-    """
-    THE MAP IS ASSUMED TO BE STRUCTURED SUCH THAT (0,0) IS THE DEPOT AND THE LOWER LEFT HAND CORNER OF THE GRID
-    takes in a tuple representing node that's neighbors are desired
-    :param curr:
-    :param n_a:
-    :return:
-    """
-    ns = [(curr[0] + 1, curr[1]), (curr[0] - 1, curr[1]), (curr[0], curr[1] + 1), (curr[0], curr[1] - 1),
-          (curr[0] + 1, curr[1] + 1), (curr[0] - 1, curr[1] - 1), (curr[0] + 1, curr[1] - 1),
-          (curr[0] - 1, curr[1] + 1)]
-    neighborslist = []
-    for n in ns:
-        if 0 <= n[0] < n_a > n[1] >= 0:
-            neighborslist.append(n)
-    return neighborslist
-
-
-def heuristic(node):
-    if node in nodes_covered:
-        return -1
-    else:
-        return -10
-
-
 def a_star_search(start, goal, n_a):
     """
     https://www.redblobgames.com/pathfinding/a-star/implementation.html#python-astar
@@ -120,19 +114,21 @@ def a_star_search(start, goal, n_a):
     """
     robot_failed = False
     frontier = PriorityQueue()
-    frontier.put((0, (start[0], start[1])))
+    frontier.put((0, (start[0],start[1])))
 
     came_from = dict()
     cost_so_far = dict()
-    came_from[(start[0], start[1])] = None
-    cost_so_far[(start[0], start[1])] = 0
+    came_from[(start[0],start[1])] = None
+    cost_so_far[(start[0],start[1])] = 0
+
 
     while not frontier.empty():
         current = frontier.get()
         if current == (goal[0], goal[1]):
             break
 
-        for next in neighbors(current[1], n_a):
+        neighbor_list = neighbors(current[1])
+        for next in neighbor_list:
             new_cost = cost_so_far[current[1]] + math.dist(current[1], next)
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
@@ -153,7 +149,12 @@ def a_star_search(start, goal, n_a):
     final_path.append(start)
     final_path.reverse()
 
-    return final_path, dist
+    i = len(final_path)
+    if random.random() < alpha:
+        i = random.randrange(1, len(final_path)+1, 1)
+        robot_failed = True
+
+    return final_path[:i], dist, robot_failed
 
 
 def calculate_costmap(n_a):
@@ -166,7 +167,6 @@ def calculate_costmap(n_a):
     for x in range(0, n_a):
         for y in range(0, n_a):
             map[x][y] = math.dist((0, 0), (x, y))
-
     return map
 
 
@@ -192,41 +192,6 @@ def find_max(n_a, k):
     return max
 
 
-def generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, l):
-    last_node = [(0, 0) for ki in range(k)]
-    nodes_seen = []
-    while n_a * n_a - len(nodes_covered) > 0:
-        for ki in range(0, k):
-            goal = (0, 0)
-            while goal in nodes_covered and math.dist(goal, (0, 0)) < robot_fuel[ki] and len(
-                    nodes_covered) < n_a * n_a:  # if goal is already covered, find a different one
-                nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
-                goal = random.choice(nodes_uncovered)
-
-            path, distance_travelled = a_star_search(last_node[ki], goal, n_a)
-
-            robot_paths[ki] = robot_paths[ki] + path
-
-            [nodes_seen.append(p) for p in path]
-
-            counted_nodes_seen = Counter(nodes_seen)
-            for n in nodes_seen:
-                if counted_nodes_seen[n] > rp:
-                    nodes_covered.add(n)
-
-            robot_fuel[ki] = robot_fuel[ki] - distance_travelled
-
-            last_node[ki] = robot_paths[ki][len(robot_paths[ki]) - 1]
-
-            # if robot_failed:
-            #     # print("ROBOT", ki, "FAILED")
-            #     last_node[ki] = (0, 0)
-
-            # managing fuel levels
-            if (0, 0) == last_node[ki]:
-                robot_fuel[ki] = l
-
-    return robot_paths
 
 
 def visualize_paths_brute_force(k, n_a, robot_paths, save_path=None):
@@ -248,53 +213,3 @@ def visualize_paths_brute_force(k, n_a, robot_paths, save_path=None):
         plt.savefig(save_path)
     else:
         plt.show()
-
-
-def animate(z, n_a, k, robot_paths):
-    pyplot.ion()
-    heatmap = np.zeros((n_a, n_a))
-    for ki in range(k):
-        if z < len(robot_paths[ki]):
-            (x, y) = robot_paths[ki][z]
-            heatmap[x][y] = heatmap[x][y] + 1
-
-    plt = pyplot.imshow(heatmap[:, :], norm=colors.Normalize(0, 25))
-
-    return plt
-
-
-def generateHeatmap(n_a):
-    pyplot.ion()
-    heatmap = np.zeros((n_a, n_a))
-    figure = pyplot.figure(figsize=(5, 5))
-    plt = pyplot.imshow(heatmap[:, :], norm=colors.Normalize(0, 25))
-
-    pyplot.colorbar().set_ticks([0, 25])
-
-
-# print(heatmap)
-# number_of_steps = max(len(robot_paths[ki]) for ki in range(k))
-# ani = animation.FuncAnimation(figure, animate, interval=number_of_steps, frames=number_of_steps)
-# ani.save("data/" + str(n_a) + "n" + str(k) + "r" + str(edge_length) + ".gif", fps=10)
-
-
-# sending to ArGoS
-"""
-import xml.etree.ElementTree as ET
-
-mytree = ET.parse('diffusion_1_positioning.argos')
-myroot = mytree.getroot()
-print(myroot.attrib)
-
-edge = [x/10 for x in range(int(-10*edge_length/2) , int(10*edge_length/2)+1, int(10*edge_length/(nodes_per_axis-1)))]
-path_string = "-1 -1, "
-for r in robot_paths[0]:
-    path_string = path_string + str(edge[r[0]]) + " " + str(edge[r[1]]) + ", "
-
-for x in myroot.iter('params'):
-  print(x.get('path'))
-  x.set('path', path_string)
-  x.set('path_length', str(1+len(robot_paths[0])))
-
-mytree.write('diffusion_2_positioning.argos')
-"""

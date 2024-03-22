@@ -16,68 +16,18 @@ from src.http_server.mrpcp import saveGraphPath, convertToWorldPath
 all_nodes = set()
 nodes_covered = set()  # nodes covered is a set of every node that has been covered so far
 alpha = 0.05
-robot_failure_percent = 0.1  # percent of robots that will fail as a value from 0 to 1
-
-def recalculate_paths(job_id, curr_robots_pos, failed_robot_id):
+def recalculate_paths(job_id,
+                      num_of_robots: int,
+                      nodes_to_robot_ratio: int,
+                      square_side_dist: float,
+                      fuel_capacity_ratio: float,
+                      failure_rate: int,
+                      curr_robots_pos, failed_robot_id):
     """
     This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
-    """
-    # Convert the current robot positions back to an integer array
-    curr_robots_pos = [int(pos) for pos in curr_robots_pos]
-
-    # Define the cache folder path relative to the current directory
-    cache_folder_path = os.path.join(os.getcwd(), 'cache')
-
-    # Check if the job folder exists
-    job_folder_path = os.path.join(cache_folder_path, job_id)
-    if not os.path.exists(job_folder_path):
-        print(f"Job folder does not exist: {job_folder_path}.")
-        return
-
-    # Read the result.json file to retrieve the parameters
-    result_file_path = os.path.join(job_folder_path, 'result.json')
-    if not os.path.exists(result_file_path):
-        print(f"Result file does not exist: {result_file_path}.")
-        return
-
-    # Parse the JSON content to extract the parameters
-    with open(result_file_path, 'r') as file:
-        result_data = json.load(file)
-        params = result_data.get('params')
-        previous_robot_node_path = result_data.get('robot_node_path')
-
-    # Use the extracted parameters for recalculation
-    params_tuple = getParamsFromJobId(job_id)
-    k, nk, ssd, fcr, fr, mode = params_tuple
-
-    print("Previous robot paths:", previous_robot_node_path)
-    print("Current robot positions:", curr_robots_pos)
-
-    # Convert the current (x,y) world positions to node positions. For the failed robot, round down to the nearest node position. For others, just do normal calculation.
-    new_robot_paths = recalcRobotPaths(previous_robot_node_path, curr_robots_pos, int(k), int(nk), int(ssd), float(fcr), int(fr), int(failed_robot_id))
-    print("New robot paths:", new_robot_paths)
-    # visualize the new paths and save the graph to the cache
-    visualize_recalculated_paths(new_robot_paths, int(k), int(nk), int(ssd), saveGraphPath(job_id, 'recalculated_paths'))
-
-    result_data = {'job_id': job_id, 'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'recalc'},
-                   'robot_node_path': new_robot_paths,
-                   'robot_world_path': convertToWorldPath(int(nk), ssd, new_robot_paths)}
-    saveResultsToCache(job_id, result_data, 'recalculated_paths.json')
-    return result_data  # Return the content of the JSON file
-
-
-def recalcRobotPaths(previous_robot_node_path, curr_robots_pos, num_of_robots: int,
-                     nodes_to_robot_ratio: int,
-                     square_side_dist: float,
-                     fuel_capacity_ratio: float,
-                     failure_rate: int):
-    """
-    This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
-    :param previous_node_path:
-    :param current_robot_positions:
-    :param failed_robot_id:
     :return: The recalculated node and world paths
     """
+    # Define the parameters
     k = num_of_robots  # number of robots
     n_a = k * nodes_to_robot_ratio  # number of targets in an axis
     d = square_side_dist # Chose the length of distance of each side of the square arena
@@ -85,40 +35,36 @@ def recalcRobotPaths(previous_robot_node_path, curr_robots_pos, num_of_robots: i
     MDBF = 100.0  # Mean Distance Between Failures
     alpha = 0.00001*failure_rate
     rpp = alpha * MDBF  # redundancy parameter percentage
-    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     rp = np.ceil(k * rpp) + 1
+
     # Fuel Capacity Parameters
     max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
 
     robot_fuel = [L for ki in range(k)] #robot fuel is a list storing each robot's fuel at the present moment
-    robot_paths = previous_robot_node_path  # previous robot paths
+
+    # Convert the current robot positions back to an integer array
+    curr_robots_pos = [int(pos) for pos in curr_robots_pos]
+
+    print("Current robot positions:", curr_robots_pos)
 
     # initialize all nodes
     initAllNodes(k, nodes_to_robot_ratio)
 
-    new_robot_paths = generate_robot_paths_redundancy(n_a, k, rp, robot_paths, robot_fuel, L)
-
-    print("New robot paths:", new_robot_paths)
-    # visualize_paths_brute_force(k, n_a, new_robot_paths)
+    # Convert the current (x,y) world positions to node positions. For the failed robot, round down to the nearest node position. For others, just do normal calculation.
+    new_robot_paths = generate_robot_paths_redundancy_failure(int(k), int(nk), int(ssd), float(fcr), int(fr), curr_robots_pos,  int(failed_robot_id))
+    worldPath = convertToWorldPath(n_a, d, new_robot_paths)
 
     print("Heuristic recalculation completed...returning paths to server endpoint /solve")
-    worldPath = convertToWorldPath(n_a, d, new_robot_paths)
-    print("The optimized paths are: ", new_robot_paths)
+    print("New robot paths:", new_robot_paths)
+
     print("The optimized paths converted to world path are: ", worldPath)
     print("Returning solution to be sent to a json file...")
 
-    print("Recalculated paths: ", new_robot_paths)
-
-    return new_robot_paths, worldPath
-
-
-def getIndexOf(path, position):
-    try:
-        return path.index(position)
-    except ValueError:
-        return -1
+    # visualize the new paths and save the graph to the cache
+    visualize_recalculated_paths(new_robot_paths, int(k), int(nk), int(ssd), saveGraphPath(job_id, 'recalculated_paths'))
+    return new_robot_paths, worldPath   # Return the content of the JSON file
 
 def visualize_recalculated_paths(paths, robots, targets, d, save_path=None):
     k = robots
@@ -216,5 +162,53 @@ def getParamsFromJobId(job_id):
     """
     k, q_k, n_a, rp, l, d, mode = job_id.split('_')
     return k, q_k, n_a, rp, l, d, mode
+
+
+def generate_robot_paths_redundancy_failure(k, n_a, fuel_capacity):
+    """
+    This function solves the MRPCP problem using the heuristic approach where the failed robot starts back at the origin.
+    :return: The optimized paths and the world path
+    """
+    last_node = [(0,0) for ki in range(k)]
+    nodes_seen = []
+    while n_a*n_a - len(nodes_covered) > 0:
+        for ki in range(0,k):
+            goal = (0,0)
+            while goal in nodes_covered and math.dist(goal, (0,0)) < robot_fuel[ki] and len(nodes_covered) < n_a*n_a: #if goal is already covered, find a different one
+                nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
+
+                max_dist = 0
+                goal = (0,0)
+                for n in nodes_uncovered:
+                    if math.dist((0,0),n) > max_dist:
+                        max_dist = math.dist((0,0),n)
+                        goal = n
+
+
+            path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal)
+
+            robot_paths[ki] = robot_paths[ki] + path
+
+            [nodes_seen.append(p) for p in path]
+
+            counted_nodes_seen = Counter(nodes_seen)
+
+            for n in nodes_seen:
+                if counted_nodes_seen[n] >= RP:
+                    nodes_covered.add(n)
+
+            robot_fuel[ki] = robot_fuel[ki] - distance_travelled
+
+            last_node[ki] = robot_paths[ki][len(robot_paths[ki])-1]
+
+            if robot_failed == True:
+                last_node[ki] = (0,0)
+
+            #managing fuel levels
+            if (0,0) == last_node[ki]:
+                robot_fuel[ki] = fuel_capacity
+
+
+    return robot_paths, nodes_seen
 
 # %%
