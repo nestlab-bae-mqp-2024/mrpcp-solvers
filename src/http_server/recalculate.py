@@ -4,13 +4,13 @@ Date: 2/17/2024
 
 This program defines the methods relating to recalculating the paths for robots after a failure occurs
 """
-
+import math
 import os
 from flask import json
 
-from src.http_server.heuristic2 import *
-from src.http_server.json_handlers import saveResultsToCache
-from src.http_server.mrpcp import saveGraphPath, convertToWorldPath
+#from src.http_server.heuristic2 import *
+#from src.http_server.json_handlers import saveResultsToCache
+#from src.http_server.mrpcp import saveGraphPath, convertToWorldPath
 
 # Global variables
 all_nodes = set()
@@ -24,7 +24,7 @@ def recalculate_paths(job_id,
                       failure_rate: int,
                       curr_robots_pos, failed_robot_id):
     """
-    This function recalculates the paths based on the current positions and where the failed robot starts back at the origin.
+    This function recalculates the paths based on the current positioFns and where the failed robot starts back at the origin.
     :return: The recalculated node and world paths
     """
     # Define the parameters
@@ -53,7 +53,7 @@ def recalculate_paths(job_id,
     initAllNodes(k, nodes_to_robot_ratio)
 
     # Convert the current (x,y) world positions to node positions. For the failed robot, round down to the nearest node position. For others, just do normal calculation.
-    new_robot_paths = generate_robot_paths_redundancy_failure(int(k), int(nk), int(ssd), float(fcr), int(fr), curr_robots_pos,  int(failed_robot_id))
+    new_robot_paths = generate_robot_paths_redundancy_failure(int(k), int(n_a), L, int(ssd), int(fr), curr_robots_pos,  int(failed_robot_id))
     worldPath = convertToWorldPath(n_a, d, new_robot_paths)
 
     print("Heuristic recalculation completed...returning paths to server endpoint /solve")
@@ -164,17 +164,23 @@ def getParamsFromJobId(job_id):
     return k, q_k, n_a, rp, l, d, mode
 
 
-def generate_robot_paths_redundancy_failure(k, n_a, fuel_capacity):
+def generate_robot_paths_redundancy_failure(k, n_a, L, ssd, failure_rate, curr_robots_pos, failed_robot_id):
     """
     This function solves the MRPCP problem using the heuristic approach where the failed robot starts back at the origin.
     :return: The optimized paths and the world path
     """
-    last_node = [(0,0) for ki in range(k)]
-    nodes_seen = []
+    world_posns = convertToWorldPath(n_a, d, curr_robots_pos)
+    dist_betw_each_node = ssd/(n_a-1)
+
+
+    last_node = [(round((ssd/2 + world_posns[ki][0])/(dist_betw_each_node)), round((ssd/2 + world_posns[ki][1])/(dist_betw_each_node))) for ki in range(k)]
+
+    last_node[failed_robot_id] = (0,0)
+
     while n_a*n_a - len(nodes_covered) > 0:
         for ki in range(0,k):
             goal = (0,0)
-            while goal in nodes_covered and math.dist(goal, (0,0)) < robot_fuel[ki] and len(nodes_covered) < n_a*n_a: #if goal is already covered, find a different one
+            while goal in nodes_covered and math.dist(goal, (0,0) < robot_fuel[ki]) and len(nodes_covered) < n_a*n_a: #if goal is already covered, find a different one
                 nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
 
                 max_dist = 0
@@ -201,14 +207,13 @@ def generate_robot_paths_redundancy_failure(k, n_a, fuel_capacity):
 
             last_node[ki] = robot_paths[ki][len(robot_paths[ki])-1]
 
-            if robot_failed == True:
-                last_node[ki] = (0,0)
+            #if robot_failed == True:
+            #    last_node[ki] = (0,0)
 
             #managing fuel levels
             if (0,0) == last_node[ki]:
-                robot_fuel[ki] = fuel_capacity
+                robot_fuel[ki] = L
 
 
     return robot_paths, nodes_seen
-
 # %%

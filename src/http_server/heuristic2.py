@@ -102,6 +102,20 @@ def initAllNodes(k, nk):
             all_nodes.add((x, y))
     return all_nodes
 
+#takes in a tuple representing node that's neighbors are desired
+def neighbors(curr):
+    ns = [(curr[0]+1, curr[1]), (curr[0]-1, curr[1]), (curr[0], curr[1]+1), (curr[0], curr[1]-1), (curr[0]+1, curr[1]+1), (curr[0]-1, curr[1]-1), (curr[0]+1, curr[1]-1), (curr[0]-1, curr[1]+1)]
+    neighbors = []
+    for n in ns:
+        if n[0] < nodes_per_axis and n[0] >= 0 and n[1] < nodes_per_axis and n[1] >= 0:
+            neighbors.append(n)
+    return neighbors
+
+def heuristic(node):
+    if node in nodes_covered:
+        return -1
+    else:
+        return -10
 
 def a_star_search(start, goal, n_a):
     """
@@ -150,9 +164,9 @@ def a_star_search(start, goal, n_a):
     final_path.reverse()
 
     i = len(final_path)
-    if random.random() < alpha:
-        i = random.randrange(1, len(final_path)+1, 1)
-        robot_failed = True
+    #if random.random() < alpha:
+    #    i = random.randrange(1, len(final_path)+1, 1)
+    #    robot_failed = True
 
     return final_path[:i], dist, robot_failed
 
