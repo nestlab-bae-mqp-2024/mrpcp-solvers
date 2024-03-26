@@ -20,7 +20,8 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                                     nodes_to_robot_ratio: int,
                                     square_side_dist: float,
                                     fuel_capacity_ratio: float,
-                                    failure_rate: int):
+                                    failure_rate: int,
+                                    visualization_path: str = None):
     """
     This function solves the MRPCP problem using the heuristic approach with redundancy and failure rate. This is NOT recalculation
     :return: The optimized paths and the world path
@@ -28,10 +29,10 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     # Define the parameters
     k = num_of_robots  # number of robots
     n_a = k * nodes_to_robot_ratio  # number of targets in an axis
-    d = square_side_dist # Chose the length of distance of each side of the square arena
+    d = square_side_dist  # Chose the length of distance of each side of the square arena
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     MDBF = 100.0  # Mean Distance Between Failures
-    alpha = 0.00001*failure_rate
+    alpha = 0.00001 * failure_rate
     rpp = alpha * MDBF  # redundancy parameter percentage
     rp = np.ceil(k * rpp) + 1
 
@@ -40,28 +41,28 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
 
-    initAllNodes()
+    initAllNodes(k, nodes_to_robot_ratio)
 
-    robot_fuel = [L for ki in range(k)] #robot fuel is a list storing each robot's fuel at the present moment
+    robot_fuel = [L for ki in range(k)]  # robot fuel is a list storing each robot's fuel at the present moment
+    robot_paths = [[] for ki in range(k)]
 
-
-    last_node = [(0,0) for ki in range(k)]
+    last_node = [(0, 0) for ki in range(k)]
     nodes_seen = []
-    while n_a*n_a - len(nodes_covered) > 0:
-        for ki in range(0,k):
-            goal = (0,0)
-            while goal in nodes_covered and math.dist(goal, (0,0)) < robot_fuel[ki] and len(nodes_covered) < n_a*n_a: #if goal is already covered, find a different one
+    while n_a * n_a - len(nodes_covered) > 0:
+        for ki in range(0, k):
+            goal = (0, 0)
+            while goal in nodes_covered and math.dist(goal, (0, 0)) < robot_fuel[ki] and len(
+                    nodes_covered) < n_a * n_a:  # if goal is already covered, find a different one
                 nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
 
                 max_dist = 0
-                goal = (0,0)
+                goal = (0, 0)
                 for n in nodes_uncovered:
-                    if math.dist((0,0),n) > max_dist:
-                        max_dist = math.dist((0,0),n)
+                    if math.dist((0, 0), n) > max_dist:
+                        max_dist = math.dist((0, 0), n)
                         goal = n
 
-
-            path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal)
+            path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal, n_a)
 
             robot_paths[ki] = robot_paths[ki] + path
 
@@ -70,24 +71,24 @@ def generate_robot_paths_redundancy(num_of_robots: int,
             counted_nodes_seen = Counter(nodes_seen)
 
             for n in nodes_seen:
-                if counted_nodes_seen[n] >= RP:
+                if counted_nodes_seen[n] >= rp:
                     nodes_covered.add(n)
 
             robot_fuel[ki] = robot_fuel[ki] - distance_travelled
 
-            last_node[ki] = robot_paths[ki][len(robot_paths[ki])-1]
+            last_node[ki] = robot_paths[ki][len(robot_paths[ki]) - 1]
 
             if robot_failed == True:
-                last_node[ki] = (0,0)
+                last_node[ki] = (0, 0)
 
-            #managing fuel levels
-            if (0,0) == last_node[ki]:
-                robot_fuel[ki] = fuel_capacity
+            # managing fuel levels
+            if (0, 0) == last_node[ki]:
+                robot_fuel[ki] = L
 
-    #visualize_paths_brute_force(k, n_a, new_robot_paths)
+    visualize_paths_brute_force(k, n_a, robot_paths)
 
     return robot_paths, nodes_seen
-    #return new_robot_paths, robot_world_paths
+    # return new_robot_paths, robot_world_paths
 
 
 def initAllNodes(k, nk):
@@ -102,20 +103,25 @@ def initAllNodes(k, nk):
             all_nodes.add((x, y))
     return all_nodes
 
-#takes in a tuple representing node that's neighbors are desired
-def neighbors(curr):
-    ns = [(curr[0]+1, curr[1]), (curr[0]-1, curr[1]), (curr[0], curr[1]+1), (curr[0], curr[1]-1), (curr[0]+1, curr[1]+1), (curr[0]-1, curr[1]-1), (curr[0]+1, curr[1]-1), (curr[0]-1, curr[1]+1)]
+
+# takes in a tuple representing node that's neighbors are desired
+def neighbors(curr, nodes_per_axis):
+    ns = [(curr[0] + 1, curr[1]), (curr[0] - 1, curr[1]), (curr[0], curr[1] + 1), (curr[0], curr[1] - 1),
+          (curr[0] + 1, curr[1] + 1), (curr[0] - 1, curr[1] - 1), (curr[0] + 1, curr[1] - 1),
+          (curr[0] - 1, curr[1] + 1)]
     neighbors = []
     for n in ns:
         if n[0] < nodes_per_axis and n[0] >= 0 and n[1] < nodes_per_axis and n[1] >= 0:
             neighbors.append(n)
     return neighbors
 
+
 def heuristic(node):
     if node in nodes_covered:
         return -1
     else:
         return -10
+
 
 def a_star_search(start, goal, n_a):
     """
@@ -128,20 +134,19 @@ def a_star_search(start, goal, n_a):
     """
     robot_failed = False
     frontier = PriorityQueue()
-    frontier.put((0, (start[0],start[1])))
+    frontier.put((0, (start[0], start[1])))
 
     came_from = dict()
     cost_so_far = dict()
-    came_from[(start[0],start[1])] = None
-    cost_so_far[(start[0],start[1])] = 0
-
+    came_from[(start[0], start[1])] = None
+    cost_so_far[(start[0], start[1])] = 0
 
     while not frontier.empty():
         current = frontier.get()
         if current == (goal[0], goal[1]):
             break
 
-        neighbor_list = neighbors(current[1])
+        neighbor_list = neighbors(current[1], n_a)
         for next in neighbor_list:
             new_cost = cost_so_far[current[1]] + math.dist(current[1], next)
             if next not in cost_so_far or new_cost < cost_so_far[next]:
@@ -164,7 +169,7 @@ def a_star_search(start, goal, n_a):
     final_path.reverse()
 
     i = len(final_path)
-    #if random.random() < alpha:
+    # if random.random() < alpha:
     #    i = random.randrange(1, len(final_path)+1, 1)
     #    robot_failed = True
 
@@ -206,9 +211,7 @@ def find_max(n_a, k):
     return max
 
 
-
-
-def visualize_paths_brute_force(k, n_a, robot_paths, save_path=None):
+def visualize_paths_brute_force(k, n_a, robot_paths, visualization_path=None):
     for ki in range(k):
         fig = pyplot.figure()
         fig.suptitle(f"Path for robot #{ki}")
@@ -223,7 +226,7 @@ def visualize_paths_brute_force(k, n_a, robot_paths, save_path=None):
             past_node = (node[0], node[1])
 
         pyplot.grid()
-    if save_path:
-        plt.savefig(save_path)
+    if visualization_path:
+        plt.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
     else:
         plt.show()

@@ -8,9 +8,9 @@ import math
 import os
 from flask import json
 
-#from src.http_server.heuristic2 import *
-#from src.http_server.json_handlers import saveResultsToCache
-#from src.http_server.mrpcp import saveGraphPath, convertToWorldPath
+from src.http_server.heuristic2 import *
+from src.http_server.json_handlers import saveResultsToCache
+from src.http_server.mrpcp import saveGraphPath, convertToWorldPath
 
 # Global variables
 all_nodes = set()
@@ -53,7 +53,7 @@ def recalculate_paths(job_id,
     initAllNodes(k, nodes_to_robot_ratio)
 
     # Convert the current (x,y) world positions to node positions. For the failed robot, round down to the nearest node position. For others, just do normal calculation.
-    new_robot_paths = generate_robot_paths_redundancy_failure(int(k), int(n_a), L, int(ssd), int(fr), curr_robots_pos,  int(failed_robot_id))
+    new_robot_paths = generate_robot_paths_redundancy_failure(int(k), int(n_a), L, int(square_side_dist), int(failure_rate), curr_robots_pos,  int(failed_robot_id))
     worldPath = convertToWorldPath(n_a, d, new_robot_paths)
 
     print("Heuristic recalculation completed...returning paths to server endpoint /solve")
