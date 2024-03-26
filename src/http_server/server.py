@@ -182,7 +182,7 @@ def recalc_endpoint():
     failed_robot_id = request.args.get('failed_robot_id')
     k, nk, ssd, fcr, fr, mode = getParamsFromJobId(job_id)
     start_time = time.time()
-    robot_node_path, robot_world_path = recalculate_paths(int(k), int(nk), float(ssd), float(fcr), int(fr), curr_robots_pos, failed_robot_id)
+    robot_node_path, robot_world_path = recalculate_paths(int(k), int(nk), float(ssd), float(fcr), int(fr), curr_robots_pos, curr_fuel_levels, failed_robot_id)
     runtime = time.time() - start_time
     log_runtime("solve_endpoint", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
     result_data = {'job_id': job_id,
