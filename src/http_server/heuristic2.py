@@ -7,7 +7,7 @@ from collections import Counter
 
 from matplotlib import pyplot, colors, pyplot as plt
 
-from src.http_server.mrpcp import convertToWorldPath
+#from src.http_server.mrpcp import convertToWorldPath
 
 # Global variables
 all_nodes = set()
@@ -103,7 +103,7 @@ def initAllNodes(k, nk):
     return all_nodes
 
 #takes in a tuple representing node that's neighbors are desired
-def neighbors(curr):
+def neighbors(curr, nodes_per_axis):
     ns = [(curr[0]+1, curr[1]), (curr[0]-1, curr[1]), (curr[0], curr[1]+1), (curr[0], curr[1]-1), (curr[0]+1, curr[1]+1), (curr[0]-1, curr[1]-1), (curr[0]+1, curr[1]-1), (curr[0]-1, curr[1]+1)]
     neighbors = []
     for n in ns:
@@ -141,7 +141,7 @@ def a_star_search(start, goal, n_a):
         if current == (goal[0], goal[1]):
             break
 
-        neighbor_list = neighbors(current[1])
+        neighbor_list = neighbors(current[1], n_a)
         for next in neighbor_list:
             new_cost = cost_so_far[current[1]] + math.dist(current[1], next)
             if next not in cost_so_far or new_cost < cost_so_far[next]:
@@ -227,3 +227,5 @@ def visualize_paths_brute_force(k, n_a, robot_paths, save_path=None):
         plt.savefig(save_path)
     else:
         plt.show()
+
+# %%

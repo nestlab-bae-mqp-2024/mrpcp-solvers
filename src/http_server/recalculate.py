@@ -164,14 +164,18 @@ def getParamsFromJobId(job_id):
     return k, q_k, n_a, rp, l, d, mode
 
 
+
+
 def generate_robot_paths_redundancy_failure(k, n_a, L, ssd, failure_rate, curr_robots_pos, failed_robot_id):
     """
     This function solves the MRPCP problem using the heuristic approach where the failed robot starts back at the origin.
     :return: The optimized paths and the world path
     """
-    world_posns = convertToWorldPath(n_a, d, curr_robots_pos)
-    dist_betw_each_node = ssd/(n_a-1)
 
+    world_posns = convertToWorldPath(n_a, d, curr_robots_pos)
+
+    dist_betw_each_node = ssd/(n_a-1)
+    robot_paths = [[] for ki in range(k)]
 
     last_node = [(round((ssd/2 + world_posns[ki][0])/(dist_betw_each_node)), round((ssd/2 + world_posns[ki][1])/(dist_betw_each_node))) for ki in range(k)]
 
@@ -191,7 +195,7 @@ def generate_robot_paths_redundancy_failure(k, n_a, L, ssd, failure_rate, curr_r
                         goal = n
 
 
-            path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal)
+            path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal, n_a)
 
             robot_paths[ki] = robot_paths[ki] + path
 
@@ -207,13 +211,16 @@ def generate_robot_paths_redundancy_failure(k, n_a, L, ssd, failure_rate, curr_r
 
             last_node[ki] = robot_paths[ki][len(robot_paths[ki])-1]
 
-            #if robot_failed == True:
-            #    last_node[ki] = (0,0)
-
             #managing fuel levels
             if (0,0) == last_node[ki]:
                 robot_fuel[ki] = L
 
+    world_path = [[] for ki in range(k)]
 
-    return robot_paths, nodes_seen
-# %%
+    for ki in range(0,k):
+        path = []
+        for item in robot_paths[ki]:
+            path.append([dist_betw_each_node*item[0]-ssd/2, dist_betw_each_node*item[1]-ssd/2])
+        world_path[ki] = path
+
+    return robot_paths
