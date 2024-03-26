@@ -114,7 +114,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
         world_path[ki] = path
 
     visualize_paths_brute_force(n_a, robot_paths, visualization_path)
-
+    visualize_coverage(20, 1000, n_a, robot_paths, square_side_dist, visualization_path)
     return robot_paths, world_path
 
 
@@ -269,3 +269,46 @@ def visualize_paths_brute_force(n_a, robot_paths, visualization_path=None):
         pyplot.show()
 
 # %%
+
+def visualize_coverage(step_requirement, number_of_steps, n_a, robot_paths, ssd, visualization_path=None):
+    num_of_robots = len(robot_paths)
+    coverage_figure = pyplot.figure(figsize=(5,5))
+    coverage_ax = pyplot.subplot()
+    pyplot.xlabel('number of steps')
+    pyplot.ylabel('% coverage')
+
+    comparison = 100*step_requirement/(n_a*n_a/num_of_robots)
+
+    coverage_list = []
+
+    dist_betw_each_node = ssd/(n_a-1)
+
+    binary_heatmap = np.zeros((n_a, n_a))
+
+    path_counter = [0 for ki in range(num_of_robots)]
+    for step_counter in range(0,number_of_steps):
+        for a in range(0, n_a):
+            for b in range(0, n_a):
+                binary_heatmap[a][b] = max(0, binary_heatmap[a][b] - 1)
+
+        for ki in range(num_of_robots):
+            print(ki)
+            print(path_counter[ki])
+            print(len(robot_paths[ki]))
+            if path_counter[ki] >= len(robot_paths[ki])-1:
+                path_counter[ki] = 0
+            else:
+                path_counter[ki] += 1
+
+            (x,y) = robot_paths[ki][path_counter[ki]]
+            binary_heatmap[x][y] = step_requirement
+
+        coverage = round(100*len(binary_heatmap[binary_heatmap > 0])/(n_a*n_a),2)
+        coverage_list.append(coverage)
+
+
+    r = [*range(0, len(coverage_list))]
+    coverage_ax.plot(r, coverage_list[0:number_of_steps])
+    coverage_ax.plot(r, [comparison]*number_of_steps, '--')
+
+    pyplot.savefig(visualization_path.replace("visualization.png", str(n_a) + "n" + str(num_of_robots) + "r" + str(ssd) +"e_"+str(ki)+ "st_rq" + str(step_requirement) + ".png"))
