@@ -55,13 +55,10 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     # logic for if recalc or not
     if failed_robot_id is None and curr_fuel_levels is None and curr_robots_pos is None:
         print("Conducting heuristic2")
-        curr_robots_pos = [0 for ki in range(k)]
-        world_posns = convertToWorldPath(n_a, square_side_dist / 2, curr_robots_pos)
         print("Initializing robot fuel levels...")
         robot_fuel = [L for ki in range(k)]  # robot fuel is a list storing each robot's fuel at the present moment
         print("Initializing last node...")
-        last_node = [(round((square_side_dist / 2 + world_posns[ki][0]) / (dist_betw_each_node)),
-                      round((square_side_dist / 2 + world_posns[ki][1]) / (dist_betw_each_node))) for ki in range(k)]
+        last_node = [(0,0) for ki in range(k)]
     else:
         print("Conducting recalculation")
         world_posns = convertToWorldPath(n_a, square_side_dist, curr_robots_pos)
@@ -76,7 +73,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     while n_a * n_a - len(nodes_covered) > 0:
         for ki in range(0, k):
             goal = (0, 0)
-            while goal in nodes_covered and math.dist(goal, (0, 0) < robot_fuel[ki]) and len(
+            while goal in nodes_covered and math.dist(goal, (0, 0)) < robot_fuel[ki] and len(
                     nodes_covered) < n_a * n_a:  # if goal is already covered, find a different one
                 nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
 
