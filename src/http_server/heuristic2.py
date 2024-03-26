@@ -5,7 +5,7 @@ import random
 
 from collections import Counter
 
-from matplotlib import pyplot, colors, pyplot as plt
+from matplotlib import pyplot, colors
 
 from src.http_server.mrpcp import convertToWorldPath
 
@@ -113,7 +113,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                          dist_betw_each_node * item[1] - square_side_dist / 2])
         world_path[ki] = path
 
-    visualize_paths_brute_force(k, n_a, robot_paths, visualization_path)
+    visualize_paths_brute_force(n_a, robot_paths, visualization_path)
 
     return robot_paths, world_path
 
@@ -238,24 +238,34 @@ def find_max(n_a, k):
     return max
 
 
-def visualize_paths_brute_force(k, n_a, robot_paths, visualization_path=None):
-    for ki in range(k):
-        fig = pyplot.figure()
-        fig.suptitle(f"Path for robot #{ki}")
+def visualize_paths_brute_force(n_a, robot_paths, visualization_path=None):
+    num_rows = (len(robot_paths) + 1) // 2  # Two plots per row
+    fig, axs = pyplot.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
+
+
+    if len(robot_paths) > 2:
+        axs = axs.flatten()
+
+    for ki in range(len(robot_paths)):
+        print(ki)
+        ax = axs[ki]
 
         past_node = (0, 0)
-        [pyplot.scatter(x, y, c='blue', s=10) for x in range(0, n_a) for y in range(0, n_a)]
+        [ax.scatter(x, y, c='blue', s=10) for x in range(0, n_a) for y in range(0, n_a)]
 
         for node in robot_paths[ki]:
-            pyplot.scatter(node[0], node[1], c="purple", s=8)
-            pyplot.plot([node[0], past_node[0]], [node[1], past_node[1]], color="purple", linewidth=1)
+            ax.scatter(node[0], node[1], c="purple", s=8)
+            ax.plot([node[0], past_node[0]], [node[1], past_node[1]], color="purple", linewidth=1)
 
             past_node = (node[0], node[1])
 
-        pyplot.grid()
+        ax.set_title(f"Robot #{ki}")
+        ax.grid()
+        ax.legend()
+
     if visualization_path:
-        plt.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
+        pyplot.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
     else:
-        plt.show()
+        pyplot.show()
 
 # %%
