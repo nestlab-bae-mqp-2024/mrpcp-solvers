@@ -7,7 +7,9 @@ from collections import Counter
 
 from matplotlib import pyplot, colors, pyplot as plt
 
-#from src.http_server.mrpcp import convertToWorldPath
+from src.http_server.mrpcp import convertToWorldPath
+
+# from src.http_server.mrpcp import convertToWorldPath
 
 # Global variables
 all_nodes = set()
@@ -21,12 +23,16 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                                     square_side_dist: float,
                                     fuel_capacity_ratio: float,
                                     failure_rate: int,
+                                    failed_robot_id: int = None,
+                                    curr_robots_pos: list = None,
+                                    curr_fuel_levels: list = None,
                                     visualization_path: str = None):
     """
     This function solves the MRPCP problem using the heuristic approach with redundancy and failure rate. This is NOT recalculation
     :return: The optimized paths and the world path
     """
     # Define the parameters
+    print("Initializing parameters...")
     k = num_of_robots  # number of robots
     n_a = k * nodes_to_robot_ratio  # number of targets in an axis
     d = square_side_dist  # Chose the length of distance of each side of the square arena
@@ -41,17 +47,36 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
 
+    # Initialize the nodes
+    print("Initializing nodes...")
     initAllNodes(k, nodes_to_robot_ratio)
+    dist_betw_each_node = square_side_dist / (n_a - 1)
 
-    robot_fuel = [L for ki in range(k)]  # robot fuel is a list storing each robot's fuel at the present moment
+    # logic for if recalc or not
+    if failed_robot_id is None and curr_fuel_levels is None and curr_robots_pos is None:
+        print("Conducting heuristic2")
+        curr_robots_pos = [0 for ki in range(k)]
+        world_posns = convertToWorldPath(n_a, square_side_dist / 2, curr_robots_pos)
+        print("Initializing robot fuel levels...")
+        robot_fuel = [L for ki in range(k)]  # robot fuel is a list storing each robot's fuel at the present moment
+        print("Initializing last node...")
+        last_node = [(round((square_side_dist / 2 + world_posns[ki][0]) / (dist_betw_each_node)),
+                      round((square_side_dist / 2 + world_posns[ki][1]) / (dist_betw_each_node))) for ki in range(k)]
+    else:
+        print("Conducting recalculation")
+        world_posns = convertToWorldPath(n_a, square_side_dist, curr_robots_pos)
+        robot_fuel = curr_fuel_levels
+        last_node = [(round((square_side_dist / 2 + world_posns[ki][0]) / (dist_betw_each_node)),
+                      round((square_side_dist / 2 + world_posns[ki][1]) / (dist_betw_each_node))) for ki in range(k)]
+        last_node[failed_robot_id] = (0, 0)
+
     robot_paths = [[] for ki in range(k)]
-
-    last_node = [(0, 0) for ki in range(k)]
     nodes_seen = []
+
     while n_a * n_a - len(nodes_covered) > 0:
         for ki in range(0, k):
             goal = (0, 0)
-            while goal in nodes_covered and math.dist(goal, (0, 0)) < robot_fuel[ki] and len(
+            while goal in nodes_covered and math.dist(goal, (0, 0) < robot_fuel[ki]) and len(
                     nodes_covered) < n_a * n_a:  # if goal is already covered, find a different one
                 nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
 
@@ -78,17 +103,22 @@ def generate_robot_paths_redundancy(num_of_robots: int,
 
             last_node[ki] = robot_paths[ki][len(robot_paths[ki]) - 1]
 
-            if robot_failed == True:
-                last_node[ki] = (0, 0)
-
             # managing fuel levels
             if (0, 0) == last_node[ki]:
                 robot_fuel[ki] = L
 
-    visualize_paths_brute_force(k, n_a, robot_paths)
+    world_path = [[] for ki in range(k)]
 
-    return robot_paths, nodes_seen
-    # return new_robot_paths, robot_world_paths
+    for ki in range(0, k):
+        path = []
+        for item in robot_paths[ki]:
+            path.append([dist_betw_each_node * item[0] - square_side_dist / 2,
+                         dist_betw_each_node * item[1] - square_side_dist / 2])
+        world_path[ki] = path
+
+    visualize_paths_brute_force(k, n_a, robot_paths, visualization_path)
+
+    return robot_paths, world_path
 
 
 def initAllNodes(k, nk):
@@ -103,9 +133,12 @@ def initAllNodes(k, nk):
             all_nodes.add((x, y))
     return all_nodes
 
-#takes in a tuple representing node that's neighbors are desired
+
+# takes in a tuple representing node that's neighbors are desired
 def neighbors(curr, nodes_per_axis):
-    ns = [(curr[0]+1, curr[1]), (curr[0]-1, curr[1]), (curr[0], curr[1]+1), (curr[0], curr[1]-1), (curr[0]+1, curr[1]+1), (curr[0]-1, curr[1]-1), (curr[0]+1, curr[1]-1), (curr[0]-1, curr[1]+1)]
+    ns = [(curr[0] + 1, curr[1]), (curr[0] - 1, curr[1]), (curr[0], curr[1] + 1), (curr[0], curr[1] - 1),
+          (curr[0] + 1, curr[1] + 1), (curr[0] - 1, curr[1] - 1), (curr[0] + 1, curr[1] - 1),
+          (curr[0] - 1, curr[1] + 1)]
     neighbors = []
     for n in ns:
         if n[0] < nodes_per_axis and n[0] >= 0 and n[1] < nodes_per_axis and n[1] >= 0:
