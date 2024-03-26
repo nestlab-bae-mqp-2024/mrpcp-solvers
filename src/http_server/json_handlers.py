@@ -44,4 +44,3 @@ def saveGraphPath(job_id, title):
 
     # Construct the save path for the visualization under the 'graphs' directory
     return os.path.join(visualization_folder_path, title)
-
