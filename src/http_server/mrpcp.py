@@ -14,7 +14,7 @@ from gurobipy import GRB
 from scipy.spatial import distance
 import os
 from src.http_server.json_handlers import saveGraphPath
-
+from src.http_server.utils.visualize import visualize_coverage
 
 def solve_milp_with_optimizations(num_of_robots: int,
                                   nodes_to_robot_ratio: int,
@@ -389,6 +389,10 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
     print("MILP solution completed...returning paths to server endpoint /solve")
     worldPath = convertToWorldPath(n_a, d, optimized_paths_2opt)
+
+    print("Visualizing percent coverage over time:")
+    visualize_coverage(20, 1000, n_a, d, None, worldPath, "visualization.png")
+
     print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
     print("The optimized paths converted to world path are: ", worldPath)
     print("Returning solution to be sent to a json file...")

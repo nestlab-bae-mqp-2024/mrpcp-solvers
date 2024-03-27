@@ -9,6 +9,7 @@ from matplotlib import pyplot, colors
 
 from src.http_server.mrpcp import convertToWorldPath
 
+from src.http_server.utils.visualize import visualize_coverage
 # from src.http_server.mrpcp import convertToWorldPath
 
 # Global variables
@@ -114,7 +115,8 @@ def generate_robot_paths_redundancy(num_of_robots: int,
         world_path[ki] = path
 
     visualize_paths_brute_force(n_a, robot_paths, visualization_path)
-    visualize_coverage(20, 1000, n_a, robot_paths, square_side_dist, visualization_path)
+    visualize_coverage(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
+
     return robot_paths, world_path
 
 
@@ -202,42 +204,6 @@ def a_star_search(start, goal, n_a):
 
     return final_path[:i], dist, robot_failed
 
-
-def calculate_costmap(n_a):
-    """
-    define a costmap of the field in terms of distance from depot, in the form
-    :param n_a:
-    :return:
-    """
-    map = np.zeros((n_a, n_a))
-    for x in range(0, n_a):
-        for y in range(0, n_a):
-            map[x][y] = math.dist((0, 0), (x, y))
-    return map
-
-
-# finds k (# of robots) of the largest values in the costmap
-# not super useful for this just anticipate it being useful i think
-def find_max(n_a, k):
-    map = calculate_costmap()
-    max = [[0, (0, 0)] for r in range(k)]
-    for x in range(0, n_a):
-        for y in range(0, n_a):
-            curr = map[x][y]
-            if curr > max[2][0]:
-                if curr > max[1][0]:
-                    if curr > max[0][0]:
-                        max[2] = max[1]
-                        max[1] = max[0]
-                        max[0] = [curr, (x, y)]
-                    else:
-                        max[2] = max[1]
-                        max[1] = [curr, (x, y)]
-                else:
-                    max[2] = [curr, (x, y)]
-    return max
-
-
 def visualize_paths_brute_force(n_a, robot_paths, visualization_path=None):
     num_rows = (len(robot_paths) + 1) // 2  # Two plots per row
     fig, axs = pyplot.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
@@ -247,7 +213,6 @@ def visualize_paths_brute_force(n_a, robot_paths, visualization_path=None):
         axs = axs.flatten()
 
     for ki in range(len(robot_paths)):
-        print(ki)
         ax = axs[ki]
 
         past_node = (0, 0)
@@ -269,46 +234,3 @@ def visualize_paths_brute_force(n_a, robot_paths, visualization_path=None):
         pyplot.show()
 
 # %%
-
-def visualize_coverage(step_requirement, number_of_steps, n_a, robot_paths, ssd, visualization_path=None):
-    num_of_robots = len(robot_paths)
-    coverage_figure = pyplot.figure(figsize=(5,5))
-    coverage_ax = pyplot.subplot()
-    pyplot.xlabel('number of steps')
-    pyplot.ylabel('% coverage')
-
-    comparison = 100*step_requirement/(n_a*n_a/num_of_robots)
-
-    coverage_list = []
-
-    dist_betw_each_node = ssd/(n_a-1)
-
-    binary_heatmap = np.zeros((n_a, n_a))
-
-    path_counter = [0 for ki in range(num_of_robots)]
-    for step_counter in range(0,number_of_steps):
-        for a in range(0, n_a):
-            for b in range(0, n_a):
-                binary_heatmap[a][b] = max(0, binary_heatmap[a][b] - 1)
-
-        for ki in range(num_of_robots):
-            print(ki)
-            print(path_counter[ki])
-            print(len(robot_paths[ki]))
-            if path_counter[ki] >= len(robot_paths[ki])-1:
-                path_counter[ki] = 0
-            else:
-                path_counter[ki] += 1
-
-            (x,y) = robot_paths[ki][path_counter[ki]]
-            binary_heatmap[x][y] = step_requirement
-
-        coverage = round(100*len(binary_heatmap[binary_heatmap > 0])/(n_a*n_a),2)
-        coverage_list.append(coverage)
-
-
-    r = [*range(0, len(coverage_list))]
-    coverage_ax.plot(r, coverage_list[0:number_of_steps])
-    coverage_ax.plot(r, [comparison]*number_of_steps, '--')
-
-    pyplot.savefig(visualization_path.replace("visualization.png", str(n_a) + "n" + str(num_of_robots) + "r" + str(ssd) +"e_"+str(ki)+ "st_rq" + str(step_requirement) + ".png"))
