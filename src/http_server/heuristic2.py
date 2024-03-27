@@ -247,7 +247,7 @@ def visualize_paths_brute_force(n_a, robot_paths, visualization_path=None):
         axs = axs.flatten()
 
     for ki in range(len(robot_paths)):
-        print(ki)
+        # print(ki)
         ax = axs[ki]
 
         past_node = (0, 0)
@@ -292,9 +292,9 @@ def visualize_coverage(step_requirement, number_of_steps, n_a, robot_paths, ssd,
                 binary_heatmap[a][b] = max(0, binary_heatmap[a][b] - 1)
 
         for ki in range(num_of_robots):
-            print(ki)
-            print(path_counter[ki])
-            print(len(robot_paths[ki]))
+            # print(ki)
+            # print(path_counter[ki])
+            # print(len(robot_paths[ki]))
             if path_counter[ki] >= len(robot_paths[ki])-1:
                 path_counter[ki] = 0
             else:
