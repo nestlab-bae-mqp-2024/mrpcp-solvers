@@ -9,7 +9,7 @@ from matplotlib import pyplot, colors
 
 from src.http_server.mrpcp import convertToWorldPath
 
-from src.http_server.utils.visualize import visualize_coverage
+from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap
 # from src.http_server.mrpcp import convertToWorldPath
 
 # Global variables
@@ -116,7 +116,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
 
     visualize_paths_brute_force(n_a, robot_paths, visualization_path)
     visualize_coverage(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
-
+    visualize_heatmap(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
     return robot_paths, world_path
 
 

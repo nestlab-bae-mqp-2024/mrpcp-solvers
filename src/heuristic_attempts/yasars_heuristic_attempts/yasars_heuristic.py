@@ -3,6 +3,7 @@ from scipy.spatial import distance
 import numpy as np
 from src.heuristic_attempts.yasars_heuristic_attempts.utils.tsp_solver import k_opt
 from src.heuristic_attempts.yasars_heuristic_attempts.utils.visualize import visualize_paths, visualize_subtours, visualize_visitation_frequency
+from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap
 from concurrent.futures import ProcessPoolExecutor
 import time
 import os
@@ -147,7 +148,7 @@ def yasars_heuristic(num_of_robots: int,
     start = time.time()
     num_of_subtours = len(tsp_subtours)
     rp = max(int(np.ceil(k / num_of_subtours)), rp)
-    for i in range(num_of_subtours, num_of_subtours * rp):
+    for i in range(num_of_subtours, int(num_of_subtours * rp)):
         tsp_subtours.append(tsp_subtours[i % num_of_subtours])
         tsp_costs.append(tsp_costs[i % num_of_subtours])
         tsp_indices.append(i)
@@ -201,6 +202,10 @@ def yasars_heuristic(num_of_robots: int,
     visualize_paths(opt_node_paths, nodes, node_indices, target_indices, depot_indices, cost, mode="faster", visualization_path=visualization_path)
 
     visualize_visitation_frequency(opt_node_paths, nodes, visualization_path)
+
+    visualize_coverage(20, 1000, n, d, None, opt_world_paths, visualization_path)
+
+    visualize_heatmap(20, 1000, n, d, None, opt_world_paths, visualization_path)
 
     return opt_node_paths, opt_world_paths
 
@@ -274,7 +279,6 @@ def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
         else:
             delta = maxSum - maxSum_min
             maxSum = maxSum - delta / 2.
-
 
 if __name__ == "__main__":
     num_of_robots = 30
