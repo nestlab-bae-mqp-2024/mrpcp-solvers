@@ -2,7 +2,9 @@ from matplotlib import pyplot as plt
 from scipy.spatial import distance
 import numpy as np
 from src.heuristic_attempts.yasars_heuristic_attempts.utils.tsp_solver import k_opt
-from src.heuristic_attempts.yasars_heuristic_attempts.utils.visualize import visualize_paths, visualize_subtours, visualize_visitation_frequency
+from src.visualization.pseudo_simulate import pseudo_simulate
+from src.visualization.paths_and_subtours import visualize_paths
+from src.visualization.visitation_frequency import visualize_visitation_frequency
 from concurrent.futures import ProcessPoolExecutor
 import time
 import os
@@ -12,7 +14,7 @@ def yasars_heuristic(num_of_robots: int,
                      nodes_to_robot_ratio: int,
                      square_side_dist: float,
                      fuel_capacity_ratio: float,
-                     failure_rate: int,
+                     failure_rate: float,
                      visualization_path: str = None):
     # Chose number of robots
     k = num_of_robots
@@ -198,9 +200,8 @@ def yasars_heuristic(num_of_robots: int,
             robot_world_path.append(nodes[subtour].tolist())
         opt_world_paths.append(robot_world_path)
     print(f"Step 5 took {time.time() - start} seconds.")
-    visualize_paths(opt_node_paths, nodes, node_indices, target_indices, depot_indices, cost, mode="faster", visualization_path=visualization_path)
 
-    visualize_visitation_frequency(opt_node_paths, nodes, visualization_path)
+    visualize_paths(opt_node_paths, nodes, node_indices, target_indices, depot_indices, cost, mode="faster", visualization_path=visualization_path)
 
     return opt_node_paths, opt_world_paths
 
@@ -228,11 +229,11 @@ def construct_map(n, d):
     node_indices = list(range(len(targets) + len(depots)))
 
     # Graphical sanity check
-    plt.figure()
-    plt.scatter(targets[:, 0], targets[:, 1], c='blue', s=10)
-    plt.scatter(depots[:, 0], depots[:, 1], c='red', s=50)
-    plt.grid()
-    plt.show()
+    # plt.figure()
+    # plt.scatter(targets[:, 0], targets[:, 1], c='blue', s=10)
+    # plt.scatter(depots[:, 0], depots[:, 1], c='red', s=50)
+    # plt.grid()
+    # plt.show()
 
     return nodes, node_indices, target_indices, depot_indices
 
@@ -277,20 +278,17 @@ def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
 
 
 if __name__ == "__main__":
-    num_of_robots = 30
-    num_of_targets_per_side = 20
-    dist_per_side = 3.
-    redundancy_parameter = 20
+    num_of_robots = 9
+    nodes_to_robot_ratio = 1
+    square_side_dist = 3.
     fuel_capacity_ratio = 1.5
+    failure_rate = 0.001
 
     optimized_node_paths, optimized_world_paths = yasars_heuristic(num_of_robots,
-                                                                   num_of_targets_per_side,
-                                                                   dist_per_side,
-                                                                   redundancy_parameter,
-                                                                   fuel_capacity_ratio)
+                                                                   nodes_to_robot_ratio,
+                                                                   square_side_dist,
+                                                                   fuel_capacity_ratio,
+                                                                   failure_rate)
 
-    # for ki in range(num_of_robots):
-    #     print(f"--- {ki=} ---")
-    #     for i in range(len(optimized_node_paths[ki])):
-    #         print(f"\t{i=} {optimized_node_paths[ki][i]=}")
-    #         print(f"\t\t{i=} {optimized_world_paths[ki][i]=}")
+    all_world_points = pseudo_simulate(optimized_world_paths, t=30, ds=0.1)
+    visualize_visitation_frequency(all_world_points)

@@ -20,6 +20,9 @@ from src.http_server.recalculate import *
 from src.http_server.mrpcp import *
 import os
 import src.http_server.json_handlers as json_handlers
+from src.visualization.paths_and_subtours import visualize_paths
+from src.visualization.pseudo_simulate import pseudo_simulate
+from src.visualization.visitation_frequency import visualize_visitation_frequency
 
 app = Flask(__name__)
 analysis_file = "runtime_analysis.txt" # File path for storing runtime analysis
@@ -120,6 +123,9 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             print(
                 f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h1...")
             robot_node_path_w_subtours, robot_world_path = yasars_heuristic(int(k), int(nk), float(ssd), float(fcr), int(fr), saveGraphPath(job_id, "visualization.png"))
+            all_world_points = pseudo_simulate(robot_world_path, t=30, ds=0.1)
+            visualize_visitation_frequency(all_world_points)
+
             runtime = time.time() - start_time
             log_runtime("h1 heuristic", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
             print(
