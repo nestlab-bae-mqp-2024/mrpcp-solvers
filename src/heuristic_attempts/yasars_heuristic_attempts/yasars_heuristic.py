@@ -1,5 +1,7 @@
 from src.heuristic_attempts.yasars_heuristic_attempts.utils.construct_map import construct_map
 from src.heuristic_attempts.yasars_heuristic_attempts.utils.tsp_solver import k_opt
+from src.heuristic_attempts.yasars_heuristic_attempts.utils.visualize import visualize_paths, visualize_subtours, visualize_visitation_frequency
+from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap
 from concurrent.futures import ProcessPoolExecutor
 from scipy.spatial import distance
 from typing import Dict
@@ -158,7 +160,7 @@ def yasars_heuristic(num_of_robots: int,
     start = time.time()
     num_of_subtours = len(tsp_subtours)
     rp = max(int(np.ceil(k / num_of_subtours)), rp)
-    for i in range(num_of_subtours, num_of_subtours * rp):
+    for i in range(num_of_subtours, int(num_of_subtours * rp)):
         tsp_subtours.append(tsp_subtours[i % num_of_subtours])
         tsp_costs.append(tsp_costs[i % num_of_subtours])
         tsp_indices.append(i)
@@ -211,6 +213,11 @@ def yasars_heuristic(num_of_robots: int,
             robot_world_path.append(nodes[subtour].tolist())
         opt_world_paths.append(robot_world_path)
     print(f"Step 5 took {time.time() - start} seconds.")
+
+    # visualize_coverage(20, 1000, n, d, None, opt_world_paths, visualization_path)
+    #
+    # visualize_heatmap(20, 1000, n, d, None, opt_world_paths, visualization_path)
+
     return opt_node_paths, opt_world_paths, metadata
 
 

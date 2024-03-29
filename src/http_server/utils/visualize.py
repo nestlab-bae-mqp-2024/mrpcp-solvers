@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import pyplot as plt
+from matplotlib import colors, pyplot as plt
 import itertools
 
 
@@ -173,3 +173,113 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
     elif mode == "faster":
         visualize_paths_faster(paths, nodes, node_indices, target_indices, depot_indices, cost, save_path)
 
+#visualizes percent coverage over time
+def visualize_coverage(step_requirement, number_of_steps, n_a, ssd, robot_paths=None, world_paths=None, visualization_path=None):
+    coverage_figure = plt.figure(figsize=(5,5))
+    coverage_ax = plt.subplot()
+    plt.xlabel('number of steps')
+    plt.ylabel('% coverage')
+
+    num_of_robots = 0
+    #code to convert world_paths to node_path format if necessary
+    if world_paths != None:
+        num_of_robots = len(world_paths)
+        updated_paths = convertToNodePaths(world_paths, ssd, n_a)
+    elif robot_paths != None: #if given robot_paths, assuming already in node_path format
+        num_of_robots = len(robot_paths)
+        updated_paths = robot_paths
+
+    comparison = 100*step_requirement/(n_a*n_a/num_of_robots)
+
+    coverage_list = []
+
+    binary_heatmap = np.zeros((n_a, n_a))
+    path_counter = [0 for ki in range(num_of_robots)]
+
+    for step_counter in range(0,number_of_steps):
+        for a in range(0, n_a):
+            for b in range(0, n_a):
+                binary_heatmap[a][b] = max(0, binary_heatmap[a][b] - 1)
+
+        for ki in range(num_of_robots):
+            if path_counter[ki] >= len(updated_paths[ki])-1:
+                path_counter[ki] = 0
+            else:
+                path_counter[ki] += 1
+
+            (x,y) = updated_paths[ki][path_counter[ki]]
+            binary_heatmap[x][y] = step_requirement
+
+        coverage = round(100*len(binary_heatmap[binary_heatmap > 0])/(n_a*n_a),2)
+        coverage_list.append(coverage)
+
+
+    r = [*range(0, len(coverage_list))]
+    coverage_ax.plot(r, coverage_list[0:number_of_steps])
+    coverage_ax.plot(r, [comparison]*number_of_steps, '--')
+
+    #plt.show()
+    plt.savefig(visualization_path.replace("visualization.png", "percent_coverage_visualization.png"))
+    plt.close()
+
+def visualize_heatmap(step_requirement, number_of_steps, n_a, ssd, robot_paths=None, world_paths=None, visualization_path=None):
+    dist_betw_each_node = ssd/(n_a-1)
+
+    num_of_robots = 0
+    #code to convert world_paths to node_path format if necessary
+    if world_paths != None:
+        num_of_robots = len(world_paths)
+        updated_paths = convertToNodePaths(world_paths, ssd, n_a)
+
+    elif robot_paths != None: #if given robot_paths, assuming already in node_path format
+        num_of_robots = len(robot_paths)
+        updated_paths = robot_paths
+
+    heatmap = np.zeros((n_a, n_a))
+    path_counter = [0 for ki in range(num_of_robots)]
+    for step_counter in range(0,number_of_steps):
+        for ki in range(num_of_robots):
+            if path_counter[ki] >= len(updated_paths[ki])-1:
+                path_counter[ki] = 0
+            else:
+                path_counter[ki] += 1
+
+            (x,y) = updated_paths[ki][path_counter[ki]]
+            heatmap[x][y] = heatmap[x][y] + 1
+
+    figure = plt.figure(figsize=(5,5))
+    ax1, ax2 = plt.subplots()
+    py = plt.imshow(heatmap[:,:], norm=colors.Normalize(0,heatmap[0][0]))
+    plt.colorbar().set_ticks([0,heatmap[0][0]])
+
+    for (j,i),label in np.ndenumerate(heatmap):
+        ax1.text(i,j,int(label),ha='center',va='center')
+        ax2.text(i,j,int(label),ha='center',va='center')
+
+    plt.savefig(visualization_path.replace("visualization.png", "heatmap_visualization.png"))
+    plt.close()
+
+    print(heatmap)
+
+def convertToNodePaths(world_paths, ssd, n_a):
+    dist_betw_each_node = ssd/(n_a-1)
+    num_of_robots = len(world_paths)
+
+    updated_paths = [[] for ki in range(num_of_robots)]
+    for ki in range(0, num_of_robots):
+        path = []
+
+
+        if len(world_paths[ki][0]) == 2: #this is just to account for if there are multiple subtours in what it's given, or not.
+            for item in world_paths[ki]:
+                path.append((round(((ssd) / 2 + item[0]) / (dist_betw_each_node)), round((ssd / 2 + item[1]) / (dist_betw_each_node))))
+
+        else:
+            for w_path in world_paths[ki]:
+                for item in w_path:
+                    path.append((round((ssd / 2 + item[0]) / (dist_betw_each_node)), round((ssd / 2 + item[1]) / (dist_betw_each_node))))
+
+
+        updated_paths[ki] = path
+
+    return updated_paths

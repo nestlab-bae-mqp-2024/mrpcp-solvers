@@ -5,10 +5,11 @@ import random
 
 from collections import Counter
 
-from matplotlib import pyplot, colors, pyplot as plt
+from matplotlib import pyplot, colors
 
 from src.http_server.mrpcp import convertToWorldPath
 
+from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap
 # from src.http_server.mrpcp import convertToWorldPath
 
 # Global variables
@@ -55,13 +56,10 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     # logic for if recalc or not
     if failed_robot_id is None and curr_fuel_levels is None and curr_robots_pos is None:
         print("Conducting heuristic2")
-        curr_robots_pos = [0 for ki in range(k)]
-        world_posns = convertToWorldPath(n_a, square_side_dist / 2, curr_robots_pos)
         print("Initializing robot fuel levels...")
         robot_fuel = [L for ki in range(k)]  # robot fuel is a list storing each robot's fuel at the present moment
         print("Initializing last node...")
-        last_node = [(round((square_side_dist / 2 + world_posns[ki][0]) / (dist_betw_each_node)),
-                      round((square_side_dist / 2 + world_posns[ki][1]) / (dist_betw_each_node))) for ki in range(k)]
+        last_node = [(0,0) for ki in range(k)]
     else:
         print("Conducting recalculation")
         world_posns = convertToWorldPath(n_a, square_side_dist, curr_robots_pos)
@@ -76,7 +74,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     while n_a * n_a - len(nodes_covered) > 0:
         for ki in range(0, k):
             goal = (0, 0)
-            while goal in nodes_covered and math.dist(goal, (0, 0) < robot_fuel[ki]) and len(
+            while goal in nodes_covered and math.dist(goal, (0, 0)) < robot_fuel[ki] and len(
                     nodes_covered) < n_a * n_a:  # if goal is already covered, find a different one
                 nodes_uncovered = [item for item in all_nodes if item not in nodes_covered]
 
@@ -116,8 +114,9 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                          dist_betw_each_node * item[1] - square_side_dist / 2])
         world_path[ki] = path
 
-    visualize_paths_brute_force(k, n_a, robot_paths, visualization_path)
-
+    visualize_paths_brute_force(n_a, robot_paths, visualization_path)
+    visualize_coverage(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
+    visualize_heatmap(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
     return robot_paths, world_path
 
 
@@ -205,60 +204,33 @@ def a_star_search(start, goal, n_a):
 
     return final_path[:i], dist, robot_failed
 
-
-def calculate_costmap(n_a):
-    """
-    define a costmap of the field in terms of distance from depot, in the form
-    :param n_a:
-    :return:
-    """
-    map = np.zeros((n_a, n_a))
-    for x in range(0, n_a):
-        for y in range(0, n_a):
-            map[x][y] = math.dist((0, 0), (x, y))
-    return map
+def visualize_paths_brute_force(n_a, robot_paths, visualization_path=None):
+    num_rows = (len(robot_paths) + 1) // 2  # Two plots per row
+    fig, axs = pyplot.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
 
 
-# finds k (# of robots) of the largest values in the costmap
-# not super useful for this just anticipate it being useful i think
-def find_max(n_a, k):
-    map = calculate_costmap()
-    max = [[0, (0, 0)] for r in range(k)]
-    for x in range(0, n_a):
-        for y in range(0, n_a):
-            curr = map[x][y]
-            if curr > max[2][0]:
-                if curr > max[1][0]:
-                    if curr > max[0][0]:
-                        max[2] = max[1]
-                        max[1] = max[0]
-                        max[0] = [curr, (x, y)]
-                    else:
-                        max[2] = max[1]
-                        max[1] = [curr, (x, y)]
-                else:
-                    max[2] = [curr, (x, y)]
-    return max
+    if len(robot_paths) > 2:
+        axs = axs.flatten()
 
-
-def visualize_paths_brute_force(k, n_a, robot_paths, visualization_path=None):
-    for ki in range(k):
-        fig = pyplot.figure()
-        fig.suptitle(f"Path for robot #{ki}")
+    for ki in range(len(robot_paths)):
+        ax = axs[ki]
 
         past_node = (0, 0)
-        [pyplot.scatter(x, y, c='blue', s=10) for x in range(0, n_a) for y in range(0, n_a)]
+        [ax.scatter(x, y, c='blue', s=10) for x in range(0, n_a) for y in range(0, n_a)]
 
         for node in robot_paths[ki]:
-            pyplot.scatter(node[0], node[1], c="purple", s=8)
-            pyplot.plot([node[0], past_node[0]], [node[1], past_node[1]], color="purple", linewidth=1)
+            ax.scatter(node[0], node[1], c="purple", s=8)
+            ax.plot([node[0], past_node[0]], [node[1], past_node[1]], color="purple", linewidth=1)
 
             past_node = (node[0], node[1])
 
-        pyplot.grid()
+        ax.set_title(f"Robot #{ki}")
+        ax.grid()
+        ax.legend()
+
     if visualization_path:
-        plt.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
+        pyplot.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
     else:
-        plt.show()
+        pyplot.show()
 
 # %%
