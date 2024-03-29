@@ -3,10 +3,10 @@ from matplotlib import pyplot as plt
 from matplotlib import ticker
 
 
-def visualize_visitation_frequency(all_robot_world_points, visualization_path=None):
+def visualize_visitation_frequency(all_robot_world_points, metadata=None):
     all_world_points = []
     for robot_world_points in all_robot_world_points:
-        print(f"{robot_world_points=}")
+        # print(f"{robot_world_points=}")
         all_world_points.extend(robot_world_points)
     all_world_points = np.array(all_world_points)
     heatmap, xedges, yedges = np.histogram2d(all_world_points[:, 0], all_world_points[:, 1], bins=9)
@@ -22,8 +22,8 @@ def visualize_visitation_frequency(all_robot_world_points, visualization_path=No
     cb.update_ticks()
 
     fig.suptitle("Normalized Visitation Frequency (Heatmap)")
-    if visualization_path:
-        fig.savefig(visualization_path.replace("visualization.png", "visitation_frequency_visualization.png"))
+    if "visitation_frequency_graph_path" in metadata:
+        fig.savefig(metadata["visitation_frequency_graph_path"])
     else:
         plt.show()
 

@@ -1,11 +1,9 @@
-from matplotlib import pyplot as plt
-from scipy.spatial import distance
-import numpy as np
+from src.heuristic_attempts.yasars_heuristic_attempts.utils.construct_map import construct_map
 from src.heuristic_attempts.yasars_heuristic_attempts.utils.tsp_solver import k_opt
-from src.visualization.pseudo_simulate import pseudo_simulate
-from src.visualization.paths_and_subtours import visualize_paths
-from src.visualization.visitation_frequency import visualize_visitation_frequency
 from concurrent.futures import ProcessPoolExecutor
+from scipy.spatial import distance
+from typing import Dict
+import numpy as np
 import time
 import os
 
@@ -15,7 +13,11 @@ def yasars_heuristic(num_of_robots: int,
                      square_side_dist: float,
                      fuel_capacity_ratio: float,
                      failure_rate: float,
-                     visualization_path: str = None):
+                     metadata: Dict = None,
+                     skip_tsp_optimization: bool = False):
+    if metadata is None:
+        metadata = {}
+
     # Chose number of robots
     k = num_of_robots
     # Chose the number of targets in an axis
@@ -24,7 +26,7 @@ def yasars_heuristic(num_of_robots: int,
     d = square_side_dist
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     MDBF = 100.0  # Mean Distance Between Failures
-    alpha = 0.00001*failure_rate
+    alpha = 0.00001 * failure_rate
     rpp = alpha * MDBF  # redundancy parameter percentage
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     rp = np.ceil(k * rpp) + 1
@@ -32,8 +34,11 @@ def yasars_heuristic(num_of_robots: int,
     max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
-    print(f"{L_min=} {L=}")
-    print(f"{k=} {n=} {d=} {rp=}")
+    # print(f"{L_min=} {L=}")
+    # print(f"{k=} {n=} {d=} {rp=}")
+    metadata["n"] = n
+    metadata["d"] = d
+    metadata["rp"] = rp
 
     # 1. Create map and get node indices
     nodes, node_indices, target_indices, depot_indices = construct_map(n, d)
@@ -61,6 +66,7 @@ def yasars_heuristic(num_of_robots: int,
 
     # Step 2: Divide nodes to subtours s.t. cost <= L
     start = time.time()
+
     # https://takeuforward.org/arrays/split-array-largest-sum/
     def countSubtourPartitions(maxSum, maxp):
         # n = len(a)  # size of array
@@ -114,36 +120,39 @@ def yasars_heuristic(num_of_robots: int,
     # visualize_subtours(tsp_subtours, nodes, node_indices, target_indices, depot_indices, cost, mode="faster")
     print(f"Step 2 took {time.time() - start} seconds.")
 
-    # exit()
-
     # Step 3: Further optimize the subtours by running tsp on them
-    start = time.time()
-    tsp_subtours_prev, tsp_costs_prev = tsp_subtours, tsp_costs
-    tsp_subtours = []
-    tsp_costs = []
-    with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
-        futures = []
-        for heur_subtour in tsp_subtours_prev:
-            futures.append(executor.submit(k_opt, *[heur_subtour, cost, 2]))
+    if skip_tsp_optimization:
+        print(f"Skipping TSP optimization ...")
+        tsp_indices = np.array(tsp_costs).argsort().tolist()
+        print(f"Step 3 took {time.time() - start} seconds.")
+    else:
+        start = time.time()
+        tsp_subtours_prev, tsp_costs_prev = tsp_subtours, tsp_costs
+        tsp_subtours = []
+        tsp_costs = []
+        with ProcessPoolExecutor(max_workers=os.cpu_count() - 1) as executor:
+            futures = []
+            for heur_subtour in tsp_subtours_prev:
+                futures.append(executor.submit(k_opt, *[heur_subtour, cost, 2]))
 
-        uncompleted_jobs = list(range(len(futures)))
-        while len(uncompleted_jobs) != 0:
-            new_uncompleted_jobs = uncompleted_jobs
-            for future_i in uncompleted_jobs:
-                if futures[future_i].done():
-                    best_subtour, c = futures[future_i].result()
-                    print(
-                        f"\t[subtour {future_i + 1}/{len(futures)}] took {time.time() - start:.3f} seconds and improved {(1 - c / tsp_costs_prev[future_i]) * 100:.3f}%.")
-                    tsp_subtours.append(best_subtour)
-                    tsp_costs.append(c)
-                    new_uncompleted_jobs.remove(future_i)
-                else:
-                    time.sleep(0.1)
-            uncompleted_jobs = new_uncompleted_jobs
-    tsp_indices = np.array(tsp_costs).argsort().tolist()
+            uncompleted_jobs = list(range(len(futures)))
+            while len(uncompleted_jobs) != 0:
+                new_uncompleted_jobs = uncompleted_jobs
+                for future_i in uncompleted_jobs:
+                    if futures[future_i].done():
+                        best_subtour, c = futures[future_i].result()
+                        print(
+                            f"\t[subtour {future_i + 1}/{len(futures)}] took {time.time() - start:.3f} seconds and improved {(1 - c / tsp_costs_prev[future_i]) * 100:.3f}%.")
+                        tsp_subtours.append(best_subtour)
+                        tsp_costs.append(c)
+                        new_uncompleted_jobs.remove(future_i)
+                    else:
+                        time.sleep(0.1)
+                uncompleted_jobs = new_uncompleted_jobs
 
-    # visualize_subtours(tsp_subtours, nodes, node_indices, target_indices, depot_indices, cost, mode="faster")
-    print(f"Step 3 took {time.time() - start} seconds.")
+        tsp_indices = np.array(tsp_costs).argsort().tolist()
+        print(f"Step 3 took {time.time() - start} seconds.")
+        # visualize_subtours(tsp_subtours, nodes)
 
     # Step 4: Ensure rp
     start = time.time()
@@ -189,10 +198,12 @@ def yasars_heuristic(num_of_robots: int,
         return partitions, partitions_array, partitions_cost, max_partitions_cost
 
     # TODO: A better estimate for high could be given to speed up binary search
-    opt_node_paths, opt_node_path_costs, maxSum = divideArrayByP(k, countRobotPartitions, low=max(tsp_costs), high=sum(tsp_costs), force_p_equals=True)
+    opt_node_paths, opt_node_path_costs, maxSum = divideArrayByP(k, countRobotPartitions, low=max(tsp_costs),
+                                                                 high=sum(tsp_costs), force_p_equals=True)
     # for i, optimized_node_path in enumerate(opt_node_paths):
     #     print(f"[{i}] {len(optimized_node_path)=} cost=({optimized_node_path_costs[i]})")
-    print(f"{sum(opt_node_path_costs)=} {max(opt_node_path_costs)=}")
+    # print(f"{sum(opt_node_path_costs)=} {max(opt_node_path_costs)=}")
+    metadata["opt_node_path_costs"] = opt_node_path_costs
     opt_world_paths = []
     for ki in range(k):
         robot_world_path = []
@@ -200,42 +211,7 @@ def yasars_heuristic(num_of_robots: int,
             robot_world_path.append(nodes[subtour].tolist())
         opt_world_paths.append(robot_world_path)
     print(f"Step 5 took {time.time() - start} seconds.")
-
-    visualize_paths(opt_node_paths, nodes, node_indices, target_indices, depot_indices, cost, mode="faster", visualization_path=visualization_path)
-
-    return opt_node_paths, opt_world_paths
-
-
-def construct_map(n, d):
-    # nodes = targets + depots
-    # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
-    targets = np.mgrid[-1:1:n * 1j, -1.:1:n * 1j] * (d / 2.)
-    targets = targets.reshape(targets.shape + (1,))
-    targets = np.concatenate((targets[0], targets[1]), axis=2)
-    targets = targets.reshape((n * n, 2))
-    target_indices = list(range(len(targets)))
-    # print(f"{targets.shape=}")
-
-    # Specify depots
-    # One depot node in the corner
-    depots = np.array([
-        [-1., -1.],
-    ]) * (d / 2.)
-    # print(f"{depots=}")
-    depot_indices = list(range(len(targets), len(targets) + len(depots)))
-
-    nodes = np.concatenate((targets, depots))
-    # print(f"{nodes.shape=}")
-    node_indices = list(range(len(targets) + len(depots)))
-
-    # Graphical sanity check
-    # plt.figure()
-    # plt.scatter(targets[:, 0], targets[:, 1], c='blue', s=10)
-    # plt.scatter(depots[:, 0], depots[:, 1], c='red', s=50)
-    # plt.grid()
-    # plt.show()
-
-    return nodes, node_indices, target_indices, depot_indices
+    return opt_node_paths, opt_world_paths, metadata
 
 
 def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
@@ -284,11 +260,17 @@ if __name__ == "__main__":
     fuel_capacity_ratio = 1.5
     failure_rate = 0.001
 
-    optimized_node_paths, optimized_world_paths = yasars_heuristic(num_of_robots,
-                                                                   nodes_to_robot_ratio,
-                                                                   square_side_dist,
-                                                                   fuel_capacity_ratio,
-                                                                   failure_rate)
+    from src.http_server.json_handlers import saveGraphPath
+    metadata = {"visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
+                "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")}
+    optimized_node_paths, optimized_world_paths, metadata = yasars_heuristic(num_of_robots,
+                                                                             nodes_to_robot_ratio,
+                                                                             square_side_dist,
+                                                                             fuel_capacity_ratio,
+                                                                             failure_rate,
+                                                                             metadata,
+                                                                             skip_tsp_optimization=False)
 
-    all_world_points = pseudo_simulate(optimized_world_paths, t=30, ds=0.1)
-    visualize_visitation_frequency(all_world_points)
+    from src.visualization.visualization_pipeline import run_visualization_pipeline
+    run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)
+

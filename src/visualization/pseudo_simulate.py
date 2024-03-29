@@ -23,7 +23,7 @@ def pseudo_simulate(robot_world_paths, t=10, ds=0.1):
         si = 0
         pi = 0
         robot_world_point = np.array(robot_world_path[si][pi])
-        print(f"{robot_world_point=}")
+        # print(f"{robot_world_point=}")
         robot_world_points.append(robot_world_point.copy())
         for dist in np.arange(0., t + ds, ds):
             dist_travelled = 0
