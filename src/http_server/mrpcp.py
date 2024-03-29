@@ -14,7 +14,9 @@ from gurobipy import GRB
 from scipy.spatial import distance
 import os
 from src.http_server.json_handlers import saveGraphPath
-from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap
+from src.http_server.utils.tsp_solver import k_opt
+from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap, visualize_individual_paths
+
 
 def solve_milp_with_optimizations(num_of_robots: int,
                                   nodes_to_robot_ratio: int,
@@ -198,87 +200,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
             f"Paths for all robots (# of active/available robots={len(active_robots)}/{k}, sum of costs={(cost * edges).sum():.3f})")
         plt.show()
 
-    def calculate_total_distance(path, cost_matrix):
-        """
-        Calculate the total distance of a path using the cost matrix
-        :param path:
-        :param cost_matrix:
-        :return: total_cost
-        """
-        total_cost = 0
-        for i in range(len(path) - 1):
-            total_cost += cost_matrix[path[i], path[i + 1]]
-        total_cost += cost_matrix[path[-1], path[0]]  # Return to start
-        return total_cost
-
-    def two_opt(route, cost_matrix):
-        """
-        Two-opt algorithm for solving the TSP. This algorithm iteratively removes two edges and reconnects the two paths in
-        a different way that reduces the total distance.
-        """
-        # Ensure n^2 and n^2+1 stay together at the beginning of the path
-        if pow(n_a, 2) in route and pow(n_a, 2) + 1 in route:
-            # Find the indices of n^2 and n^2+1
-            index_n2 = route.index(pow(n_a, 2))
-            index_n2_plus_1 = route.index(pow(n_a, 2) + 1)
-
-            # Ensure they are at the beginning of the route
-            if index_n2 > 0:
-                route.insert(0, route.pop(index_n2))
-            if index_n2_plus_1 > 1:
-                route.insert(1, route.pop(index_n2_plus_1))
-
-            best_distance = calculate_total_distance(route, cost_matrix)
-            best_route = route.copy()
-
-            improved = True
-            while improved:
-                improved = False
-                for i in range(1, len(route) - 2):
-                    for j in range(i + 1, len(route)):
-                        if j - i == 1:
-                            continue  # Skip adjacent edges
-                        new_route = route.copy()
-                        new_route[i:j] = route[j - 1:i - 1:-1]  # Reverse the segment between i and j
-                        new_distance = calculate_total_distance(new_route, cost_matrix)
-
-                        if new_distance < best_distance:
-                            best_distance = new_distance
-                            best_route = new_route.copy()
-                            improved = True
-
-            return best_route, best_distance
-
-    def k_opt(route, cost_matrix, k):
-        """
-        k-opt algorithm for solving the TSP. This algorithm iteratively removes k edges and reconnects the two paths in
-        a different way that reduces the total distance.
-        """
-        best_distance = calculate_total_distance(route, cost_matrix)
-        best_route = route.copy()
-
-        improved = True
-        while improved:
-            improved = False
-            for i in range(1, len(route) - 1):
-                for j in range(i + 1, len(route)):
-                    if j - i < k - 1:
-                        continue  # Ensure the segment size is at least k
-
-                    new_route = route.copy()
-                    new_route[i:j] = reversed(route[i:j])  # Reverse the segment between i and j
-
-                    new_distance = calculate_total_distance(new_route, cost_matrix)
-
-                    if new_distance < best_distance:
-                        best_distance = new_distance
-                        best_route = new_route.copy()
-                        improved = True
-
-            route = best_route.copy()
-
-        return best_route, best_distance
-
     def extract_and_calculate_milp_costs(x, start_nodes, num_robots, num_nodes, cost_matrix):
         milp_costs = []
         milp_paths = []
@@ -359,7 +280,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
     optimized_paths_2opt = []  # Initialize an empty list to store optimized paths
     optimized_paths_kopt = []
     for path in milp_paths:
-        opt_path2, opt_dist2 = two_opt(path, cost)
+        opt_path2, opt_dist2 = k_opt(path, cost, 2)
         optimized_paths_2opt.append(opt_path2)
 
         # Apply 3-opt algorithm to each path
@@ -400,59 +321,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
     print("The optimized paths converted to world path are: ", worldPath)
     print("Returning solution to be sent to a json file...")
     return optimized_paths_2opt, worldPath
-
-
-def visualize_individual_paths(paths, nodes, targets, depots, b_k, costs, save_path=None):
-    num_robots = len(paths)
-    num_rows = (num_robots + 1) // 2  # Two plots per row
-    fig, axs = plt.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
-
-    # Flatten the axs array for easy iteration if there's more than one row
-    if num_robots > 2:
-        axs = axs.flatten()
-
-    for index, path in enumerate(paths):
-        ax = axs[index]
-
-        # Plot targets and depots
-        ax.scatter(targets[:, 0], targets[:, 1], c='blue', s=10, label='Targets')
-        ax.scatter(depots[:, 0], depots[:, 1], c='red', s=50, label='Depots')
-
-        # Plot path for this robot
-        for i in range(len(path) - 1):
-            start_node = path[i]
-            end_node = path[i + 1]
-            ax.plot([nodes[start_node, 0], nodes[end_node, 0]],
-                    [nodes[start_node, 1], nodes[end_node, 1]],
-                    color="purple", linewidth=1)
-            ax.scatter(nodes[start_node, 0], nodes[start_node, 1], c="purple", s=8)
-            ax.text(nodes[start_node, 0], nodes[start_node, 1], str(start_node), fontsize=8, ha='center', va='center')
-
-        # Plot a line returning to the starting depot
-        ax.plot([nodes[path[-1], 0], nodes[b_k[0], 0]],
-                [nodes[path[-1], 1], nodes[b_k[0], 1]],
-                color="purple", linewidth=1, linestyle="--", label='Return to Depot')
-
-        # Plot the starting depot
-        ax.text(nodes[b_k[0], 0], nodes[b_k[0], 1], str(b_k[0]), fontsize=8, ha='center', va='center')
-
-        # Set title with cost
-        ax.set_title(f"Robot #{index + 1} (Cost: {costs[index]:.2f})")
-        ax.grid()
-        ax.legend()
-
-    # Hide any unused subplots
-    for i in range(index + 1, num_rows * 2):
-        fig.delaxes(axs[i])
-
-    # plt.tight_layout()
-    fig.suptitle(f"Paths for all robots (sum of costs={sum(costs):.3f})")
-
-    # Save the figure if save_path is provided
-    if save_path:
-        plt.savefig(save_path)
-    else:
-        plt.show()
 
 
 def convertToWorldPath(n_a, d, robot_node_path):
@@ -504,9 +372,3 @@ def convertToWorldPath(n_a, d, robot_node_path):
     for i in range(pow(n_a, 2) + 1):
         print(f"{i=}, {nodes[i]}")
     return robot_world_path
-
-# %%
-# convertToWorldPath(3, [[9, 10, 7, 6, 3]]) # Returns: [[[-1.0, -1.0], [1, 0], [1,-1], [0,-1], [-1,-1]]]
-# %%
-
-# %%

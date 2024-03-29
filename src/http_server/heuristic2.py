@@ -1,22 +1,13 @@
 from queue import PriorityQueue
 import math
 import numpy as np
-import random
-
 from collections import Counter
-
-from matplotlib import pyplot, colors
-
 from src.http_server.mrpcp import convertToWorldPath
-
-from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap
-# from src.http_server.mrpcp import convertToWorldPath
+from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap, visualize_paths_heuristic2
 
 # Global variables
 all_nodes = set()
 nodes_covered = set()  # nodes covered is a set of every node that has been covered so far
-alpha = 0.05
-robot_failure_percent = 0.1  # percent of robots that will fail as a value from 0 to 1
 
 
 def generate_robot_paths_redundancy(num_of_robots: int,
@@ -69,6 +60,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
         last_node[failed_robot_id] = (0, 0)
 
     robot_paths = [[] for ki in range(k)]
+    total_costs = [0] * num_of_robots
     nodes_seen = []
 
     while n_a * n_a - len(nodes_covered) > 0:
@@ -88,7 +80,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
             path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal, n_a)
 
             robot_paths[ki] = robot_paths[ki] + path
-
+            total_costs[ki] += distance_travelled
             [nodes_seen.append(p) for p in path]
 
             counted_nodes_seen = Counter(nodes_seen)
@@ -114,10 +106,10 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                          dist_betw_each_node * item[1] - square_side_dist / 2])
         world_path[ki] = path
 
-    visualize_paths_brute_force(n_a, robot_paths, visualization_path)
+    visualize_paths_heuristic2(n_a, robot_paths, visualization_path)
     visualize_coverage(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
     visualize_heatmap(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
-    return robot_paths, world_path
+    return robot_paths, world_path, total_costs
 
 
 def initAllNodes(k, nk):
@@ -140,7 +132,7 @@ def neighbors(curr, nodes_per_axis):
           (curr[0] - 1, curr[1] + 1)]
     neighbors = []
     for n in ns:
-        if n[0] < nodes_per_axis and n[0] >= 0 and n[1] < nodes_per_axis and n[1] >= 0:
+        if nodes_per_axis > n[0] >= 0 and nodes_per_axis > n[1] >= 0:
             neighbors.append(n)
     return neighbors
 
@@ -198,39 +190,5 @@ def a_star_search(start, goal, n_a):
     final_path.reverse()
 
     i = len(final_path)
-    # if random.random() < alpha:
-    #    i = random.randrange(1, len(final_path)+1, 1)
-    #    robot_failed = True
-
     return final_path[:i], dist, robot_failed
 
-def visualize_paths_brute_force(n_a, robot_paths, visualization_path=None):
-    num_rows = (len(robot_paths) + 1) // 2  # Two plots per row
-    fig, axs = pyplot.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
-
-
-    if len(robot_paths) > 2:
-        axs = axs.flatten()
-
-    for ki in range(len(robot_paths)):
-        ax = axs[ki]
-
-        past_node = (0, 0)
-        [ax.scatter(x, y, c='blue', s=10) for x in range(0, n_a) for y in range(0, n_a)]
-
-        for node in robot_paths[ki]:
-            ax.scatter(node[0], node[1], c="purple", s=8)
-            ax.plot([node[0], past_node[0]], [node[1], past_node[1]], color="purple", linewidth=1)
-
-            past_node = (node[0], node[1])
-
-        ax.set_title(f"Robot #{ki}")
-        ax.grid()
-        ax.legend()
-
-    if visualization_path:
-        pyplot.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
-    else:
-        pyplot.show()
-
-# %%

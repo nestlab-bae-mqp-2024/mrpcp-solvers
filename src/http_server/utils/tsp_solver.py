@@ -10,6 +10,10 @@ def calculate_total_distance(path, cost_matrix):
 
 
 def k_opt(route, cost_matrix, ki):
+    """
+    k-opt algorithm for solving the TSP. This algorithm iteratively removes k edges and reconnects the two paths in
+    a different way that reduces the total distance.
+    """
     best_distance = calculate_total_distance(route, cost_matrix)
     best_route = route
 
