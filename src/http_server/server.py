@@ -123,7 +123,7 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
                         "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
             robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(nk), float(ssd), float(fcr), int(fr), metadata)
-            run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
+            metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
 
             runtime = time.time() - start_time
             log_runtime("h1 heuristic", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)

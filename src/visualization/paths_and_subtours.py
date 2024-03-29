@@ -77,7 +77,9 @@ def visualize_paths(paths, metadata):
         plt.savefig(metadata["visualize_paths_graph_path"])
     plt.show()
 
+    return metadata
+
 
 def visualize_subtours(subtours, metadata):
-    visualize_paths([[subtour] for subtour in subtours], metadata)
+    return visualize_paths([[subtour] for subtour in subtours], metadata)
 

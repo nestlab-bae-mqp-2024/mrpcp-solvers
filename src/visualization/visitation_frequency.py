@@ -27,3 +27,5 @@ def visualize_visitation_frequency(all_robot_world_points, metadata=None):
     else:
         plt.show()
 
+    return metadata
+
