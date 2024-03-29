@@ -5,7 +5,7 @@ Date: 2/17/2024
 This program defines the methods relating to solving the MRPCP (Multi-Robot Path Coverage Problem) using MILP (Mixed-Integer Linear Programming)
 and TSP (Travelling Salesman Problem) using 2-OPT and k-OPT algorithms.
 """
-
+from typing import Dict
 from matplotlib import pyplot as plt
 import numpy as np
 import itertools
@@ -14,6 +14,7 @@ from gurobipy import GRB
 from scipy.spatial import distance
 import os
 from src.http_server.json_handlers import saveGraphPath
+from src.http_server.utils.conversions import convertToWorldPath
 from src.http_server.utils.tsp_solver import k_opt
 from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap, visualize_individual_paths
 
@@ -23,11 +24,14 @@ def solve_milp_with_optimizations(num_of_robots: int,
                                   square_side_dist: float,
                                   fuel_capacity_ratio: float,
                                   failure_rate: int,
-                                  job_id: str = None):
+                                  job_id: str = None,
+                                  metadata: Dict = None):
     """
     This function solves the MRPCP using MILP (Mixed-Integer Linear Programming) and TSP (Travelling Salesman Problem) using 2-OPT and k-OPT algorithms.
     :return: The optimized paths with 2-OPT and the world path
     """
+    if metadata is None:
+        metadata = {}
     k = num_of_robots  # Chose the number of robots
     n_a = k * nodes_to_robot_ratio  # Chose the number of targets in an axis
     MDBF = 100.0  # Mean Distance Between Failures
@@ -320,55 +324,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
     print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
     print("The optimized paths converted to world path are: ", worldPath)
     print("Returning solution to be sent to a json file...")
-    return optimized_paths_2opt, worldPath
+    return optimized_paths_2opt, worldPath, metadata
 
 
-def convertToWorldPath(n_a, d, robot_node_path):
-    """
-    This function takes in the node paths and should return X and Y coordinates for the robots to follow in ArgOS
-    Example:
-        robot_node_path = [
-            [16,15]
-        ]
-        convertToWorldPath(4, robot_node_path)
-        # Returns:
-        [
-            [[-1, -1], [-0.5, -0.5], [-1, -1]]
-        ]
-    """
-    d = d / 2.  # Distance per side of the square
-    targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
-    targets = targets.reshape(targets.shape + (1,))
-    targets = np.concatenate((targets[0], targets[1]), axis=2)
-    targets = targets.reshape((n_a * n_a, 2))
-    depots = np.array([
-        [-1., -1.],
-    ]) * d
-    depots = np.concatenate((depots, depots))
 
-    depots = np.concatenate((depots, depots))
-    nodes = np.concatenate((targets, depots))
-
-    # Graphical sanity check
-    plt.figure()
-    plt.scatter(targets[:, 0], targets[:, 1], c='blue', s=10)
-    plt.scatter(depots[:, 0], depots[:, 1], c='red', s=50)
-    plt.grid()
-
-    # Label nodes with node IDs and their positions
-    for i, node in enumerate(nodes):
-        plt.text(node[0], node[1], f'{i}', fontsize=8, ha='center')
-
-    plt.show()
-
-    robot_world_path = []
-    for path in robot_node_path:
-        world_path = []
-        for i, node in enumerate(path):
-            x, y = nodes[node]
-            world_path.append([float(x), float(y)])  # Convert to floats
-        world_path.append(world_path[0])  # Return to starting node
-        robot_world_path.append(world_path)
-    for i in range(pow(n_a, 2) + 1):
-        print(f"{i=}, {nodes[i]}")
-    return robot_world_path

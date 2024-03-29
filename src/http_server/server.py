@@ -95,10 +95,13 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
         if mode == 'm':
             # Run MILP solver function with parameters
             start_time = time.time()
+            metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
+                        "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
             print(
                 f"Running MILP solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode=m...")
-            edges, robot_world_path = solve_milp_with_optimizations(int(k), int(nk), float(ssd), float(fcr), int(fr),
-                                                         job_id)
+            edges, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(nk), float(ssd), float(fcr), int(fr),
+                                                         job_id, metadata)
+            metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("MILP", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
             print(
@@ -153,7 +156,10 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             start_time = time.time()
             print(
                 f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h2...")
-            edges, robot_world_path, total_costs = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), None, None, None, saveGraphPath(job_id, "visualization.png"))  # Run the other heuristic solver
+            metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
+                        "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
+            edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), None, None, None, saveGraphPath(job_id, "visualization.png"), metadata)  # Run the other heuristic solver
+            # metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("h2 heuristic", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
             print(
@@ -165,7 +171,7 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
                            'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'h2'},
                            'robot_node_path': edges, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
-            stats_data = {'job_id': job_id, 'runtime': runtime, 'total_costs': total_costs}
+            stats_data = {'job_id': job_id, 'runtime': runtime}
             json_handlers.saveResultsToCache(job_id, result_data, 'result.json')
             json_handlers.saveResultsToCache(job_id, stats_data, 'stats.json')
             return result_data  # Return the content of the JSON file
@@ -187,7 +193,10 @@ def recalc_endpoint():
     failed_robot_id = request.args.get('failed_robot_id')
     k, nk, ssd, fcr, fr, mode = getParamsFromJobId(job_id)
     start_time = time.time()
-    robot_node_path, robot_world_path, total_costs = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), failed_robot_id, curr_robots_pos, curr_fuel_levels, saveGraphPath(job_id, "visualization.png"))  # Run the other heuristic solver
+    metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
+                "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
+    robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), failed_robot_id, curr_robots_pos, curr_fuel_levels, saveGraphPath(job_id, "visualization.png"), metadata)  # Run the other heuristic solver
+    metadata = run_visualization_pipeline(robot_node_path, robot_world_path, metadata)
     runtime = time.time() - start_time
     log_runtime("solve_endpoint", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
     result_data = {'job_id': job_id,
@@ -234,7 +243,3 @@ if __name__ == '__main__':
         f.write("----------------\n\n")
     print("Waiting for a request...")  # Added waiting message
     app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
-
-#%%
-
-#%%

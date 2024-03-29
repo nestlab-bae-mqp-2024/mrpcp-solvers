@@ -1,5 +1,7 @@
 from queue import PriorityQueue
 import math
+from typing import Dict
+
 import numpy as np
 from collections import Counter
 from src.http_server.mrpcp import convertToWorldPath
@@ -18,11 +20,15 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                                     failed_robot_id: int = None,
                                     curr_robots_pos: list = None,
                                     curr_fuel_levels: list = None,
-                                    visualization_path: str = None):
+                                    visualization_path: str = None,
+                                    metadata: Dict = None):
     """
     This function solves the MRPCP problem using the heuristic approach with redundancy and failure rate. This is NOT recalculation
     :return: The optimized paths and the world path
     """
+    if metadata is None:
+        metadata = {}
+
     # Define the parameters
     print("Initializing parameters...")
     k = num_of_robots  # number of robots
@@ -38,6 +44,19 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
+
+    # meta data given params
+    metadata["k"] = k
+    metadata["nk"] = nodes_to_robot_ratio
+    metadata["ssd"] = square_side_dist
+    metadata["fcr"] = fuel_capacity_ratio
+    metadata["fr"] = failure_rate
+    # metadata derived params
+    metadata["n"] = n_a
+    metadata["rp"] = rp
+    metadata["L_min"] = L_min
+    metadata["L"] = L
+    metadata["mode"] = "h2"
 
     # Initialize the nodes
     print("Initializing nodes...")
@@ -60,7 +79,6 @@ def generate_robot_paths_redundancy(num_of_robots: int,
         last_node[failed_robot_id] = (0, 0)
 
     robot_paths = [[] for ki in range(k)]
-    total_costs = [0] * num_of_robots
     nodes_seen = []
 
     while n_a * n_a - len(nodes_covered) > 0:
@@ -80,7 +98,6 @@ def generate_robot_paths_redundancy(num_of_robots: int,
             path, distance_travelled, robot_failed = a_star_search(last_node[ki], goal, n_a)
 
             robot_paths[ki] = robot_paths[ki] + path
-            total_costs[ki] += distance_travelled
             [nodes_seen.append(p) for p in path]
 
             counted_nodes_seen = Counter(nodes_seen)
@@ -109,7 +126,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     visualize_paths_heuristic2(n_a, robot_paths, visualization_path)
     visualize_coverage(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
     visualize_heatmap(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
-    return robot_paths, world_path, total_costs
+    return robot_paths, world_path, metadata
 
 
 def initAllNodes(k, nk):

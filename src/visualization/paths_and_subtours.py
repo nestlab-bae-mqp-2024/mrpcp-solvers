@@ -2,6 +2,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
 from src.heuristic_attempts.yasars_heuristic_attempts.utils.construct_map import construct_map
+from src.http_server.heuristic2 import initAllNodes
+
 
 def get_next_nodes(edges, node, node_indices):
     next_nodes = []
@@ -38,7 +40,8 @@ def visualize_paths(paths, metadata):
         else:
             ax = axs[hor_i][vert_i]
 
-        nodes, _, _, _ = construct_map(metadata["n"], metadata["d"])
+        nodes, _, _, _ = construct_map(metadata["n"], metadata["ssd"])
+
         ax.scatter(nodes[:-1, 0], nodes[:-1, 1], c='blue', s=10)
         ax.scatter(nodes[-1, 0], nodes[-1, 1], c='red', s=100)  # Last node is depot
 
