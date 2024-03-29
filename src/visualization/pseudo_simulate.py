@@ -43,6 +43,6 @@ def pseudo_simulate(robot_world_paths, t=10, ds=0.1):
 
             # print(f"dist={dist:.2f} {robot_world_point} (from Subtour {si} Point {pi}: {robot_world_path[si][pi]})")
             robot_world_points.append(robot_world_point.copy())
-        all_robot_world_points.append(robot_world_points)
+        all_robot_world_points.append(np.array(robot_world_points))
 
     return all_robot_world_points
