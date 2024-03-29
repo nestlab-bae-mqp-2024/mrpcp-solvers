@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import colors, pyplot as plt
+from matplotlib import colors, pyplot as plt, pyplot
 import itertools
 
 
@@ -12,22 +12,21 @@ def visualize_paths_edges_brute_force(edges, nodes, node_indices, target_indices
 
     subplot_per_hor_axis = int(np.ceil(np.sqrt(len(active_robots))))
     subplot_per_vert_axis = int(np.ceil(len(active_robots) / subplot_per_hor_axis))
-    fig, axs = plt.subplots(subplot_per_hor_axis, subplot_per_vert_axis, figsize=(subplot_per_hor_axis * 4, subplot_per_vert_axis * 4))
+    fig, axs = plt.subplots(subplot_per_hor_axis, subplot_per_vert_axis,
+                            figsize=(subplot_per_hor_axis * 4, subplot_per_vert_axis * 4))
     fig.tight_layout()
     fig.subplots_adjust(bottom=0.1, top=0.9, right=0.9, left=0.1, wspace=0.3, hspace=0.3)
 
     hor_i = 0
     vert_i = 0
     for robot_i, ki in enumerate(active_robots):
-        # print(f"Robot #{ki}\n-------")
-        # print(f"Staring position: {B_k[ki]} -> {[nodes[B_k[ki, 0], B_k[ki, 1], 0], nodes[B_k[ki, 0], B_k[ki, 1], 1]]}")
         if subplot_per_hor_axis == 1 and subplot_per_vert_axis == 1:
             ax = axs
         elif subplot_per_vert_axis == 1:
             ax = axs[hor_i]
         else:
             ax = axs[hor_i][vert_i]
-        ax.set_title(f"Robot #{robot_i +1} (cost={(cost * edges[ki]).sum():.3f})")
+        ax.set_title(f"Robot #{robot_i + 1} (cost={(cost * edges[ki]).sum():.3f})")
         ax.scatter(nodes[target_indices, 0], nodes[target_indices, 1], c='blue', s=10)
         ax.scatter(nodes[depot_indices, 0], nodes[depot_indices, 1], c='red', s=50)
         ax.scatter(nodes[depot_indices[0], 0], nodes[depot_indices[0], 1], c='red', s=100)
@@ -103,15 +102,16 @@ def visualize_paths_faster(paths, nodes, node_indices, target_indices, depot_ind
 
         total_cost_i = 0
         for i in range(len(paths[ki])):
-            for j in range(len(paths[ki][i])-1):
+            for j in range(len(paths[ki][i]) - 1):
                 curr_node = paths[ki][i][j]
-                next_node = paths[ki][i][j+1]
+                next_node = paths[ki][i][j + 1]
                 total_cost_i += cost[curr_node, next_node]
 
                 # print(f"{curr_node=} {next_node=}")
 
                 ax.scatter(nodes[curr_node, 0], nodes[curr_node, 1], c="purple", s=8)
-                ax.plot([nodes[curr_node, 0], nodes[next_node, 0]], [nodes[curr_node, 1], nodes[next_node, 1]], color="purple", linewidth=1)
+                ax.plot([nodes[curr_node, 0], nodes[next_node, 0]], [nodes[curr_node, 1], nodes[next_node, 1]],
+                        color="purple", linewidth=1)
 
         ax.set_title(f"Robot #{robot_i + 1} (cost={total_cost_i:.3f})")
         total_cost += total_cost_i
@@ -155,10 +155,12 @@ def visualize_subtours(subtours, nodes, node_indices, target_indices, depot_indi
 
         visualize_paths_edges_brute_force(path_edges, nodes, node_indices, target_indices, depot_indices, cost)
     elif mode == "faster":
-        visualize_paths_faster([[subtour] for subtour in subtours], nodes, node_indices, target_indices, depot_indices, cost)
+        visualize_paths_faster([[subtour] for subtour in subtours], nodes, node_indices, target_indices, depot_indices,
+                               cost)
 
 
-def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, cost, mode="brute-force", save_path=None):
+def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, cost, mode="brute-force",
+                    save_path=None):
     if mode == "brute-force":
         path_edges = np.zeros((len(paths), len(node_indices), len(node_indices)), dtype=np.uint8)
 
@@ -169,117 +171,208 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
                     curr_node = path[curr_node_i]
                     next_node = path[next_node_i]
                     path_edges[ki][curr_node][next_node] = 1
-        visualize_paths_edges_brute_force(path_edges, nodes, node_indices, target_indices, depot_indices, cost, save_path)
+        visualize_paths_edges_brute_force(path_edges, nodes, node_indices, target_indices, depot_indices, cost,
+                                          save_path)
     elif mode == "faster":
         visualize_paths_faster(paths, nodes, node_indices, target_indices, depot_indices, cost, save_path)
 
-#visualizes percent coverage over time
-def visualize_coverage(step_requirement, number_of_steps, n_a, ssd, robot_paths=None, world_paths=None, visualization_path=None):
-    coverage_figure = plt.figure(figsize=(5,5))
+
+# visualizes percent coverage over time
+def visualize_coverage(step_requirement, number_of_steps, n_a, ssd, robot_paths=None, world_paths=None,
+                       visualization_path=None):
+    coverage_figure = plt.figure(figsize=(5, 5))
     coverage_ax = plt.subplot()
     plt.xlabel('number of steps')
     plt.ylabel('% coverage')
 
     num_of_robots = 0
-    #code to convert world_paths to node_path format if necessary
+    # code to convert world_paths to node_path format if necessary
     if world_paths != None:
         num_of_robots = len(world_paths)
         updated_paths = convertToNodePaths(world_paths, ssd, n_a)
-    elif robot_paths != None: #if given robot_paths, assuming already in node_path format
+    elif robot_paths != None:  # if given robot_paths, assuming already in node_path format
         num_of_robots = len(robot_paths)
         updated_paths = robot_paths
 
-    comparison = 100*step_requirement/(n_a*n_a/num_of_robots)
+    comparison = 100 * step_requirement / (n_a * n_a / num_of_robots)
 
     coverage_list = []
 
     binary_heatmap = np.zeros((n_a, n_a))
     path_counter = [0 for ki in range(num_of_robots)]
 
-    for step_counter in range(0,number_of_steps):
+    for step_counter in range(0, number_of_steps):
         for a in range(0, n_a):
             for b in range(0, n_a):
                 binary_heatmap[a][b] = max(0, binary_heatmap[a][b] - 1)
 
         for ki in range(num_of_robots):
-            if path_counter[ki] >= len(updated_paths[ki])-1:
+            if path_counter[ki] >= len(updated_paths[ki]) - 1:
                 path_counter[ki] = 0
             else:
                 path_counter[ki] += 1
 
-            (x,y) = updated_paths[ki][path_counter[ki]]
+            (x, y) = updated_paths[ki][path_counter[ki]]
             binary_heatmap[x][y] = step_requirement
 
-        coverage = round(100*len(binary_heatmap[binary_heatmap > 0])/(n_a*n_a),2)
+        coverage = round(100 * len(binary_heatmap[binary_heatmap > 0]) / (n_a * n_a), 2)
         coverage_list.append(coverage)
-
 
     r = [*range(0, len(coverage_list))]
     coverage_ax.plot(r, coverage_list[0:number_of_steps])
-    coverage_ax.plot(r, [comparison]*number_of_steps, '--')
+    coverage_ax.plot(r, [comparison] * number_of_steps, '--')
 
-    #plt.show()
+    # plt.show()
     plt.savefig(visualization_path.replace("visualization.png", "percent_coverage_visualization.png"))
     plt.close()
 
-def visualize_heatmap(step_requirement, number_of_steps, n_a, ssd, robot_paths=None, world_paths=None, visualization_path=None):
-    dist_betw_each_node = ssd/(n_a-1)
+
+def visualize_heatmap(step_requirement, number_of_steps, n_a, ssd, robot_paths=None, world_paths=None,
+                      visualization_path=None):
+    dist_betw_each_node = ssd / (n_a - 1)
 
     num_of_robots = 0
-    #code to convert world_paths to node_path format if necessary
+    # code to convert world_paths to node_path format if necessary
     if world_paths != None:
         num_of_robots = len(world_paths)
         updated_paths = convertToNodePaths(world_paths, ssd, n_a)
 
-    elif robot_paths != None: #if given robot_paths, assuming already in node_path format
+    elif robot_paths != None:  # if given robot_paths, assuming already in node_path format
         num_of_robots = len(robot_paths)
         updated_paths = robot_paths
 
     heatmap = np.zeros((n_a, n_a))
     path_counter = [0 for ki in range(num_of_robots)]
-    for step_counter in range(0,number_of_steps):
+    for step_counter in range(0, number_of_steps):
         for ki in range(num_of_robots):
-            if path_counter[ki] >= len(updated_paths[ki])-1:
+            if path_counter[ki] >= len(updated_paths[ki]) - 1:
                 path_counter[ki] = 0
             else:
                 path_counter[ki] += 1
 
-            (x,y) = updated_paths[ki][path_counter[ki]]
+            (x, y) = updated_paths[ki][path_counter[ki]]
             heatmap[x][y] = heatmap[x][y] + 1
 
-    figure = plt.figure(figsize=(5,5))
+    figure = plt.figure(figsize=(5, 5))
     ax1, ax2 = plt.subplots()
-    py = plt.imshow(heatmap[:,:], norm=colors.Normalize(0,heatmap[0][0]))
-    plt.colorbar().set_ticks([0,heatmap[0][0]])
+    py = plt.imshow(heatmap[:, :], norm=colors.Normalize(0, heatmap[0][0]))
+    plt.colorbar().set_ticks([0, heatmap[0][0]])
 
-    for (j,i),label in np.ndenumerate(heatmap):
-        ax1.text(i,j,int(label),ha='center',va='center')
-        ax2.text(i,j,int(label),ha='center',va='center')
+    for (j, i), label in np.ndenumerate(heatmap):
+        ax1.text(i, j, int(label), ha='center', va='center')
+        ax2.text(i, j, int(label), ha='center', va='center')
 
     plt.savefig(visualization_path.replace("visualization.png", "heatmap_visualization.png"))
     plt.close()
 
     print(heatmap)
 
+
 def convertToNodePaths(world_paths, ssd, n_a):
-    dist_betw_each_node = ssd/(n_a-1)
+    dist_betw_each_node = ssd / (n_a - 1)
     num_of_robots = len(world_paths)
 
     updated_paths = [[] for ki in range(num_of_robots)]
     for ki in range(0, num_of_robots):
         path = []
 
-
-        if len(world_paths[ki][0]) == 2: #this is just to account for if there are multiple subtours in what it's given, or not.
+        if len(world_paths[ki][
+                   0]) == 2:  # this is just to account for if there are multiple subtours in what it's given, or not.
             for item in world_paths[ki]:
-                path.append((round(((ssd) / 2 + item[0]) / (dist_betw_each_node)), round((ssd / 2 + item[1]) / (dist_betw_each_node))))
+                path.append((round(((ssd) / 2 + item[0]) / (dist_betw_each_node)),
+                             round((ssd / 2 + item[1]) / (dist_betw_each_node))))
 
         else:
             for w_path in world_paths[ki]:
                 for item in w_path:
-                    path.append((round((ssd / 2 + item[0]) / (dist_betw_each_node)), round((ssd / 2 + item[1]) / (dist_betw_each_node))))
-
+                    path.append((round((ssd / 2 + item[0]) / (dist_betw_each_node)),
+                                 round((ssd / 2 + item[1]) / (dist_betw_each_node))))
 
         updated_paths[ki] = path
 
     return updated_paths
+
+
+def visualize_paths_heuristic2(n_a, robot_paths, visualization_path=None):
+    num_rows = (len(robot_paths) + 1) // 2  # Two plots per row
+    fig, axs = pyplot.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
+
+    if len(robot_paths) > 2:
+        axs = axs.flatten()
+
+    for ki in range(len(robot_paths)):
+        ax = axs[ki]
+
+        past_node = (0, 0)
+        [ax.scatter(x, y, c='blue', s=10) for x in range(0, n_a) for y in range(0, n_a)]
+
+        for node in robot_paths[ki]:
+            ax.scatter(node[0], node[1], c="purple", s=8)
+            ax.plot([node[0], past_node[0]], [node[1], past_node[1]], color="purple", linewidth=1)
+
+            past_node = (node[0], node[1])
+
+        ax.set_title(f"Robot #{ki}")
+        ax.grid()
+        ax.legend()
+
+    if visualization_path:
+        pyplot.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
+    else:
+        pyplot.show()
+
+
+def visualize_individual_paths(paths, nodes, targets, depots, b_k, costs, save_path=None):
+    """
+    Visualization used in MRPCP
+    """
+    num_robots = len(paths)
+    num_rows = (num_robots + 1) // 2  # Two plots per row
+    fig, axs = plt.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
+
+    # Flatten the axs array for easy iteration if there's more than one row
+    if num_robots > 2:
+        axs = axs.flatten()
+
+    for index, path in enumerate(paths):
+        ax = axs[index]
+
+        # Plot targets and depots
+        ax.scatter(targets[:, 0], targets[:, 1], c='blue', s=10, label='Targets')
+        ax.scatter(depots[:, 0], depots[:, 1], c='red', s=50, label='Depots')
+
+        # Plot path for this robot
+        for i in range(len(path) - 1):
+            start_node = path[i]
+            end_node = path[i + 1]
+            ax.plot([nodes[start_node, 0], nodes[end_node, 0]],
+                    [nodes[start_node, 1], nodes[end_node, 1]],
+                    color="purple", linewidth=1)
+            ax.scatter(nodes[start_node, 0], nodes[start_node, 1], c="purple", s=8)
+            ax.text(nodes[start_node, 0], nodes[start_node, 1], str(start_node), fontsize=8, ha='center', va='center')
+
+        # Plot a line returning to the starting depot
+        ax.plot([nodes[path[-1], 0], nodes[b_k[0], 0]],
+                [nodes[path[-1], 1], nodes[b_k[0], 1]],
+                color="purple", linewidth=1, linestyle="--", label='Return to Depot')
+
+        # Plot the starting depot
+        ax.text(nodes[b_k[0], 0], nodes[b_k[0], 1], str(b_k[0]), fontsize=8, ha='center', va='center')
+
+        # Set title with cost
+        ax.set_title(f"Robot #{index + 1} (Cost: {costs[index]:.2f})")
+        ax.grid()
+        ax.legend()
+
+    # Hide any unused subplots
+    for i in range(index + 1, num_rows * 2):
+        fig.delaxes(axs[i])
+
+    # plt.tight_layout()
+    fig.suptitle(f"Paths for all robots (sum of costs={sum(costs):.3f})")
+
+    # Save the figure if save_path is provided
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
