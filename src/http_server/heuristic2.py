@@ -123,9 +123,9 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                          dist_betw_each_node * item[1] - square_side_dist / 2])
         world_path[ki] = path
 
-    visualize_paths_heuristic2(n_a, robot_paths, visualization_path)
-    visualize_coverage(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
-    visualize_heatmap(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
+    # visualize_paths_heuristic2(n_a, robot_paths, visualization_path)
+    # visualize_coverage(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
+    # visualize_heatmap(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)
     return robot_paths, world_path, metadata
 
 

@@ -36,9 +36,17 @@ def yasars_heuristic(num_of_robots: int,
     L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
     # print(f"{L_min=} {L=}")
     # print(f"{k=} {n=} {d=} {rp=}")
+    # meta data given params
+    metadata["k"] = k
+    metadata["nk"] = nodes_to_robot_ratio
+    metadata["ssd"] = square_side_dist
+    metadata["fcr"] = fuel_capacity_ratio
+    metadata["fr"] = failure_rate
+    # metadata derived params
     metadata["n"] = n
-    metadata["d"] = d
     metadata["rp"] = rp
+    metadata["L_min"] = L
+    metadata["mode"] = "h1"
 
     # 1. Create map and get node indices
     nodes, node_indices, target_indices, depot_indices = construct_map(n, d)

@@ -1,7 +1,3 @@
 Runtime Analysis
 ----------------
 
-Function: h1 heuristic
-Parameters: {'k': '5', 'nk': '2', 'ssd': '3', 'fcr': '2', 'fr': '10', 'mode': 'h1'}
-Runtime: 0 minutes 3.589508 seconds
-

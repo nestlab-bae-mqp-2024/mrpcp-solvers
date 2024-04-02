@@ -20,6 +20,8 @@ from src.http_server.recalculate import *
 from src.http_server.mrpcp import *
 import os
 import src.http_server.json_handlers as json_handlers
+from src.http_server.utils.metric_calculations import calculate_mean_distance_per_path, \
+    calculate_mean_distance_per_path_h2
 from src.visualization.visualization_pipeline import run_visualization_pipeline
 
 app = Flask(__name__)
@@ -115,7 +117,7 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
                            'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'm'},
                            'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
-            stats_data = {'job_id': job_id, 'runtime': runtime}
+            stats_data = {'job_id': job_id, 'runtime': runtime, 'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
             json_handlers.saveResultsToCache(job_id, result_data, 'result.json')  # Save the results to the cache
             json_handlers.saveResultsToCache(job_id, stats_data, 'stats.json')
         elif mode == 'h1':
@@ -146,7 +148,7 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
                            'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'h1'},
                            'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
-            stats_data = {'job_id': job_id, 'runtime': runtime}
+            stats_data = {'job_id': job_id, 'runtime': runtime, 'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
             json_handlers.saveResultsToCache(job_id, result_data, 'result.json')
             json_handlers.saveResultsToCache(job_id, stats_data, 'stats.json')
             return result_data  # Return the content of the JSON file
@@ -157,9 +159,11 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             print(
                 f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h2...")
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
-                        "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
+                        "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
+                        "percent_coverage_visualization.png": saveGraphPath(job_id, "percent_coverage_visualization.png"),
+                        "heatmap_visualization.png": saveGraphPath(job_id, "heatmap_visualization.png")}
             edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), None, None, None, saveGraphPath(job_id, "visualization.png"), metadata)  # Run the other heuristic solver
-            # metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
+            metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("h2 heuristic", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
             print(
@@ -171,7 +175,7 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
                            'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'h2'},
                            'robot_node_path': edges, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
-            stats_data = {'job_id': job_id, 'runtime': runtime}
+            stats_data = {'job_id': job_id, 'runtime': runtime, 'mean_distance_per_path': calculate_mean_distance_per_path_h2(robot_world_path)}
             json_handlers.saveResultsToCache(job_id, result_data, 'result.json')
             json_handlers.saveResultsToCache(job_id, stats_data, 'stats.json')
             return result_data  # Return the content of the JSON file
@@ -243,3 +247,5 @@ if __name__ == '__main__':
         f.write("----------------\n\n")
     print("Waiting for a request...")  # Added waiting message
     app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+
+#%%

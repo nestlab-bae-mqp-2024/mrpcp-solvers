@@ -178,8 +178,10 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
 
 
 # visualizes percent coverage over time
-def visualize_coverage(step_requirement, number_of_steps, n_a, ssd, robot_paths=None, world_paths=None,
-                       visualization_path=None):
+def visualize_coverage(step_requirement, number_of_steps, robot_paths=None, world_paths=None,
+                       metadata=None):
+    ssd = metadata["ssd"]
+    n_a = metadata["n"]
     coverage_figure = plt.figure(figsize=(5, 5))
     coverage_ax = plt.subplot()
     plt.xlabel('number of steps')
@@ -223,12 +225,20 @@ def visualize_coverage(step_requirement, number_of_steps, n_a, ssd, robot_paths=
     coverage_ax.plot(r, [comparison] * number_of_steps, '--')
 
     # plt.show()
-    plt.savefig(visualization_path.replace("visualization.png", "percent_coverage_visualization.png"))
-    plt.close()
+    # plt.savefig(visualization_path.replace("visualization.png", "percent_coverage_visualization.png"))
+    # plt.close()
+    if "percent_coverage_visualization" in metadata:
+        plt.savefig(metadata["percent_coverage_visualization"])
+    else:
+        plt.show()
+
+    return metadata
 
 
-def visualize_heatmap(step_requirement, number_of_steps, n_a, ssd, robot_paths=None, world_paths=None,
-                      visualization_path=None):
+def visualize_heatmap(step_requirement, number_of_steps, robot_paths=None, world_paths=None,
+                      metadata=None):
+    ssd = metadata["ssd"]
+    n_a = metadata["n"]
     dist_betw_each_node = ssd / (n_a - 1)
 
     num_of_robots = 0
@@ -293,7 +303,8 @@ def convertToNodePaths(world_paths, ssd, n_a):
     return updated_paths
 
 
-def visualize_paths_heuristic2(n_a, robot_paths, visualization_path=None):
+def visualize_paths_heuristic2(robot_paths, metadata):
+    n_a = metadata["n"]
     num_rows = (len(robot_paths) + 1) // 2  # Two plots per row
     fig, axs = pyplot.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
 
@@ -316,10 +327,13 @@ def visualize_paths_heuristic2(n_a, robot_paths, visualization_path=None):
         ax.grid()
         ax.legend()
 
-    if visualization_path:
-        pyplot.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
-    else:
-        pyplot.show()
+    # if visualization_path:
+    #     pyplot.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
+    # else:
+    #     pyplot.show()
+    if "visualize_paths_graph_path" in metadata:
+        plt.savefig(metadata["visualize_paths_graph_path"])
+    plt.show()
 
 
 def visualize_individual_paths(paths, nodes, targets, depots, b_k, costs, save_path=None):

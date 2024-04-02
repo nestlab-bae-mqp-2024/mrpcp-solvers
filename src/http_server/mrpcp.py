@@ -45,6 +45,18 @@ def solve_milp_with_optimizations(num_of_robots: int,
     L = fuel_capacity_ratio * max_fuel_cost_to_node * 2  # Fuel capacity (1 unit of fuel = 1 unit of distance)
     M = L + max_fuel_cost_to_node
 
+    # meta data given params
+    metadata["k"] = k
+    metadata["nk"] = nodes_to_robot_ratio
+    metadata["ssd"] = square_side_dist
+    metadata["fcr"] = fuel_capacity_ratio
+    metadata["fr"] = failure_rate
+    # metadata derived params
+    metadata["n"] = n_a
+    metadata["rp"] = rp
+    metadata["L_min"] = L
+    metadata["mode"] = "m"
+
     # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
     targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
     # targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
