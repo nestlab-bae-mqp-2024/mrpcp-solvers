@@ -228,6 +228,8 @@ def visualize_coverage(step_requirement, number_of_steps, robot_paths, world_pat
     # plt.show()
     # plt.savefig(visualization_path.replace("visualization.png", "percent_coverage_visualization.png"))
     # plt.close()
+
+    plt.suptitle("Percent Coverage Over Time")
     if "percent_coverage_visualization" in metadata:
         plt.savefig(metadata["percent_coverage_visualization"])
     else:
@@ -273,6 +275,7 @@ def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_path
         ax1.text(i, j, int(label), ha='center', va='center')
         ax2.text(i, j, int(label), ha='center', va='center')
 
+    plt.suptitle("Node Visitation Frequency (Heatmap)")
     if "heatmap_visualization" in metadata:
         plt.savefig(metadata["heatmap_visualization"])
     else:
@@ -320,14 +323,13 @@ def visualize_paths_heuristic2(robot_paths, metadata):
 
         past_node = (0, 0)
         [ax.scatter(x, y, c='blue', s=10) for x in range(0, n_a) for y in range(0, n_a)]
-
         for node in robot_paths[ki]:
             ax.scatter(node[0], node[1], c="purple", s=8)
             ax.plot([node[0], past_node[0]], [node[1], past_node[1]], color="purple", linewidth=1)
 
             past_node = (node[0], node[1])
 
-        ax.set_title(f"Robot #{ki}")
+        ax.set_title(f"Robot #{ki+1}")
         ax.grid()
         ax.legend()
 
@@ -335,6 +337,7 @@ def visualize_paths_heuristic2(robot_paths, metadata):
     #     pyplot.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
     # else:
     #     pyplot.show()
+    fig.suptitle(f"Paths for all robots (# of robots={len(robot_paths)}")
     if "visualize_paths_graph_path" in metadata:
         plt.savefig(metadata["visualize_paths_graph_path"])
     plt.show()

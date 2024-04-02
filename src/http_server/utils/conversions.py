@@ -53,10 +53,16 @@ def convertToWorldPath(n_a, d, robot_node_path):
     return robot_world_path
 
 
-def worldToNodePath():
+def worldToNodePath(world_path):
     """
     Use this function to convert the world path to a node path
     Used for recalculation and for heuristic 2 to convert back to MILP/H1 node path format
     :return:
     """
-    pass
+    node_path = []
+    for i in range(len(world_path)):
+        if i == 0:
+            node_path.append([world_path[i]])
+        else:
+            node_path.append([world_path[i], world_path[i - 1]])
+    return node_path

@@ -120,7 +120,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
         for item in robot_paths[ki]:
             path.append([dist_betw_each_node * item[0] - square_side_dist / 2,
                          dist_betw_each_node * item[1] - square_side_dist / 2])
-        world_path[ki] = path
+        world_path[ki] = [path]
 
     # visualize_paths_heuristic2(n_a, robot_paths, visualization_path)
     # visualize_coverage(20, 1000, n_a, square_side_dist, robot_paths, None, visualization_path)

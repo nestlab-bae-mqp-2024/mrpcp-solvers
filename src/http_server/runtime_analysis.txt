@@ -1,11 +1,11 @@
 Runtime Analysis
 ----------------
 
-Function: h1 heuristic
-Parameters: {'k': '4', 'nk': '2', 'ssd': '3', 'fcr': '2', 'fr': '10', 'mode': 'h1'}
-Runtime: 0 minutes 2.977006 seconds
-
 Function: h2 heuristic
 Parameters: {'k': '4', 'nk': '2', 'ssd': '3', 'fcr': '2', 'fr': '10', 'mode': 'h2'}
-Runtime: 0 minutes 7.974991 seconds
+Runtime: 0 minutes 7.185035 seconds
+
+Function: h1 heuristic
+Parameters: {'k': '4', 'nk': '2', 'ssd': '3', 'fcr': '2', 'fr': '10', 'mode': 'h1'}
+Runtime: 0 minutes 3.652207 seconds
 

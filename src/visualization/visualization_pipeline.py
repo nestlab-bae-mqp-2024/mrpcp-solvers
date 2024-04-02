@@ -5,23 +5,24 @@ from src.http_server.utils.visualize import visualize_coverage, visualize_heatma
 
 
 def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
+    # 1. Visualize the paths assigned to each robot
+    # TODO: convert world to node and then use visualize_paths
     if metadata["mode"] == "h2":
-        # 1. Visualize the paths assigned to each robot
         metadata = visualize_paths_heuristic2(robot_node_path, metadata)
-        # 2. Pseudo-Simulate and create the 2d histogram of the visitation frequency
-        # all_world_points = pseudo_simulate(robot_world_path, t=30, ds=0.1)
-        # metadata = visualize_visitation_frequency(all_world_points, metadata)
     else:
         metadata = visualize_paths(robot_node_path, metadata)
-        all_world_points = pseudo_simulate(robot_world_path, t=30, ds=0.1)
-        metadata = visualize_visitation_frequency(all_world_points, metadata)
 
-    # TODO: 3. % coverage over time
+    # 2. Pseudo-Simulate and create the 2d histogram of the normalized visitation frequency
+    all_world_points = pseudo_simulate(robot_world_path, t=30, ds=0.1)
+    metadata = visualize_visitation_frequency(all_world_points, metadata)
+
+    # 3. percent coverage over time
     metadata = visualize_coverage(20, 1000, robot_node_path, robot_world_path, metadata)
 
+    # 4. node visitation over time
     metadata = visualize_heatmap(20, 1000, robot_node_path, robot_world_path, metadata)
 
-    # TODO: 4. mean time between revisitation heatmap
+    # TODO: 5. mean time/distance between revisitation heatmap
 
     return metadata
 
