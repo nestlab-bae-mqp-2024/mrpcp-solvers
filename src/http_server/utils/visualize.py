@@ -178,8 +178,9 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
 
 
 # visualizes percent coverage over time
-def visualize_coverage(step_requirement, number_of_steps, robot_paths=None, world_paths=None,
-                       metadata=None):
+def visualize_coverage(step_requirement, number_of_steps, robot_paths, world_paths,
+                       metadata):
+    print("Visualizing coverage over time")
     ssd = metadata["ssd"]
     n_a = metadata["n"]
     coverage_figure = plt.figure(figsize=(5, 5))
@@ -189,10 +190,10 @@ def visualize_coverage(step_requirement, number_of_steps, robot_paths=None, worl
 
     num_of_robots = 0
     # code to convert world_paths to node_path format if necessary
-    if world_paths != None:
+    if world_paths is not None:
         num_of_robots = len(world_paths)
         updated_paths = convertToNodePaths(world_paths, ssd, n_a)
-    elif robot_paths != None:  # if given robot_paths, assuming already in node_path format
+    elif robot_paths is not None:  # if given robot_paths, assuming already in node_path format
         num_of_robots = len(robot_paths)
         updated_paths = robot_paths
 
@@ -231,23 +232,23 @@ def visualize_coverage(step_requirement, number_of_steps, robot_paths=None, worl
         plt.savefig(metadata["percent_coverage_visualization"])
     else:
         plt.show()
-
     return metadata
 
 
-def visualize_heatmap(step_requirement, number_of_steps, robot_paths=None, world_paths=None,
-                      metadata=None):
+def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_paths,
+                      metadata):
+    print("Visualizing heatmap for coverage over time")
     ssd = metadata["ssd"]
     n_a = metadata["n"]
     dist_betw_each_node = ssd / (n_a - 1)
 
     num_of_robots = 0
     # code to convert world_paths to node_path format if necessary
-    if world_paths != None:
+    if world_paths is not None:
         num_of_robots = len(world_paths)
         updated_paths = convertToNodePaths(world_paths, ssd, n_a)
 
-    elif robot_paths != None:  # if given robot_paths, assuming already in node_path format
+    elif robot_paths is not None:  # if given robot_paths, assuming already in node_path format
         num_of_robots = len(robot_paths)
         updated_paths = robot_paths
 
@@ -272,10 +273,12 @@ def visualize_heatmap(step_requirement, number_of_steps, robot_paths=None, world
         ax1.text(i, j, int(label), ha='center', va='center')
         ax2.text(i, j, int(label), ha='center', va='center')
 
-    plt.savefig(visualization_path.replace("visualization.png", "heatmap_visualization.png"))
-    plt.close()
+    if "heatmap_visualization" in metadata:
+        plt.savefig(metadata["heatmap_visualization"])
+    else:
+        plt.show()
 
-    print(heatmap)
+    return metadata
 
 
 def convertToNodePaths(world_paths, ssd, n_a):
@@ -304,6 +307,7 @@ def convertToNodePaths(world_paths, ssd, n_a):
 
 
 def visualize_paths_heuristic2(robot_paths, metadata):
+    print("Visualizing paths for heuristic 2")
     n_a = metadata["n"]
     num_rows = (len(robot_paths) + 1) // 2  # Two plots per row
     fig, axs = pyplot.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
@@ -334,9 +338,10 @@ def visualize_paths_heuristic2(robot_paths, metadata):
     if "visualize_paths_graph_path" in metadata:
         plt.savefig(metadata["visualize_paths_graph_path"])
     plt.show()
+    return metadata
 
 
-def visualize_individual_paths(paths, nodes, targets, depots, b_k, costs, save_path=None):
+def visualize_individual_paths(paths, nodes, targets, depots, b_k, costs, metadata):
     """
     Visualization used in MRPCP
     """
@@ -385,8 +390,7 @@ def visualize_individual_paths(paths, nodes, targets, depots, b_k, costs, save_p
     # plt.tight_layout()
     fig.suptitle(f"Paths for all robots (sum of costs={sum(costs):.3f})")
 
-    # Save the figure if save_path is provided
-    if save_path:
-        plt.savefig(save_path)
-    else:
-        plt.show()
+    if "visualize_paths_graph_path" in metadata:
+        plt.savefig(metadata["visualize_paths_graph_path"])
+    plt.show()
+    return metadata

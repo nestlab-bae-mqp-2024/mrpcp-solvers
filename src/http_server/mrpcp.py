@@ -310,9 +310,8 @@ def solve_milp_with_optimizations(num_of_robots: int,
                             optimized_paths_kopt]  # Calculate costs for each robot with 3-opt
 
     # Call the updated visualization function with costs
-    visualize_individual_paths(optimized_paths_2opt, nodes, targets, depots, B_k, optimized_costs_2opt,
-                               save_path=saveGraphPath(job_id, 'visualization.png'))
-    visualize_individual_paths(optimized_paths_kopt, nodes, targets, depots, B_k, optimized_costs_kopt)  # three opt
+    # visualize_individual_paths(optimized_paths_2opt, nodes, targets, depots, B_k, optimized_costs_2opt, )
+    # visualize_individual_paths(optimized_paths_kopt, nodes, targets, depots, B_k, optimized_costs_kopt)  # three opt
 
     # Calculate cost reduction for each robot
     for index, (milp_cost, opt_cost) in enumerate(zip(milp_costs, optimized_costs_2opt)):
@@ -327,11 +326,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
     print("MILP solution completed...returning paths to server endpoint /solve")
     worldPath = convertToWorldPath(n_a, d, optimized_paths_2opt)
 
-    print("Visualizing percent coverage over time:")
-    visualize_coverage(20, 1000, n_a, d, None, worldPath, "visualization.png")
-
-    print("Visualizing heatmap:")
-    visualize_heatmap(20, 1000, n_a, d, None, worldPath, "visualization.png")
 
     print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
     print("The optimized paths converted to world path are: ", worldPath)

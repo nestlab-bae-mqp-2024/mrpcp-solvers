@@ -98,7 +98,9 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             # Run MILP solver function with parameters
             start_time = time.time()
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
-                        "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
+                        "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
+                        "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
+                        "heatmap_visualization": saveGraphPath(job_id, "heatmap_visualization.png")}
             print(
                 f"Running MILP solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode=m...")
             edges, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(nk), float(ssd), float(fcr), int(fr),
@@ -126,7 +128,9 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             print(
                 f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h1...")
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
-                        "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
+                        "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
+                        "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
+                        "heatmap_visualization": saveGraphPath(job_id, "heatmap_visualization.png")}
             robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(nk), float(ssd), float(fcr), int(fr), metadata)
             metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
 
@@ -159,10 +163,10 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             print(
                 f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h2...")
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
-                        "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
-                        "percent_coverage_visualization.png": saveGraphPath(job_id, "percent_coverage_visualization.png"),
-                        "heatmap_visualization.png": saveGraphPath(job_id, "heatmap_visualization.png")}
-            edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), None, None, None, saveGraphPath(job_id, "visualization.png"), metadata)  # Run the other heuristic solver
+                        # "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
+                        "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
+                        "heatmap_visualization": saveGraphPath(job_id, "heatmap_visualization.png")}
+            edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), None, None, None, metadata)  # Run the other heuristic solver
             metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("h2 heuristic", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)

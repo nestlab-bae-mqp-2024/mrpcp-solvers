@@ -20,7 +20,6 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                                     failed_robot_id: int = None,
                                     curr_robots_pos: list = None,
                                     curr_fuel_levels: list = None,
-                                    visualization_path: str = None,
                                     metadata: Dict = None):
     """
     This function solves the MRPCP problem using the heuristic approach with redundancy and failure rate. This is NOT recalculation
