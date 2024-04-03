@@ -14,13 +14,12 @@ import threading
 import time
 
 from flask import Flask, request, jsonify
-
+from src.http_server.json_handlers import *
 from src.heuristic_attempts.yasars_heuristic_attempts.yasars_heuristic import yasars_heuristic
 from src.http_server import heuristic2
 
 from src.http_server.mrpcp import *
 import os
-import src.http_server.json_handlers as json_handlers
 from src.http_server.utils.metric_calculations import calculate_mean_distance_per_path
 from src.visualization.visualization_pipeline import run_visualization_pipeline
 
@@ -120,8 +119,8 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
                            'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             stats_data = {'job_id': job_id, 'runtime': runtime, 'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
-            json_handlers.saveResultsToCache(job_id, result_data, 'result.json')  # Save the results to the cache
-            json_handlers.saveResultsToCache(job_id, stats_data, 'stats.json')
+            saveResultsToCache(job_id, result_data, 'result.json')  # Save the results to the cache
+            saveResultsToCache(job_id, stats_data, 'stats.json')
         elif mode == 'h1':
             # Run Heuristic solver function with parameters
             start_time = time.time()
@@ -153,8 +152,8 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
                            'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             stats_data = {'job_id': job_id, 'runtime': runtime, 'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
-            json_handlers.saveResultsToCache(job_id, result_data, 'result.json')
-            json_handlers.saveResultsToCache(job_id, stats_data, 'stats.json')
+            saveResultsToCache(job_id, result_data, 'result.json')
+            saveResultsToCache(job_id, stats_data, 'stats.json')
             return result_data  # Return the content of the JSON file
 
         elif mode == 'h2':
@@ -180,8 +179,8 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
                            'robot_node_path': edges, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             stats_data = {'job_id': job_id, 'runtime': runtime, 'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
-            json_handlers.saveResultsToCache(job_id, result_data, 'result.json')
-            json_handlers.saveResultsToCache(job_id, stats_data, 'stats.json')
+            saveResultsToCache(job_id, result_data, 'result.json')
+            saveResultsToCache(job_id, stats_data, 'stats.json')
             return result_data  # Return the content of the JSON file
 
     except Exception as e:
@@ -203,7 +202,7 @@ def recalc_endpoint():
     start_time = time.time()
     metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
                 "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
-    robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), failed_robot_id, curr_robots_pos, curr_fuel_levels, saveGraphPath(job_id, "visualization.png"), metadata)  # Run the other heuristic solver
+    robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), failed_robot_id, curr_robots_pos, curr_fuel_levels, metadata)  # Run the other heuristic solver
     metadata = run_visualization_pipeline(robot_node_path, robot_world_path, metadata)
     runtime = time.time() - start_time
     log_runtime("solve_endpoint", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
@@ -212,8 +211,8 @@ def recalc_endpoint():
                    'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                    'status': 'completed'}
     stats_data = {'job_id': job_id, 'runtime': runtime}
-    json_handlers.saveResultsToCache(job_id, result_data, 'recalculation_result.json')  # Save the results to the cache
-    json_handlers.saveResultsToCache(job_id, stats_data, 'stats.json')
+    saveResultsToCache(job_id, result_data, 'recalculation_result.json')  # Save the results to the cache
+    saveResultsToCache(job_id, stats_data, 'stats.json')
     # Run the function to recalculate the paths based on the input parameters
     return jsonify(result_data), 200 # Return the json result of the recalculation
 

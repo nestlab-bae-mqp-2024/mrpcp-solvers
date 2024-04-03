@@ -13,10 +13,8 @@ import gurobipy as gp
 from gurobipy import GRB
 from scipy.spatial import distance
 import os
-from src.http_server.json_handlers import saveGraphPath
 from src.http_server.utils.conversions import convertToWorldPath
 from src.http_server.utils.tsp_solver import k_opt
-from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap, visualize_individual_paths
 
 
 def solve_milp_with_optimizations(num_of_robots: int,
@@ -59,7 +57,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
     # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
     targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
-    # targets = np.mgrid[-1:1:n_a * 1j, -1.:1:n_a * 1j]
     targets = targets.reshape(targets.shape + (1,))
     targets = np.concatenate((targets[0], targets[1]), axis=2)
     targets = targets.reshape((n_a * n_a, 2))
