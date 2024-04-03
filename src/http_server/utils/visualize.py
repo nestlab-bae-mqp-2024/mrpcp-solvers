@@ -267,7 +267,7 @@ def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_path
             heatmap[x][y] = heatmap[x][y] + 1
 
     fig, ax = plt.subplots()
-    im = ax.imshow(heatmap[:, :], norm=colors.Normalize(0, heatmap[0][0]))
+    im = ax.imshow(heatmap[:, :], norm=colors.Normalize(0, heatmap[0][0]), origin='lower')
 
     bar = fig.colorbar(cm.ScalarMappable(norm=colors.Normalize(0, heatmap[0][0])), ax=ax)
 
@@ -275,7 +275,7 @@ def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_path
 
     xtick = [str(i) for i in np.arange(-ssd/2, ssd/2+0.5, 0.5)]
     ax.set_xticks((n_a/(2*ssd))*np.arange(len(xtick))-0.5, labels = xtick)
-    ax.set_yticks((n_a/(2*ssd))*np.arange(len(xtick))[::-1]-0.5, labels = xtick)
+    ax.set_yticks((n_a/(2*ssd))*np.arange(len(xtick))-0.5, labels = xtick)
 
     for (j, i), label in np.ndenumerate(heatmap):
         text = ax.text(i, j, int(label),
