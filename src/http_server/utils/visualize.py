@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import colors, pyplot as plt, pyplot
+from matplotlib import colors, cm, pyplot as plt, pyplot
 import itertools
 
 
@@ -266,16 +266,23 @@ def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_path
             (x, y) = updated_paths[ki][path_counter[ki]]
             heatmap[x][y] = heatmap[x][y] + 1
 
-    figure = plt.figure(figsize=(5, 5))
-    ax1, ax2 = plt.subplots()
-    py = plt.imshow(heatmap[:, :], norm=colors.Normalize(0, heatmap[0][0]))
-    plt.colorbar().set_ticks([0, heatmap[0][0]])
+    fig, ax = plt.subplots()
+    im = ax.imshow(heatmap[:, :], norm=colors.Normalize(0, heatmap[0][0]))
+
+    bar = fig.colorbar(cm.ScalarMappable(norm=colors.Normalize(0, heatmap[0][0])), ax=ax)
+
+    bar.set_ticks([0, heatmap[0][0]])
+
+    xtick = [str(i) for i in np.arange(-ssd/2, ssd/2+0.5, 0.5)]
+    ax.set_xticks((n_a/(2*ssd))*np.arange(len(xtick))-0.5, labels = xtick)
+    ax.set_yticks((n_a/(2*ssd))*np.arange(len(xtick))[::-1]-0.5, labels = xtick)
 
     for (j, i), label in np.ndenumerate(heatmap):
-        ax1.text(i, j, int(label), ha='center', va='center')
-        ax2.text(i, j, int(label), ha='center', va='center')
+        text = ax.text(i, j, int(label),
+                       ha="center", va="center", color="w")
 
-    plt.suptitle("Node Visitation Frequency (Heatmap)")
+    fig.suptitle(f"Number of Visitations per Node: Simulation run for {number_of_steps} steps")
+
     if "heatmap_visualization" in metadata:
         plt.savefig(metadata["heatmap_visualization"])
     else:
