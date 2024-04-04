@@ -22,6 +22,8 @@ def visualize_visitation_frequency(all_robot_world_points, metadata=None):
     cb.update_ticks()
 
     fig.suptitle("Normalized World Coordinate Visitation Frequency (Heatmap)")
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
     if "visitation_frequency_graph_path" in metadata:
         fig.savefig(metadata["visitation_frequency_graph_path"])
     else:

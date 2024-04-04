@@ -99,7 +99,8 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
                         "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
                         "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
-                        "heatmap_visualization": saveGraphPath(job_id, "heatmap_visualization.png")}
+                        "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
+                        "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png")}
             print(
                 f"Running MILP solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode=m...")
             edges, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(nk), float(ssd), float(fcr), int(fr),
@@ -129,7 +130,8 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
                         "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
                         "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
-                        "heatmap_visualization": saveGraphPath(job_id, "heatmap_visualization.png")}
+                        "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
+                        "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png")}
             robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(nk), float(ssd), float(fcr), int(fr), metadata)
             metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
 
@@ -164,7 +166,8 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
                         "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
                         "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
-                        "heatmap_visualization": saveGraphPath(job_id, "heatmap_visualization.png")}
+                        "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
+                        "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png")}
             edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), None, None, None, metadata)  # Run the other heuristic solver
             metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time

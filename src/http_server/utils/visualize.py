@@ -237,8 +237,8 @@ def visualize_coverage(step_requirement, number_of_steps, robot_paths, world_pat
     return metadata
 
 
-def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_paths,
-                      metadata):
+def visualize_node_visitations(step_requirement, number_of_steps, robot_paths, world_paths,
+                               metadata):
     print("Visualizing heatmap for coverage over time")
     ssd = metadata["ssd"]
     n_a = metadata["n"]
@@ -266,6 +266,9 @@ def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_path
             (x, y) = updated_paths[ki][path_counter[ki]]
             heatmap[x][y] = heatmap[x][y] + 1
 
+    # Create a new figure
+    plt.figure()
+
     fig, ax = plt.subplots()
     im = ax.imshow(heatmap[:, :], norm=colors.Normalize(0, heatmap[0][0]), origin='lower')
 
@@ -282,9 +285,11 @@ def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_path
                        ha="center", va="center", color="w")
 
     fig.suptitle(f"Number of Visitations per Node: Simulation run for {number_of_steps} steps")
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
 
-    if "heatmap_visualization" in metadata:
-        plt.savefig(metadata["heatmap_visualization"])
+    if "node_visitation_heatmap" in metadata:
+        plt.savefig(metadata["node_visitation_heatmap"])
     else:
         plt.show()
 

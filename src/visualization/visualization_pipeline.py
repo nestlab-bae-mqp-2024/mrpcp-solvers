@@ -1,7 +1,8 @@
+from src.visualization.mean_time_between_revisitation import visualize_mean_time_between_revisitation
 from src.visualization.pseudo_simulate import pseudo_simulate
 from src.visualization.paths_and_subtours import visualize_paths, visualize_subtours
 from src.visualization.visitation_frequency import visualize_visitation_frequency
-from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap, visualize_paths_heuristic2
+from src.http_server.utils.visualize import visualize_coverage, visualize_node_visitations, visualize_paths_heuristic2
 
 
 def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
@@ -20,9 +21,9 @@ def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
     metadata = visualize_coverage(20, 1000, robot_node_path, robot_world_path, metadata)
 
     # 4. node visitation over time
-    metadata = visualize_heatmap(20, 1000, robot_node_path, robot_world_path, metadata)
+    metadata = visualize_node_visitations(20, 1000, robot_node_path, robot_world_path, metadata)
 
     # TODO: 5. mean time/distance between revisitation heatmap
-
+    metadata = visualize_mean_time_between_revisitation(all_world_points, metadata)
     return metadata
 
