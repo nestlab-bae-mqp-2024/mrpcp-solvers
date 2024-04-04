@@ -96,18 +96,22 @@ def solve_milp_with_optimizations(num_of_robots: int,
     _ = m.addConstrs(x[:, :, i].sum() == rp for i in target_indices)
 
     for ki in range(k):
+        if rp > 1:
+            _ = m.addConstrs(x[ki,i,:].sum() <= 1 for i in target_indices)
+            _ = m.addConstrs(x[ki,:,i].sum() <= 1 for i in target_indices)
+
         # (8) and (9) Begin and end at same position B_k
-        _ = m.addConstr(x[ki, B_k[ki], :].sum() <= 1)
-        _ = m.addConstr(x[ki, :, B_k[ki]].sum() <= 1)
+        _ = m.addConstr(x[ki,B_k[ki],:].sum() <= 1)
+        _ = m.addConstr(x[ki,:,B_k[ki]].sum() <= 1)
 
         # (10) Every robot that visits a target leaves the target
-        _ = m.addConstrs((x[ki, :, i] - x[ki, i, :]).sum() == 0 for i in node_indices)
+        _ = m.addConstrs((x[ki,:,i]-x[ki,i,:]).sum() == 0 for i in node_indices)
 
         # Additional constraint: no loopholes!
         _ = m.addConstrs(x[ki, i, i] == 0 for i in node_indices)
 
     # C. Capacity and Flow Constraints (11), (12), (13), (14)
-    p = m.addMVar((k, len(node_indices), len(node_indices)), name='p', vtype=GRB.INTEGER, lb=0, ub=len(target_indices))
+    p = m.addMVar((k,len(node_indices),len(node_indices)), name='p', vtype=GRB.INTEGER, lb=0, ub=len(target_indices))
 
     for ki in range(k):
         # (11) and (12) flow constraints
@@ -133,25 +137,25 @@ def solve_milp_with_optimizations(num_of_robots: int,
         _ = m.addConstrs(p[ki, i, j] <= len(target_indices) * x[ki, i, j] for i in node_indices for j in node_indices)
 
     # # D. Fuel Constraints (15), (16), (17), (18), (19), (20)
-    r = m.addMVar((len(node_indices)), name='r', vtype=GRB.CONTINUOUS, lb=0, ub=L)  # (20)
+    r = m.addMVar((k,len(node_indices),len(node_indices)), name='r', vtype=GRB.CONTINUOUS, lb=0, ub=L)  # (20)
 
     for ki in range(k):
         # (15) and (16)
         for i, j in itertools.product(target_indices, target_indices):
-            left_side = r[j] - r[i] + cost[i, j]
-            right_side = M * (1 - x[ki, i, j])
-            _ = m.addConstr(left_side <= right_side)
+            left_side = r[ki,j,i] - r[ki,i,j] + cost[i,j]
+            right_side = M * (1 - x[ki,i,j])
+            _ = m.addConstr(left_side <=  right_side)
             _ = m.addConstr(left_side >= -right_side)
 
         # (17) and (18)
         for i, j in itertools.product(depot_indices, target_indices):
-            left_side = r[j] - M + cost[i, j]
-            right_side = M * (1 - x[ki, i, j])
+            left_side = r[ki,j,i] - L + cost[i,j]
+            right_side = M * (1 - x[ki,i,j])
             _ = m.addConstr(left_side >= -right_side)
-            _ = m.addConstr(left_side <= right_side)
+            _ = m.addConstr(left_side <=  right_side)
 
             # (19)
-            _ = m.addConstr(r[j] - cost[j, i] >= -M * (1 - x[ki, j, i]))
+            _ = m.addConstr(r[ki,j,i] - cost[j,i] >= -M * (1 - x[ki,j,i]))
 
     # Set objective function (3)
     p_max = m.addVar(vtype=GRB.CONTINUOUS, name="p_max")
@@ -258,14 +262,15 @@ def solve_milp_with_optimizations(num_of_robots: int,
             if where == GRB.Callback.MIPSOL and what.cbGet(GRB.Callback.MIPSOL_OBJ) < MILPSolver.min_cost:
                 MILPSolver.min_cost = what.cbGet(GRB.Callback.MIPSOL_OBJ)
                 print(f"Found a new solution with lower cost({MILPSolver.min_cost:.3f})!")
-                MILPSolver.min_cost_edges = what.cbGetSolution(what._x)
-                visualize_paths_brute_force(MILPSolver.min_cost_edges)
 
-                # If this solution's maximum costing tour ~= the cost of the tour that only travels between depot and the furthest node,
+                # If this solution's maximum costing tour ~= the cost of tour that only travels between depot and the furthest node,
                 # then, this is guaranteed to be optimal.
-                if (MILPSolver.min_cost - max_fuel_cost_to_node * 2) < 0.01:
+                if (MILPSolver.min_cost - max_fuel_cost_to_node * 4) < 0.01:
                     print("!This is guaranteed to be the optimal solution!")
                     what.terminate()
+
+                MILPSolver.min_cost_edges = what.cbGetSolution(what._x)
+                visualize_paths_brute_force(MILPSolver.min_cost_edges)
 
         def solve(self):
             self.model.optimize(MILPSolver.cb)
@@ -277,7 +282,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
     solver = MILPSolver(m, num_threads_available - 1)  # Create an instance of your MILP solver with multi-threading
 
-    # import gurobipy as grb
 
     # Set the number of threads for Gurobi
     # grb.setParam('Threads', num_threads_available-1)
@@ -324,9 +328,11 @@ def solve_milp_with_optimizations(num_of_robots: int,
     worldPath = convertToWorldPath(n_a, d, optimized_paths_2opt)
 
 
+
     print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
+    print("The min cost edges are: ", MILPSolver.min_cost_edges)
     print("The optimized paths converted to world path are: ", worldPath)
-    print("Returning solution to be sent to a json file...")
+    print("Returning MILP solution to be sent to a json file...")
     return optimized_paths_2opt, worldPath, metadata
 
 

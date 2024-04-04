@@ -4,8 +4,8 @@ from typing import Dict
 
 import numpy as np
 from collections import Counter
-from src.http_server.mrpcp import convertToWorldPath
-from src.http_server.utils.visualize import visualize_coverage, visualize_heatmap, visualize_paths_heuristic2
+
+from src.http_server.utils.conversions import convertToWorldPath
 
 # Global variables
 all_nodes = set()

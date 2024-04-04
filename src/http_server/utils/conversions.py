@@ -15,6 +15,7 @@ def convertToWorldPath(n_a, d, robot_node_path):
             [[-1, -1], [-0.5, -0.5], [-1, -1]]
         ]
     """
+    print("Converting to world path")
     d = d / 2.  # Distance per side of the square
     targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
     targets = targets.reshape(targets.shape + (1,))
@@ -47,7 +48,7 @@ def convertToWorldPath(n_a, d, robot_node_path):
             x, y = nodes[node]
             world_path.append([float(x), float(y)])  # Convert to floats
         world_path.append(world_path[0])  # Return to starting node
-        robot_world_path.append(world_path)
+        robot_world_path.append([world_path])
     for i in range(pow(n_a, 2) + 1):
         print(f"{i=}, {nodes[i]}")
     return robot_world_path
