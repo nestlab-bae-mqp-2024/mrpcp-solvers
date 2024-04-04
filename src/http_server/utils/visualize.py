@@ -178,8 +178,7 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
 
 
 # visualizes percent coverage over time
-def visualize_coverage(step_requirement, number_of_steps, robot_paths, world_paths,
-                       metadata):
+def visualize_coverage(step_requirement, robot_paths, world_paths, metadata):
     print("Visualizing coverage over time")
     ssd = metadata["ssd"]
     n_a = metadata["n"]
@@ -193,9 +192,12 @@ def visualize_coverage(step_requirement, number_of_steps, robot_paths, world_pat
     if world_paths is not None:
         num_of_robots = len(world_paths)
         updated_paths = convertToNodePaths(world_paths, ssd, n_a)
+
     elif robot_paths is not None:  # if given robot_paths, assuming already in node_path format
         num_of_robots = len(robot_paths)
         updated_paths = robot_paths
+
+    number_of_steps = max(len(updated_paths[ki]) for ki in range(num_of_robots))
 
     comparison = 100 * step_requirement / (n_a * n_a / num_of_robots)
 
@@ -225,10 +227,6 @@ def visualize_coverage(step_requirement, number_of_steps, robot_paths, world_pat
     coverage_ax.plot(r, coverage_list[0:number_of_steps])
     coverage_ax.plot(r, [comparison] * number_of_steps, '--')
 
-    # plt.show()
-    # plt.savefig(visualization_path.replace("visualization.png", "percent_coverage_visualization.png"))
-    # plt.close()
-
     plt.suptitle("Percent Coverage Over Time")
     if "percent_coverage_visualization" in metadata:
         plt.savefig(metadata["percent_coverage_visualization"])
@@ -237,8 +235,7 @@ def visualize_coverage(step_requirement, number_of_steps, robot_paths, world_pat
     return metadata
 
 
-def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_paths,
-                      metadata):
+def visualize_heatmap(step_requirement, robot_paths, world_paths, metadata):
     print("Visualizing heatmap for coverage over time")
     ssd = metadata["ssd"]
     n_a = metadata["n"]
@@ -253,6 +250,8 @@ def visualize_heatmap(step_requirement, number_of_steps, robot_paths, world_path
     elif robot_paths is not None:  # if given robot_paths, assuming already in node_path format
         num_of_robots = len(robot_paths)
         updated_paths = robot_paths
+
+    number_of_steps = max(len(updated_paths[ki]) for ki in range(num_of_robots))
 
     heatmap = np.zeros((n_a, n_a))
     path_counter = [0 for ki in range(num_of_robots)]
