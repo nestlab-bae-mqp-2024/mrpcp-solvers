@@ -270,8 +270,10 @@ if __name__ == "__main__":
     failure_rate = 0.001
 
     from src.http_server.json_handlers import saveGraphPath
-    metadata = {"visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
-                "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")}
+    metadata = {"mode": "h1",
+                # "visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
+                # "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")
+                }
     optimized_node_paths, optimized_world_paths, metadata = yasars_heuristic(num_of_robots,
                                                                              nodes_to_robot_ratio,
                                                                              square_side_dist,

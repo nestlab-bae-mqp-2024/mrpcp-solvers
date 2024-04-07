@@ -12,13 +12,19 @@ def visualize_visitation_frequency(all_robot_world_points, metadata=None):
     heatmap, xedges, yedges = np.histogram2d(all_world_points[:, 0], all_world_points[:, 1], bins=9)
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
 
-    heatmap_normalized = heatmap / heatmap.sum()
+    heatmap_normalized = heatmap / heatmap.sum() * 100.
 
     fig = plt.figure()
     pos = plt.imshow(heatmap_normalized.T, extent=extent, origin='lower', vmin=0, vmax=np.round(heatmap_normalized.max(), decimals=2))
     cb = fig.colorbar(pos)
     cb.locator = ticker.MaxNLocator(nbins=10)
-    cb.formatter = ticker.FormatStrFormatter("%.3f")
+    cb.formatter = ticker.FormatStrFormatter("%.1f%%")
+    xcenters = (xedges[:-1] + xedges[1:]) / 2
+    ycenters = (yedges[:-1] + yedges[1:]) / 2
+    for (i, j), label in np.ndenumerate(heatmap_normalized):
+        # print(f"{i=} {j=}")
+        plt.text(xcenters[i], ycenters[j], f"{label:.1f}%", ha="center", va="center", color="w")
+
     cb.update_ticks()
 
     fig.suptitle("Normalized World Coordinate Visitation Frequency (Heatmap)")
