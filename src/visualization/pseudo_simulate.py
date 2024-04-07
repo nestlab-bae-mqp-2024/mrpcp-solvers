@@ -15,7 +15,8 @@ def get_next_node(robot_world_path, si, pi):
     return nsi, npi
 
 
-def pseudo_simulate(robot_world_paths, t=10, ds=0.1):
+def pseudo_simulate(robot_world_paths, v=1., t=10, dt=0.1):
+    ds = v * dt
     all_robot_world_points = []
     for ki, robot_world_path in enumerate(robot_world_paths):
         robot_world_points = []
@@ -24,8 +25,10 @@ def pseudo_simulate(robot_world_paths, t=10, ds=0.1):
         pi = 0
         robot_world_point = np.array(robot_world_path[si][pi])
         # print(f"{robot_world_point=}")
-        robot_world_points.append(robot_world_point.copy())
-        for dist in np.arange(0., t + ds, ds):
+        datum = robot_world_point.copy().tolist()
+        datum.append(0.)
+        robot_world_points.append(datum)
+        for curr_time in np.arange(0., t + dt, dt):
             dist_travelled = 0
             while dist_travelled < ds:
                 nsi, npi = get_next_node(robot_world_path, si, pi)
@@ -42,7 +45,9 @@ def pseudo_simulate(robot_world_paths, t=10, ds=0.1):
                     pi = npi
 
             # print(f"dist={dist:.2f} {robot_world_point} (from Subtour {si} Point {pi}: {robot_world_path[si][pi]})")
-            robot_world_points.append(robot_world_point.copy())
+            datum = robot_world_point.copy().tolist()
+            datum.append(curr_time)
+            robot_world_points.append(datum)
         all_robot_world_points.append(np.array(robot_world_points))
 
-    return all_robot_world_points
+    return np.array(all_robot_world_points)

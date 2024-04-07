@@ -14,7 +14,7 @@ def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
         metadata = visualize_paths(robot_node_path, metadata)
 
     # 2. Pseudo-Simulate and create the 2d histogram of the normalized visitation frequency
-    all_world_points = pseudo_simulate(robot_world_path, t=30, ds=0.1)
+    all_world_points = pseudo_simulate(robot_world_path, v=1., t=30, dt=0.1)
     metadata = visualize_visitation_frequency(all_world_points, metadata)
 
     discretized = discretize_world_points(all_world_points, metadata)
