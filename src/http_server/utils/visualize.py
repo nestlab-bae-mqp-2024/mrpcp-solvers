@@ -181,7 +181,7 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
 def visualize_coverage(step_requirement, robot_paths, world_paths, metadata):
     print("Visualizing coverage over time")
     ssd = metadata["ssd"]
-    n_a = metadata["n"]
+    n_a = metadata["n_a"]
     coverage_figure = plt.figure(figsize=(5, 5))
     coverage_ax = plt.subplot()
     plt.xlabel('number of steps')
@@ -239,7 +239,7 @@ def visualize_node_visitations(step_requirement, robot_paths, world_paths,
                                metadata):
     print("Visualizing heatmap for coverage over time")
     ssd = metadata["ssd"]
-    n_a = metadata["n"]
+    n_a = metadata["n_a"]
     dist_betw_each_node = ssd / (n_a - 1)
 
     num_of_robots = 0
@@ -323,7 +323,7 @@ def convertToNodePaths(world_paths, ssd, n_a):
 
 def visualize_paths_heuristic2(robot_paths, metadata):
     print("Visualizing paths for heuristic 2")
-    n_a = metadata["n"]
+    n_a = metadata["n_a"]
     num_rows = (len(robot_paths) + 1) // 2  # Two plots per row
     fig, axs = pyplot.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
 

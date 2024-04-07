@@ -13,10 +13,10 @@ nodes_covered = set()  # nodes covered is a set of every node that has been cove
 
 
 def generate_robot_paths_redundancy(num_of_robots: int,
-                                    nodes_to_robot_ratio: int,
+                                    nodes_per_axis: int,
                                     square_side_dist: float,
                                     fuel_capacity_ratio: float,
-                                    failure_rate: int,
+                                    rp: int,
                                     failed_robot_id: int = None,
                                     curr_robots_pos: list = None,
                                     curr_fuel_levels: list = None,
@@ -31,14 +31,9 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     # Define the parameters
     print("Initializing parameters...")
     k = num_of_robots  # number of robots
-    n_a = k * nodes_to_robot_ratio  # number of targets in an axis
+    n_a = nodes_per_axis  # number of nodes per axis
     d = square_side_dist  # Chose the length of distance of each side of the square arena
-    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
-    MDBF = 100.0  # Mean Distance Between Failures
-    alpha = 0.00001 * failure_rate
-    rpp = alpha * MDBF  # redundancy parameter percentage
-    rp = np.ceil(k * rpp) + 1
-
+    rp = min(rp, k)
     # Fuel Capacity Parameters
     max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
@@ -46,20 +41,18 @@ def generate_robot_paths_redundancy(num_of_robots: int,
 
     # meta data given params
     metadata["k"] = k
-    metadata["nk"] = nodes_to_robot_ratio
+    metadata["n_a"] = n_a
     metadata["ssd"] = square_side_dist
     metadata["fcr"] = fuel_capacity_ratio
-    metadata["fr"] = failure_rate
-    # metadata derived params
-    metadata["n"] = n_a
     metadata["rp"] = rp
+    # metadata derived params
     metadata["L_min"] = L_min
     metadata["L"] = L
     metadata["mode"] = "h2"
 
     # Initialize the nodes
     print("Initializing nodes...")
-    initAllNodes(k, nodes_to_robot_ratio)
+    initAllNodes(n_a)
     dist_betw_each_node = square_side_dist / (n_a - 1)
 
     # logic for if recalc or not
@@ -128,13 +121,12 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     return robot_paths, world_path, metadata
 
 
-def initAllNodes(k, nk):
+def initAllNodes(n_a):
     """
     # set containing all possible nodes in the map -- not a particularly efficient way of doing this
-    :param nk:
+    :param n_a:
     :return:
     """
-    n_a = k * nk
     for x in range(0, n_a):
         for y in range(0, n_a):
             all_nodes.add((x, y))

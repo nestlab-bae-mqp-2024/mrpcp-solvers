@@ -24,7 +24,8 @@ from src.http_server.utils.metric_calculations import calculate_mean_distance_pe
 from src.visualization.visualization_pipeline import run_visualization_pipeline
 
 app = Flask(__name__)
-analysis_file = "runtime_analysis.txt" # File path for storing runtime analysis
+analysis_file = "runtime_analysis.txt"  # File path for storing runtime analysis
+
 
 @app.route('/solve', methods=['POST'])
 def solve_endpoint():
@@ -33,14 +34,14 @@ def solve_endpoint():
     """
     print("Solution request received.")
     k = request.args.get('k')
-    nk = request.args.get('nk')
+    n_a = request.args.get('n_a')
     ssd = request.args.get('ssd')
     fcr = request.args.get('fcr')
-    fr = request.args.get('fr')
+    rp = request.args.get('rp')
     mode = request.args.get('mode')
 
     # Generate job ID based on parameters
-    job_id = f"{k}_{nk}_{ssd}_{fcr}_{fr}_{mode}"
+    job_id = f"{k}_{n_a}_{ssd}_{fcr}_{rp}_{mode}"
 
     # Get the current working directory
     current_dir = os.getcwd()
@@ -60,7 +61,7 @@ def solve_endpoint():
         return jsonify(result), 200
 
     print(
-        f"Job folder does not exist: {job_folder_path}. Starting solver function with parameters k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode={mode}...")
+        f"Job folder does not exist: {job_folder_path}. Starting solver function with parameters k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode={mode}...")
 
     # Check if there's an ongoing solver thread with the same parameters
     for thread in threading.enumerate():
@@ -73,23 +74,23 @@ def solve_endpoint():
             return jsonify(result), 200
 
     # Run MILP solver function with parameters on a separate thread
-    solve_thread = threading.Thread(name=job_id, target=run_solver, args=(k, nk, ssd, fcr, fr, mode, job_id))
+    solve_thread = threading.Thread(name=job_id, target=run_solver, args=(k, n_a, ssd, fcr, rp, mode, job_id))
     solve_thread.start()
-    result_data = {'job_id': job_id, 'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': mode},
+    result_data = {'job_id': job_id, 'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'fr': rp, 'mode': mode},
                    'robot_node_path': None, 'robot_world_path': None, 'status': 'in progress'}
     return jsonify(result_data), 200
 
 
-def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
+def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
     """
     This function runs the MILP solver function with the provided parameters.
     Once the solver completes, it saves the result to a JSON file in the cache folder.
     Params:
         num_of_robots: int,
-        nodes_to_robot_ratio: int,
+        nodes_per_axis: int,
         square_side_dist: int,
         fuel_capacity_ratio: float,
-        failure_rate: int,
+        rp: int,
         job_id: str
     """
     try:
@@ -102,43 +103,42 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
                         "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
                         "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png")}
             print(
-                f"Running MILP solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode=m...")
-            edges, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(nk), float(ssd), float(fcr), int(fr),
-                                                         job_id, metadata)
-            # Convert edges to a node format
-            robot_node_path = [[int(edge) for edge in path] for path in edges]
+                f"Running MILP solver function with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode=m...")
+            edges, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(n_a), float(ssd), float(fcr), int(rp), metadata)
             print("Robot node path", edges)
             print("Robot world path", robot_world_path)
-            metadata = run_visualization_pipeline(robot_node_path, robot_world_path, metadata)
+            metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
-            log_runtime("MILP", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
+            log_runtime("MILP", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
-                f"MILP solver function completed with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, mode=m.")
+                f"MILP solver function completed with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, mode=m.")
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
-                           'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'm'},
-                           'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
+                           'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'm'},
+                           'robot_node_path': edges, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
-            stats_data = {'job_id': job_id, 'runtime': runtime, 'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
+            stats_data = {'job_id': job_id, 'runtime': runtime,
+                          'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
             saveResultsToCache(job_id, result_data, 'result.json')  # Save the results to the cache
             saveResultsToCache(job_id, stats_data, 'stats.json')
         elif mode == 'h1':
             # Run Heuristic solver function with parameters
             start_time = time.time()
             print(
-                f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h1...")
+                f"Running Heuristic solver function with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}  mode=h1...")
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
                         "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
                         "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
                         "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
                         "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png")}
-            robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(nk), float(ssd), float(fcr), int(fr), metadata)
+            robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(n_a), float(ssd),
+                                                                                      float(fcr), int(rp), metadata)
             metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
 
             runtime = time.time() - start_time
-            log_runtime("h1 heuristic", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
+            log_runtime("h1 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
-                f"Heuristic solver function completed with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}, mode=h1")
+                f"Heuristic solver function completed with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode=h1")
             robot_node_path = []
             for subtours in robot_node_path_w_subtours:
                 robot_path = []
@@ -150,10 +150,11 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             print("Robot world path", robot_world_path)
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
-                           'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'h1'},
+                           'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'h1'},
                            'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
-            stats_data = {'job_id': job_id, 'runtime': runtime, 'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
+            stats_data = {'job_id': job_id, 'runtime': runtime,
+                          'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
             saveResultsToCache(job_id, result_data, 'result.json')
             saveResultsToCache(job_id, stats_data, 'stats.json')
             return result_data  # Return the content of the JSON file
@@ -162,26 +163,30 @@ def run_solver(k, nk, ssd, fcr, fr, mode, job_id):
             # Run Heuristic solver function with parameters
             start_time = time.time()
             print(
-                f"Running Heuristic solver function with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, job_id={job_id}  mode=h2...")
+                f"Running Heuristic solver function with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}  mode=h2...")
             metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
                         "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
                         "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
                         "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
                         "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png")}
-            edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), None, None, None, metadata)  # Run the other heuristic solver
+            edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(n_a), int(ssd),
+                                                                                           float(fcr), int(rp), None,
+                                                                                           None, None,
+                                                                                           metadata)  # Run the other heuristic solver
             metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
-            log_runtime("h2 heuristic", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
+            log_runtime("h2 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
-                f"Heuristic solver function completed with parameters: k={k}, nk={nk}, ssd={ssd}, fcr={fcr}, fr={fr}, mode=h2.")
+                f"Heuristic solver function completed with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, mode=h2.")
             print("Robot node path", edges)
             print("Robot world path", robot_world_path)
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
-                           'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'h2'},
+                           'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'h2'},
                            'robot_node_path': edges, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
-            stats_data = {'job_id': job_id, 'runtime': runtime, 'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
+            stats_data = {'job_id': job_id, 'runtime': runtime,
+                          'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
             saveResultsToCache(job_id, result_data, 'result.json')
             saveResultsToCache(job_id, stats_data, 'stats.json')
             return result_data  # Return the content of the JSON file
@@ -201,23 +206,27 @@ def recalc_endpoint():
     curr_fuel_levels = request.args.get('curr_fuel_levels')
     curr_robots_pos = json.loads(curr_robots_pos)
     failed_robot_id = request.args.get('failed_robot_id')
-    k, nk, ssd, fcr, fr, mode = getParamsFromJobId(job_id)
+    k, n_a, ssd, fcr, rp, mode = getParamsFromJobId(job_id)
+    new_job_id = f"{k}_{n_a}_{ssd}_{fcr}_{rp}_recalc"
     start_time = time.time()
     metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
                 "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
-    robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(nk), int(ssd), float(fcr), int(fr), failed_robot_id, curr_robots_pos, curr_fuel_levels, metadata)  # Run the other heuristic solver
+    # TODO: add into account that when you recalculate, you need to update the number of robots you are calculating for
+    robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(
+        int(k - len(curr_robots_pos)), int(n_a), int(ssd), float(fcr), int(rp), failed_robot_id, curr_robots_pos,
+        curr_fuel_levels, metadata)  # Run the other heuristic solver
     metadata = run_visualization_pipeline(robot_node_path, robot_world_path, metadata)
     runtime = time.time() - start_time
-    log_runtime("solve_endpoint", {"k": k, "nk": nk, "ssd": ssd, "fcr": fcr, "fr": fr, "mode": mode}, runtime)
+    log_runtime("solve_endpoint", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": 'recalc'}, runtime)
     result_data = {'job_id': job_id,
-                   'params': {'k': k, 'nk': nk, 'ssd': ssd, 'fcr': fcr, 'fr': fr, 'mode': 'recalc'},
+                   'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'recalc'},
                    'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                    'status': 'completed'}
-    stats_data = {'job_id': job_id, 'runtime': runtime}
-    saveResultsToCache(job_id, result_data, 'recalculation_result.json')  # Save the results to the cache
-    saveResultsToCache(job_id, stats_data, 'stats.json')
+    stats_data = {'job_id': new_job_id, 'runtime': runtime}
+    saveResultsToCache(new_job_id, result_data, 'recalculation_result.json')  # Save the results to the cache
+    saveResultsToCache(new_job_id, stats_data, 'stats.json')
     # Run the function to recalculate the paths based on the input parameters
-    return jsonify(result_data), 200 # Return the json result of the recalculation
+    return jsonify(result_data), 200  # Return the json result of the recalculation
 
 
 def getParamsFromJobId(job_id):

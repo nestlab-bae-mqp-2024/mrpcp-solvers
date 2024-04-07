@@ -9,10 +9,10 @@ import os
 
 
 def yasars_heuristic(num_of_robots: int,
-                     nodes_to_robot_ratio: int,
+                     nodes_per_axis: int,
                      square_side_dist: float,
                      fuel_capacity_ratio: float,
-                     failure_rate: float,
+                     rp: int,
                      metadata: Dict = None,
                      skip_tsp_optimization: bool = False):
     if metadata is None:
@@ -21,15 +21,11 @@ def yasars_heuristic(num_of_robots: int,
     # Chose number of robots
     k = num_of_robots
     # Chose the number of targets in an axis
-    n = k * nodes_to_robot_ratio
+    n = nodes_per_axis
     # Chose the length of distance of each side of the square arena
     d = square_side_dist
     # Choose the redundancy parameter (have each target be visited by exactly that many robots)
-    MDBF = 100.0  # Mean Distance Between Failures
-    alpha = 0.00001 * failure_rate
-    rpp = alpha * MDBF  # redundancy parameter percentage
-    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
-    rp = np.ceil(k * rpp) + 1
+    rp = min(rp, k)
     # Fuel Capacity Parameters
     max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
@@ -38,13 +34,11 @@ def yasars_heuristic(num_of_robots: int,
     # print(f"{k=} {n=} {d=} {rp=}")
     # meta data given params
     metadata["k"] = k
-    metadata["nk"] = nodes_to_robot_ratio
+    metadata["n_a"] = nodes_per_axis
     metadata["ssd"] = square_side_dist
     metadata["fcr"] = fuel_capacity_ratio
-    metadata["fr"] = failure_rate
-    # metadata derived params
-    metadata["n"] = n
     metadata["rp"] = rp
+    # metadata derived params
     metadata["L_min"] = L
     metadata["mode"] = "h1"
 
@@ -264,19 +258,19 @@ def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
 
 if __name__ == "__main__":
     num_of_robots = 9
-    nodes_to_robot_ratio = 1
+    n_a = 3
     square_side_dist = 3.
     fuel_capacity_ratio = 1.5
-    failure_rate = 0.001
+    rp = 2
 
     from src.http_server.json_handlers import saveGraphPath
     metadata = {"visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
                 "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")}
     optimized_node_paths, optimized_world_paths, metadata = yasars_heuristic(num_of_robots,
-                                                                             nodes_to_robot_ratio,
+                                                                             n_a,
                                                                              square_side_dist,
                                                                              fuel_capacity_ratio,
-                                                                             failure_rate,
+                                                                             rp,
                                                                              metadata,
                                                                              skip_tsp_optimization=False)
 

@@ -18,11 +18,10 @@ from src.http_server.utils.tsp_solver import k_opt
 
 
 def solve_milp_with_optimizations(num_of_robots: int,
-                                  nodes_to_robot_ratio: int,
+                                  nodes_per_axis: int,
                                   square_side_dist: float,
                                   fuel_capacity_ratio: float,
-                                  failure_rate: int,
-                                  job_id: str = None,
+                                  rp: int,
                                   metadata: Dict = None):
     """
     This function solves the MRPCP using MILP (Mixed-Integer Linear Programming) and TSP (Travelling Salesman Problem) using 2-OPT and k-OPT algorithms.
@@ -30,14 +29,11 @@ def solve_milp_with_optimizations(num_of_robots: int,
     """
     if metadata is None:
         metadata = {}
+    print("Initializing MILP solution...")
     k = num_of_robots  # Chose the number of robots
-    n_a = k * nodes_to_robot_ratio  # Chose the number of targets in an axis
-    MDBF = 100.0  # Mean Distance Between Failures
-    alpha = 0.00001*failure_rate
-    rpp = alpha * MDBF  # redundancy parameter percentage
-    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
-    rp = np.ceil(k * rpp) + 1
+    n_a = nodes_per_axis  # Choose the number of nodes per side
     d = square_side_dist / 2.  # Distance per side of the square
+    rp = min(rp, k)
     max_fuel_cost_to_node = square_side_dist * np.sqrt(
         2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
     L = fuel_capacity_ratio * max_fuel_cost_to_node * 2  # Fuel capacity (1 unit of fuel = 1 unit of distance)
@@ -45,13 +41,11 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
     # meta data given params
     metadata["k"] = k
-    metadata["nk"] = nodes_to_robot_ratio
+    metadata["n_a"] = n_a
     metadata["ssd"] = square_side_dist
     metadata["fcr"] = fuel_capacity_ratio
-    metadata["fr"] = failure_rate
-    # metadata derived params
-    metadata["n"] = n_a
     metadata["rp"] = rp
+    # metadata derived params
     metadata["L_min"] = L
     metadata["mode"] = "m"
 
@@ -88,10 +82,12 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
     # A. Integer Constraints (4), (5)
     # Note: All edges are now binary
+    print("Integer Constraints (4), (5)")
     x = m.addMVar((k, len(node_indices), len(node_indices)), name='x', vtype=GRB.BINARY)
 
     # B. Degree Constraints (6), (7), (8), (9), (10)
     # (6) and (7) Only one robot arrives to and leaves from a target (B_k is a depot, so we don't need to remove it from targets)
+    print("Degree Constraints (6), (7)")
     _ = m.addConstrs(x[:, i, :].sum() == rp for i in target_indices)
     _ = m.addConstrs(x[:, :, i].sum() == rp for i in target_indices)
 
@@ -111,6 +107,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
         _ = m.addConstrs(x[ki, i, i] == 0 for i in node_indices)
 
     # C. Capacity and Flow Constraints (11), (12), (13), (14)
+    print("Capacity and Flow Constraints (11), (12), (13), (14)")
     p = m.addMVar((k,len(node_indices),len(node_indices)), name='p', vtype=GRB.INTEGER, lb=0, ub=len(target_indices))
 
     for ki in range(k):
@@ -171,27 +168,28 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
         subplot_per_hor_axis = int(np.ceil(np.sqrt(len(active_robots))))
         subplot_per_vert_axis = int(np.ceil(len(active_robots) / subplot_per_hor_axis))
-        fig, axs = plt.subplots(subplot_per_hor_axis, subplot_per_vert_axis,
-                                figsize=(subplot_per_hor_axis * 4, subplot_per_vert_axis * 4))
+        fig, axs = plt.subplots(subplot_per_hor_axis, subplot_per_vert_axis, figsize=(subplot_per_hor_axis * 4, subplot_per_vert_axis * 4))
         fig.tight_layout()
         fig.subplots_adjust(bottom=0.1, top=0.9, right=0.9, left=0.1, wspace=0.3, hspace=0.3)
 
         hor_i = 0
         vert_i = 0
         for robot_i, ki in enumerate(active_robots):
+            # print(f"Robot #{ki}\n-------")
+            # print(f"Staring position: {B_k[ki]} -> {[nodes[B_k[ki, 0], B_k[ki, 1], 0], nodes[B_k[ki, 0], B_k[ki, 1], 1]]}")
             if subplot_per_hor_axis == 1 and subplot_per_vert_axis == 1:
                 ax = axs
             elif subplot_per_vert_axis == 1:
                 ax = axs[hor_i]
             else:
                 ax = axs[hor_i][vert_i]
-            ax.set_title(f"Robot #{robot_i + 1} (cost={(cost * edges[ki]).sum():.3f})")
-            ax.scatter(targets[:, 0], targets[:, 1], c='blue', s=10)
-            ax.scatter(depots[:, 0], depots[:, 1], c='red', s=50)
+            ax.set_title(f"Robot #{robot_i+1} (cost={(cost * edges[ki]).sum():.3f})")
+            ax.scatter(targets[:,0], targets[:,1], c='blue', s=10)
+            ax.scatter(depots[:,0], depots[:,1], c='red', s=50)
             ax.scatter(nodes[B_k[ki], 0], nodes[B_k[ki], 1], c='red', s=100)
 
             for i, j in itertools.product(node_indices, node_indices):
-                if edges[ki, i, j] > 0.5:  # In case there is any floating math errors
+                if edges[ki,i,j] > 0.5:  # In case there is any floating math errors
                     # print(f"Connection from {[i1,j1]} to {[i2,j2]}")
                     ax.scatter(nodes[i, 0], nodes[i, 1], c="purple", s=8)
                     ax.scatter(nodes[j, 0], nodes[j, 1], c="purple", s=8)
@@ -213,11 +211,12 @@ def solve_milp_with_optimizations(num_of_robots: int,
                     ax = axs[h][v]
                 ax.set_box_aspect(1)
 
-        fig.suptitle(
-            f"Paths for all robots (# of active/available robots={len(active_robots)}/{k}, sum of costs={(cost * edges).sum():.3f})")
+        fig.suptitle(f"Paths for all robots (# of active/available robots={len(active_robots)}/{k}, sum of costs={(cost * edges).sum():.3f})")
+        # fig.savefig(f"../../../data/2015_mrpcp_k={k}_n={n}_{datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}.png")
         plt.show()
 
     def extract_and_calculate_milp_costs(x, start_nodes, num_robots, num_nodes, cost_matrix):
+        print("Extracting Costs")
         milp_costs = []
         milp_paths = []
 
@@ -265,7 +264,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
                 # If this solution's maximum costing tour ~= the cost of tour that only travels between depot and the furthest node,
                 # then, this is guaranteed to be optimal.
-                if (MILPSolver.min_cost - max_fuel_cost_to_node * 4) < 0.01:
+                if (MILPSolver.min_cost - max_fuel_cost_to_node * 2) < 0.01:
                     print("!This is guaranteed to be the optimal solution!")
                     what.terminate()
 
@@ -325,15 +324,15 @@ def solve_milp_with_optimizations(num_of_robots: int,
         print(f"Cost reduction for Robot (k-opt) {index + 1}: {cost_reduction:.2f}")
 
     print("MILP solution completed...returning paths to server endpoint /solve")
-    worldPath = convertToWorldPath(n_a, d, optimized_paths_2opt)
-
+    # worldPath = convertToWorldPath(n_a, d, optimized_paths_2opt)
+    worldPath = convertToWorldPath(n_a, d, milp_paths)
 
 
     print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
-    print("The min cost edges are: ", MILPSolver.min_cost_edges)
+    print("The paths are: ", milp_paths)
     print("The optimized paths converted to world path are: ", worldPath)
     print("Returning MILP solution to be sent to a json file...")
-    return optimized_paths_2opt, worldPath, metadata
+    return milp_paths, worldPath, metadata
 
 
 
