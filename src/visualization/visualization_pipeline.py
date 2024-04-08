@@ -24,6 +24,7 @@ def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
     # 4. node visitation over time
     metadata = visualize_node_visitations(20, None, discretized, metadata)
 
-    # TODO: 5. mean time/distance between revisitation heatmap
+    # 5. mean time/distance between revisitation heatmap
     metadata = visualize_mean_time_between_revisitation(all_world_points, metadata)
+    print("Visualizations complete! Returning metadata...")
     return metadata

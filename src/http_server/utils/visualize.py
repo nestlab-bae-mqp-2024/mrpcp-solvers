@@ -180,6 +180,7 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
 # visualizes percent coverage over time
 def visualize_coverage(step_requirement, robot_paths, world_paths, metadata):
     print("Visualizing coverage over time")
+    timestep = 20
     ssd = metadata["ssd"]
     n_a = metadata["n_a"]
     coverage_figure = plt.figure(figsize=(5, 5))
@@ -227,11 +228,17 @@ def visualize_coverage(step_requirement, robot_paths, world_paths, metadata):
     coverage_ax.plot(r, coverage_list[0:number_of_steps])
     coverage_ax.plot(r, [comparison] * number_of_steps, '--')
 
+    average_coverage = sum(coverage_list[timestep:]) / len(coverage_list[timestep:])
+    # print(average_coverage)
+    if "average_coverage" in metadata:
+        metadata["average_coverage"] = average_coverage
+
     plt.suptitle("Percent Coverage Over Time")
     if "percent_coverage_visualization" in metadata:
         plt.savefig(metadata["percent_coverage_visualization"])
     else:
         plt.show()
+    # print(metadata)
     return metadata
 
 

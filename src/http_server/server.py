@@ -101,7 +101,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                         "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
                         "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
                         "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
-                        "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png")}
+                        "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
+                        "average_coverage": None}
             print(
                 f"Running MILP solver function with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode=m...")
             edges, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(n_a), float(ssd), float(fcr), int(rp), metadata)
@@ -118,7 +119,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                            'robot_node_path': edges, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             stats_data = {'job_id': job_id, 'runtime': runtime,
-                          'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
+                          'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path),
+                          'average_coverage': metadata['average_coverage']}
             saveResultsToCache(job_id, result_data, 'result.json')  # Save the results to the cache
             saveResultsToCache(job_id, stats_data, 'stats.json')
         elif mode == 'h1':
@@ -130,11 +132,11 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                         "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
                         "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
                         "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
-                        "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png")}
+                        "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
+                        "average_coverage": None}
             robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(n_a), float(ssd),
                                                                                       float(fcr), int(rp), metadata)
             metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
-
             runtime = time.time() - start_time
             log_runtime("h1 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
@@ -154,7 +156,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                            'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             stats_data = {'job_id': job_id, 'runtime': runtime,
-                          'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
+                          'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path),
+                          'average_coverage': metadata['average_coverage']}
             saveResultsToCache(job_id, result_data, 'result.json')
             saveResultsToCache(job_id, stats_data, 'stats.json')
             return result_data  # Return the content of the JSON file
@@ -168,7 +171,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                         "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
                         "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
                         "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
-                        "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png")}
+                        "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
+                        "average_coverage": None}
             edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(n_a), int(ssd),
                                                                                            float(fcr), int(rp), None,
                                                                                            None, None,
@@ -186,7 +190,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                            'robot_node_path': edges, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             stats_data = {'job_id': job_id, 'runtime': runtime,
-                          'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path)}
+                          'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path),
+                          'average_coverage': metadata['average_coverage']}
             saveResultsToCache(job_id, result_data, 'result.json')
             saveResultsToCache(job_id, stats_data, 'stats.json')
             return result_data  # Return the content of the JSON file
@@ -210,7 +215,11 @@ def recalc_endpoint():
     new_job_id = f"{k}_{n_a}_{ssd}_{fcr}_{rp}_recalc"
     start_time = time.time()
     metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
-                "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png")}
+                "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
+                "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
+                "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
+                "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
+                "average_coverage": None}
     # TODO: add into account that when you recalculate, you need to update the number of robots you are calculating for
     robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(
         int(k - len(curr_robots_pos)), int(n_a), int(ssd), float(fcr), int(rp), failed_robot_id, curr_robots_pos,
@@ -222,7 +231,7 @@ def recalc_endpoint():
                    'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'recalc'},
                    'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                    'status': 'completed'}
-    stats_data = {'job_id': new_job_id, 'runtime': runtime}
+    stats_data = {'job_id': new_job_id, 'runtime': runtime, 'average_coverage': metadata['average_coverage']}
     saveResultsToCache(new_job_id, result_data, 'recalculation_result.json')  # Save the results to the cache
     saveResultsToCache(new_job_id, stats_data, 'stats.json')
     # Run the function to recalculate the paths based on the input parameters
