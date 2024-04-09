@@ -2,6 +2,8 @@ import numpy as np
 from matplotlib import colors, cm, pyplot as plt, pyplot
 import itertools
 
+from src.http_server.utils.conversions import convertToNodePaths
+
 
 def visualize_paths_edges_brute_force(edges, nodes, node_indices, target_indices, depot_indices, cost, save_path=None):
     # Only plot the paths for the robots that were assigned a path
@@ -301,31 +303,6 @@ def visualize_node_visitations(step_requirement, robot_paths, world_paths,
         plt.show()
 
     return metadata
-
-
-def convertToNodePaths(world_paths, ssd, n_a):
-    dist_betw_each_node = ssd / (n_a - 1)
-    num_of_robots = len(world_paths)
-
-    updated_paths = [[] for ki in range(num_of_robots)]
-    for ki in range(0, num_of_robots):
-        path = []
-
-        if len(world_paths[ki][
-                   0]) == 2:  # this is just to account for if there are multiple subtours in what it's given, or not.
-            for item in world_paths[ki]:
-                path.append((round(((ssd) / 2 + item[0]) / (dist_betw_each_node)),
-                             round((ssd / 2 + item[1]) / (dist_betw_each_node))))
-
-        else:
-            for w_path in world_paths[ki]:
-                for item in w_path:
-                    path.append((round((ssd / 2 + item[0]) / (dist_betw_each_node)),
-                                 round((ssd / 2 + item[1]) / (dist_betw_each_node))))
-
-        updated_paths[ki] = path
-
-    return updated_paths
 
 
 def visualize_paths_heuristic2(robot_paths, metadata):

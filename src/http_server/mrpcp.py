@@ -250,8 +250,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
         return paths
 
 
-
-
     def extract_and_calculate_milp_costs(x, start_nodes, num_robots, num_nodes, cost_matrix):
         print("Extracting Costs")
         milp_costs = []
@@ -369,7 +367,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
     print(paths)
     print(milp_paths)
     worldPath = convertToWorldPath(n_a, square_side_dist, milp_paths)
-
 
     # print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
     print("The paths are: ", paths)

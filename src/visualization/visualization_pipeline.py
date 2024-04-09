@@ -1,15 +1,27 @@
+from src.http_server.utils.conversions import worldToNodePath, nodePathToIds
 from src.visualization.mean_time_between_revisitation import visualize_mean_time_between_revisitation
 from src.visualization.pseudo_simulate import pseudo_simulate
 from src.visualization.paths_and_subtours import visualize_paths, visualize_subtours
 from src.visualization.visitation_frequency import visualize_visitation_frequency
-from src.http_server.utils.visualize import visualize_coverage, visualize_node_visitations, visualize_paths_heuristic2
+from src.http_server.utils.visualize import visualize_coverage, visualize_node_visitations, visualize_paths_heuristic2, \
+    convertToNodePaths
 from src.visualization.discretization import discretize_world_points
+from src.http_server.mrpcp import solve_milp_with_optimizations
 
 def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
     # 1. Visualize the paths assigned to each robot
     # TODO: convert world to node and then use visualize_paths
+    print("Running visualization pipeline...")
+    print("Robot node path: ", robot_node_path)
+    print("Robot world path: ", robot_world_path)
     if metadata["mode"] == "h2":
-        metadata = visualize_paths_heuristic2(robot_node_path, metadata)
+        # metadata = visualize_paths_heuristic2(robot_node_path, metadata)
+        print("Converted to node path: ", convertToNodePaths(robot_world_path,metadata['ssd'], metadata['n_a']))
+        node_ids = nodePathToIds(convertToNodePaths(robot_world_path,metadata['ssd'], metadata['n_a']), metadata['n_a'])
+        print("Node IDs: ", node_ids)
+        metadata = visualize_subtours(node_ids, metadata)
+    elif metadata["mode"] == "m":
+        metadata = visualize_paths(robot_node_path, metadata)
     else:
         metadata = visualize_paths(robot_node_path, metadata)
 
