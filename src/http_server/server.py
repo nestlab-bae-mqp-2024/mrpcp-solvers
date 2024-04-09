@@ -141,19 +141,19 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
             log_runtime("h1 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
                 f"Heuristic solver function completed with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode=h1")
-            robot_node_path = []
-            for subtours in robot_node_path_w_subtours:
-                robot_path = []
-                for subtour in subtours:
-                    for node in subtour:
-                        robot_path.append(int(node))
-                robot_node_path.append(robot_path)
-            print("Robot node path", robot_node_path)
+            # robot_node_path = []
+            # for subtours in robot_node_path_w_subtours:
+            #     robot_path = []
+            #     for subtour in subtours:
+            #         for node in subtour:
+            #             robot_path.append(int(node))
+            #     robot_node_path.append(robot_path)
+            print("Robot node path", robot_node_path_w_subtours)
             print("Robot world path", robot_world_path)
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
                            'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'h1'},
-                           'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
+                           'robot_node_path': robot_node_path_w_subtours, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             stats_data = {'job_id': job_id, 'runtime': runtime,
                           'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path),

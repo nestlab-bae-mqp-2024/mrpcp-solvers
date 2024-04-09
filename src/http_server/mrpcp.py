@@ -215,6 +215,43 @@ def solve_milp_with_optimizations(num_of_robots: int,
         # fig.savefig(f"../../../data/2015_mrpcp_k={k}_n={n}_{datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}.png")
         plt.show()
 
+    def export_paths(edges):
+        paths = []
+
+        # Only collect the paths for the robots that were assigned a path
+        active_robots = []
+        for ki in range(len(edges)):
+            if (cost * edges[ki]).sum() > 0.01:
+                active_robots.append(ki)
+
+        for ki in active_robots:
+            robot_paths = []  # Paths for the current robot ki
+            current_subpath = []
+            split_node = 9  # The node to split the path on
+            for i, j in itertools.product(node_indices, node_indices):
+                if edges[ki][i][j] > 0.5:  # In case there is any floating math errors
+                    # Replace occurrences of node 10 with node 9
+                    if i == 10:
+                        i = 9
+                    if j == 10:
+                        j = 9
+
+                    current_subpath.append(i)
+                    current_subpath.append(j)
+                    if j == split_node:  # Split the path at node 9
+                        robot_paths.append(current_subpath)
+                        current_subpath = []
+
+            if current_subpath:  # Append the last subpath if it exists
+                robot_paths.append(current_subpath)
+
+            paths.append(robot_paths)  # Append the paths for the current robot to the list of paths
+
+        return paths
+
+
+
+
     def extract_and_calculate_milp_costs(x, start_nodes, num_robots, num_nodes, cost_matrix):
         print("Extracting Costs")
         milp_costs = []
@@ -232,6 +269,9 @@ def solve_milp_with_optimizations(num_of_robots: int,
                 path.append(next_node)
                 visited.add(next_node)
                 current_node = next_node
+
+            # Filter out the largest node if it exists in the path
+            path = [node for node in path if node != max(path)]
 
             milp_paths.append(path)
             milp_costs.append(calculate_path_cost(path, cost_matrix))
@@ -264,7 +304,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
                 # If this solution's maximum costing tour ~= the cost of tour that only travels between depot and the furthest node,
                 # then, this is guaranteed to be optimal.
-                if (MILPSolver.min_cost - max_fuel_cost_to_node * 2) < 0.01:
+                if (MILPSolver.min_cost - max_fuel_cost_to_node * 4) < 0.10:
                     print("!This is guaranteed to be the optimal solution!")
                     what.terminate()
 
@@ -325,14 +365,17 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
     print("MILP solution completed...returning paths to server endpoint /solve")
     # worldPath = convertToWorldPath(n_a, d, optimized_paths_2opt)
-    worldPath = convertToWorldPath(n_a, d, milp_paths)
+    paths = export_paths(MILPSolver.min_cost_edges)
+    print(paths)
+    print(milp_paths)
+    worldPath = convertToWorldPath(n_a, square_side_dist, milp_paths)
 
 
-    print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
-    print("The paths are: ", milp_paths)
-    print("The optimized paths converted to world path are: ", worldPath)
+    # print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
+    print("The paths are: ", paths)
+    print("The world paths are: ", worldPath)
     print("Returning MILP solution to be sent to a json file...")
-    return milp_paths, worldPath, metadata
+    return paths, worldPath, metadata
 
 
 

@@ -16,6 +16,7 @@ def get_next_node(robot_world_path, si, pi):
 
 
 def pseudo_simulate(robot_world_paths, v=1., t=10, dt=0.1):
+    print("Pseudo-simulating robots...")
     ds = v * dt
     all_robot_world_points = []
     for ki, robot_world_path in enumerate(robot_world_paths):

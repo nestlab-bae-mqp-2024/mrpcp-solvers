@@ -180,7 +180,7 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
 # visualizes percent coverage over time
 def visualize_coverage(step_requirement, robot_paths, world_paths, metadata):
     print("Visualizing coverage over time")
-    timestep = 20
+    timestep = 2
     ssd = metadata["ssd"]
     n_a = metadata["n_a"]
     coverage_figure = plt.figure(figsize=(5, 5))
