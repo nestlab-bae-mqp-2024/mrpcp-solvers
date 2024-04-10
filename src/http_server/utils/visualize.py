@@ -306,10 +306,10 @@ def visualize_node_visitations(step_requirement, robot_paths, world_paths,
 
         for ki in range(num_of_robots):
             for z in world_paths[ki]:
-                print(z)
+                # print(z)
                 no_time_paths[ki].append([z[0], z[1]])
 
-        print(no_time_paths)
+        # print(no_time_paths)
         updated_paths = convertToNodePaths(no_time_paths, ssd, n_a)
 
     elif robot_paths is not None:  # if given robot_paths, assuming already in node_path format
