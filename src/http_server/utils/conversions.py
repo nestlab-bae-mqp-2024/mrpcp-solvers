@@ -105,7 +105,7 @@ def convertToNodePaths(world_paths, ssd, n_a):
 
 def nodePathToIds(node_path, n_a):
     """
-    Convert node paths from coordinates to IDs, including subtours when the path returns to node 0.
+    Convert node paths from coordinates to IDs.
     """
     node_id_mapping = {}  # Dictionary to store the mapping of coordinates to IDs
     next_node_id = 0  # Counter for assigning IDs
@@ -113,41 +113,33 @@ def nodePathToIds(node_path, n_a):
     node_path_ids = []  # List to store the node paths with IDs
 
     for path in node_path:
-        sub_path_list = []  # List to store subpaths for each subtour
         path_ids = []  # List to store the IDs for the current path
-        zero_count = 0  # Counter for the number of (0, 0) occurrences
+        subtour = []  # List to store nodes in the current subtour
         for node_coord in path:
             x, y = node_coord
             # Calculate the ID based on the node's position
             if x / 2 == 1:
-                node_id = ((abs(x)+1)*n_a)-(abs(y)+1)
+                node_id = ((abs(x) + 1) * n_a) - (abs(y) + 1)
             else:
-                node_id = (abs(x)*n_a)+abs(y)
+                node_id = (abs(x) * n_a) + abs(y)
             # Check if the current node coordinate is already assigned an ID
             if node_coord not in node_id_mapping:
                 node_id_mapping[node_coord] = node_id
                 next_node_id += 1
             # Append the ID of the current node coordinate to the path IDs list
-            path_ids.append(node_id_mapping[node_coord])
-
-            # Check if the current node is (0, 0)
-            if node_coord == (0, 0):
-                zero_count += 1
-                if zero_count == 1:  # Open bracket for the first occurrence of (0, 0)
-                    sub_path_list.append(path_ids)
-                    path_ids = []
-                elif zero_count == 3:  # Close bracket after the third occurrence of (0, 0)
-                    zero_count = 0
-                    sub_path_list.append(path_ids)
-                    node_path_ids.append(sub_path_list)
-                    sub_path_list = []
-                    path_ids = []
-
-        # Append the path IDs list to the node path IDs list if it's not empty
-        if path_ids:
-            sub_path_list.append(path_ids)
+            if node_id == 0:  # Check if the current node ID is zero
+                if subtour:
+                    path_ids.append(subtour)
+                    subtour = []  # Clear the subtour list
+            subtour.append(node_id_mapping[node_coord])
+        # Append the last subtour if any
+        if subtour:
+            path_ids.append(subtour)
+        # Append the path IDs list to the node path IDs list
+        node_path_ids.append(path_ids)
 
     return node_path_ids
+
 
 
 

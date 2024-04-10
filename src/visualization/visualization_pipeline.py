@@ -15,13 +15,13 @@ def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
     print("Robot node path: ", robot_node_path)
     print("Robot world path: ", robot_world_path)
     if metadata["mode"] == "h2":
-        # metadata = visualize_paths_heuristic2(robot_node_path, metadata)
-        print("Converted to node path: ", convertToNodePaths(robot_world_path, metadata['ssd'], metadata['n_a']))
-        node_ids = nodePathToIds(convertToNodePaths(robot_world_path, metadata['ssd'], metadata['n_a']), metadata['n_a'])
-        print("Node IDs: ", node_ids)
-        metadata = visualize_paths(node_ids, metadata)
+        metadata = visualize_paths_heuristic2(robot_node_path, metadata)
+        # print("Converted to node path: ", convertToNodePaths(robot_world_path, metadata['ssd'], metadata['n_a']))
+        # node_ids = nodePathToIds(convertToNodePaths(robot_world_path, metadata['ssd'], metadata['n_a']), metadata['n_a'])
+        # print("Node IDs: ", node_ids)
+        # metadata = visualize_paths(node_ids, metadata)
     elif metadata["mode"] == "m":
-        metadata = visualize_paths(robot_node_path, metadata)
+        print("Skip")
     else:
         metadata = visualize_paths(robot_node_path, metadata)
 
@@ -32,13 +32,13 @@ def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
 
     discretized = discretize_world_points(all_world_points, metadata)
 
-    print(discretized)
+    # print(discretized)
     # 3. percent coverage over time
     #metadata = visualize_coverage(20, None, discretized, metadata)
     metadata = visualize_coverage_stepwise(discretized, metadata)
 
     # 4. node visitation over time
-    #metadata = visualize_node_visitations(20, None, discretized, metadata)
+    # metadata = visualize_node_visitations(20, None, discretized, metadata)
 
     # 5. mean time/distance between revisitation heatmap
     #metadata = visualize_mean_time_between_revisitation(all_world_points, metadata)

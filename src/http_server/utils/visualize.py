@@ -370,10 +370,10 @@ def visualize_node_visitations(step_requirement, robot_paths, world_paths,
 def visualize_paths_heuristic2(robot_paths, metadata):
     print("Visualizing paths for heuristic 2")
     n_a = metadata["n_a"]
-    num_rows = (len(robot_paths) + 1) // 2  # Two plots per row
-    fig, axs = pyplot.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
+    num_rows = (len(robot_paths) + 1) // 3  # Two plots per row
+    fig, axs = pyplot.subplots(num_rows, 3, figsize=(15, 5 * num_rows))  # Adjust the figure size as needed
 
-    if len(robot_paths) > 2:
+    if len(robot_paths) > 3:
         axs = axs.flatten()
 
     for ki in range(len(robot_paths)):
@@ -395,7 +395,7 @@ def visualize_paths_heuristic2(robot_paths, metadata):
     #     pyplot.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
     # else:
     #     pyplot.show()
-    fig.suptitle(f"Paths for all robots (# of robots={len(robot_paths)}")
+    fig.suptitle(f"Paths for all robots (# of robots={len(robot_paths)})")
     if "visualize_paths_graph_path" in metadata:
         plt.savefig(metadata["visualize_paths_graph_path"])
     plt.show()
@@ -407,11 +407,11 @@ def visualize_individual_paths(paths, nodes, targets, depots, b_k, costs, metada
     Visualization used in MRPCP
     """
     num_robots = len(paths)
-    num_rows = (num_robots + 1) // 2  # Two plots per row
-    fig, axs = plt.subplots(num_rows, 2, figsize=(10, 5 * num_rows))  # Adjust the figure size as needed
+    num_rows = (num_robots + 1) // 3  # Two plots per row
+    fig, axs = plt.subplots(num_rows, 3, figsize=(15, 5 * num_rows))  # Adjust the figure size as needed
 
     # Flatten the axs array for easy iteration if there's more than one row
-    if num_robots > 2:
+    if num_robots > 3:
         axs = axs.flatten()
 
     for index, path in enumerate(paths):

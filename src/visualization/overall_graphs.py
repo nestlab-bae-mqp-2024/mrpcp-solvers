@@ -32,8 +32,6 @@ t = 30  # Define the time to simulate
 dt = 0.1    # Define the time step
 v = 0.5  # robot speed
 num_robots_list_h = [8, 64, 1024]   # Define different numbers of robots to test for H1 and H2
-# num_robots_list_m = [4, 8] # Define different numbers of robots to test for MILP (too long to run, only compare heuristics)
-L_min_ratios = [1.5, 5] # Define the L_min ratios
 # Run simulations for each algorithm and each number of robots
 percent_coverage_data = {
     'H1': [],
@@ -57,11 +55,26 @@ plt.grid(True)
 plt.show()
 
 # TODO: Plot 2 is percent coverage vs robot speed for H1, H2, and MILP
-# For this, number of robots will be constant 8 robots
 v_list = [0.5, 2.0, 5.0]   # Define different robot speeds m/s
-
+plt.xlabel('Number of Robots')
+plt.ylabel('Percent Coverage')
+plt.title('Percent Coverage vs. Number of Robots (Different Robot Speeds)')
+plt.legend()
+plt.grid(True)
+plt.show()
 
 # TODO: Plot 3 is percent coverage vs robot field of view (number of nodes?) for H1, H2, and MILP
 # For this, speed will be constant 0.5 m/s
-
+plt.xlabel('Number of Robots')
+plt.ylabel('Percent Coverage')
+plt.title('Percent Coverage vs. Number of Robots (Different Surveillance Radii)')
+plt.legend()
+plt.grid(True)
+plt.show()
 # TODO: Plot 4 is percent coverage vs L_min ratio = 1.5, 5, 10 for H1, H2
+plt.xlabel('Number of Robots')
+plt.ylabel('Percent Coverage')
+plt.title('Percent Coverage vs. Number of Robots (Different Fuel Capacities')
+plt.legend()
+plt.grid(True)
+plt.show()

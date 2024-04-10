@@ -1,3 +1,5 @@
+import itertools
+
 import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
@@ -48,13 +50,14 @@ def visualize_paths(paths, metadata):
 
         total_cost_i = 0
         for i in range(len(paths[ki])):
-            for j in range(len(paths[ki][i])-1):
+            for j in range(len(paths[ki][i]) - 1):
                 curr_node = paths[ki][i][j]
-                next_node = paths[ki][i][j+1]
-                total_cost_i += np.linalg.norm(nodes[curr_node]-nodes[next_node])
+                next_node = paths[ki][i][j + 1]
+                total_cost_i += np.linalg.norm(nodes[curr_node] - nodes[next_node])
 
                 ax.scatter(nodes[curr_node, 0], nodes[curr_node, 1], c="purple", s=8)
-                ax.plot([nodes[curr_node, 0], nodes[next_node, 0]], [nodes[curr_node, 1], nodes[next_node, 1]], color="purple", linewidth=1)
+                ax.plot([nodes[curr_node, 0], nodes[next_node, 0]], [nodes[curr_node, 1], nodes[next_node, 1]],
+                        color="purple", linewidth=1)
 
         ax.set_title(f"Robot #{robot_i + 1} (cost={total_cost_i:.3f})")
         total_cost += total_cost_i
@@ -76,7 +79,8 @@ def visualize_paths(paths, metadata):
             ax.set_box_aspect(1)
 
     plt.grid()
-    fig.suptitle(f"Paths for all robots (# of active/available robots={len(active_robots)}/{len(paths)}, sum of costs={total_cost:.3f})")
+    fig.suptitle(
+        f"Paths for all robots (# of active/available robots={len(active_robots)}/{len(paths)}, sum of costs={total_cost:.3f})")
     if "visualize_paths_graph_path" in metadata:
         plt.savefig(metadata["visualize_paths_graph_path"])
     plt.show()
@@ -86,4 +90,3 @@ def visualize_paths(paths, metadata):
 
 def visualize_subtours(subtours, metadata):
     return visualize_paths([[subtour] for subtour in subtours], metadata)
-
