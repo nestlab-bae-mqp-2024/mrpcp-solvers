@@ -18,7 +18,7 @@ from src.http_server.json_handlers import *
 from src.heuristic_attempts.yasars_heuristic_attempts.yasars_heuristic import yasars_heuristic
 from src.http_server import heuristic2
 
-from src.http_server.mrpcp import *
+from src.mrpcp_2015.modified_mrpcp import solve_milp_with_optimizations
 import os
 from src.http_server.utils.metric_calculations import calculate_mean_distance_per_path
 from src.visualization.visualization_pipeline import run_visualization_pipeline
