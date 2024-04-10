@@ -17,7 +17,8 @@ def discretize_world_points(all_world_points, metadata):
             for node in all_nodes:
                 if(abs(last_posn[0]-position[0]) > 0.05 and abs(last_posn[1]-position[1]) > 0.05 and (abs(position[0] - node[0]) < 0.05 and abs(position[1] - node[1]) < 0.05)):
                     last_posn = position
-                    discretized_points[ki].append((node[0], node[1]))
+                    discretized_points[ki].append((node[0], node[1], position[2]))
 
+    print(discretized_points)
     return discretized_points
     #print(all_nodes)

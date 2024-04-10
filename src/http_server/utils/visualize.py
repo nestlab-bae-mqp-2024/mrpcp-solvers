@@ -228,10 +228,56 @@ def visualize_coverage(step_requirement, robot_paths, world_paths, metadata):
 
     r = [*range(0, len(coverage_list))]
     coverage_ax.plot(r, coverage_list[0:number_of_steps])
-    coverage_ax.plot(r, [comparison] * number_of_steps, '--')
+    #coverage_ax.plot(r, [comparison] * number_of_steps, '--')
 
     average_coverage = sum(coverage_list[timestep:]) / len(coverage_list[timestep:])
     # print(average_coverage)
+    if "average_coverage" in metadata:
+        metadata["average_coverage"] = average_coverage
+
+    plt.suptitle("Percent Coverage Over Time")
+    if "percent_coverage_visualization" in metadata:
+        plt.savefig(metadata["percent_coverage_visualization"])
+    else:
+        plt.show()
+    # print(metadata)
+    return metadata
+
+
+# visualizes percent coverage over time
+def visualize_coverage_stepwise(step_requirement_time, world_paths, metadata, t=10, dt=0.1):
+    #time :: seconds
+
+    print("Visualizing coverage over time")
+    timestep = 2
+    ssd = metadata["ssd"]
+    n_a = metadata["n_a"]
+    coverage_figure = plt.figure(figsize=(5, 5))
+    coverage_ax = plt.subplot()
+    plt.xlabel('time (s)')
+    plt.ylabel('% coverage')
+
+
+    coverage_list = []
+    for curr_time in np.arange(0., t + dt, dt):
+        number_of_covered_nodes = 0
+
+        for robot_path in world_paths:
+            for path in robot_path:
+                if path[2] <= curr_time and path[2] >= curr_time-step_requirement_time:
+                    number_of_covered_nodes += 1
+
+        coverage = round(100 * number_of_covered_nodes / (n_a * n_a), 2)
+
+        coverage_list.append(coverage)
+
+    r = np.arange(0., t + dt, dt)
+    coverage_ax.plot(r, coverage_list)
+
+    #coverage_ax.plot(r, [comparison] * number_of_steps, '--')
+
+    average_coverage = sum(coverage_list) / len(coverage_list)
+    print(average_coverage)
     if "average_coverage" in metadata:
         metadata["average_coverage"] = average_coverage
 
@@ -254,8 +300,17 @@ def visualize_node_visitations(step_requirement, robot_paths, world_paths,
     num_of_robots = 0
     # code to convert world_paths to node_path format if necessary
     if world_paths is not None:
+
         num_of_robots = len(world_paths)
-        updated_paths = convertToNodePaths(world_paths, ssd, n_a)
+        no_time_paths = [[] for ki in range(num_of_robots)]
+
+        for ki in range(num_of_robots):
+            for z in world_paths[ki]:
+                print(z)
+                no_time_paths[ki].append([z[0], z[1]])
+
+        print(no_time_paths)
+        updated_paths = convertToNodePaths(no_time_paths, ssd, n_a)
 
     elif robot_paths is not None:  # if given robot_paths, assuming already in node_path format
         num_of_robots = len(robot_paths)
