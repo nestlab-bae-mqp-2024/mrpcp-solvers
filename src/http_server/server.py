@@ -108,16 +108,18 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                         "lookback_time": 5.}
             print(
                 f"Running MILP solver function with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode=m...")
-            edges, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(n_a), float(ssd), float(fcr), int(rp), metadata)
-            metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
+            robot_node_path_w_subtours, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(n_a), float(ssd), float(fcr), int(rp), metadata)
+            metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
             runtime = time.time() - start_time
+            print(f"{robot_node_path_w_subtours=}")
+            print(f"{robot_world_path=}")
             log_runtime("MILP", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
                 f"MILP solver function completed with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, mode=m.")
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
                            'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'm'},
-                           'robot_node_path': edges, 'robot_world_path': robot_world_path,
+                           'robot_node_path': robot_node_path_w_subtours, 'robot_world_path': robot_world_path,
                            'status': 'completed'}
             stats_data = {'job_id': job_id, 'runtime': runtime,
                           'mean_distance_per_path': calculate_mean_distance_per_path(robot_world_path),

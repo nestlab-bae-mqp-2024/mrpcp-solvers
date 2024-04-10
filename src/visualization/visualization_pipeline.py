@@ -3,6 +3,7 @@ from src.visualization.paths_and_subtours import visualize_paths
 from src.http_server.utils.visualize import visualize_paths_heuristic2, \
     visualize_coverage_stepwise
 from src.visualization.discretization import discretize_world_points
+from src.visualization.visitation_frequency import visualize_visitation_frequency
 
 
 def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
@@ -23,7 +24,7 @@ def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
     # 2. Pseudo-Simulate and create the 2d histogram of the normalized visitation frequency
     all_world_points = pseudo_simulate(robot_world_path, metadata)
 
-    # metadata = visualize_visitation_frequency(all_world_points, metadata)
+    metadata = visualize_visitation_frequency(all_world_points, metadata)
 
     discretized = discretize_world_points(all_world_points, metadata)
 

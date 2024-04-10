@@ -288,12 +288,12 @@ def convertEdgesToPaths(edges, nodes, depot_indices):
             if edges[ki][curr_node].sum() < 0.5:
                 break
             next_node = np.argmax(edges[ki][curr_node])
-            list_of_subtours[subtour_idx].append(depot_indices[0] if next_node == depot_indices[1] else next_node)
+            list_of_subtours[subtour_idx].append(int(depot_indices[0]) if next_node == depot_indices[1] else int(next_node))
             edges[ki][curr_node][next_node] = 0
             curr_node = next_node
             if curr_node == depot_indices[1]:
                 subtour_idx += 1
-                list_of_subtours.append([depot_indices[0]])
+                list_of_subtours.append([int(depot_indices[0])])
 
         filtered_list_of_subtours = []
         for i, si in enumerate(list_of_subtours):
