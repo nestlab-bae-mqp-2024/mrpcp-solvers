@@ -5,6 +5,7 @@ Date: 2/17/2024
 This program defines the methods relating to solving the MRPCP (Multi-Robot Path Coverage Problem) using MILP (Mixed-Integer Linear Programming)
 and TSP (Travelling Salesman Problem) using 2-OPT and k-OPT algorithms.
 """
+from src.utils.construct_map import construct_map
 from typing import Dict
 from matplotlib import pyplot as plt
 import numpy as np
@@ -31,18 +32,24 @@ def solve_milp_with_optimizations(num_of_robots: int,
     if metadata is None:
         metadata = {}
     print("Initializing MILP solution...")
-    k = num_of_robots  # Chose the number of robots
-    n_a = nodes_per_axis  # Choose the number of nodes per side
-    d = square_side_dist / 2.  # Distance per side of the square
+    # Chose number of robots
+    k = num_of_robots
+    # Chose the number of targets in an axis
+    n_a = nodes_per_axis
+    # Chose the length of distance of each side of the square arena
+    d = square_side_dist
+    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     rp = min(rp, k)
-    max_fuel_cost_to_node = square_side_dist * np.sqrt(
-        2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
-    L = fuel_capacity_ratio * max_fuel_cost_to_node * 2  # Fuel capacity (1 unit of fuel = 1 unit of distance)
+    # Fuel Capacity Parameters
+    max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
+    L_min = max_fuel_cost_to_node * 2  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
+    L = L_min * fuel_capacity_ratio  # Fuel capacity (1 unit of fuel = 1 unit of distance)
     M = L + max_fuel_cost_to_node
-
+    # print(f"{L_min=} {L=}")
+    # print(f"{k=} {n=} {d=} {rp=}")
     # meta data given params
     metadata["k"] = k
-    metadata["n_a"] = n_a
+    metadata["n_a"] = nodes_per_axis
     metadata["ssd"] = square_side_dist
     metadata["fcr"] = fuel_capacity_ratio
     metadata["rp"] = rp
@@ -50,47 +57,21 @@ def solve_milp_with_optimizations(num_of_robots: int,
     metadata["L_min"] = L
     metadata["mode"] = "m"
 
-    # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
-    targets = np.mgrid[-d:d:n_a * 1j, -d:d:n_a * 1j]  # Size d x d
-    targets = targets.reshape(targets.shape + (1,))
-    targets = np.concatenate((targets[0], targets[1]), axis=2)
-    targets = targets.reshape((n_a * n_a, 2))
-    target_indices = range(len(targets))
-    depots = np.array([
-        [-1., -1.],
-    ]) * d
-    depots = np.concatenate((depots, depots))
-    depot_indices = range(len(targets), len(targets) + len(depots))
-    nodes = np.concatenate((targets, depots))
-    node_indices = range(len(targets) + len(depots))
-    metadata["node_indices"] = node_indices
+    # 1. Create map and get node indices
+    nodes, node_indices, target_indices, depot_indices = construct_map(n_a, d, milp=True)
     B_k = np.array([depot_indices[0]] * k)
-
-    # Graphical sanity check
-    plt.figure()
-    plt.scatter(targets[:, 0], targets[:, 1], c='blue', s=10)
-    plt.scatter(depots[:, 0], depots[:, 1], c='red', s=50)
-    plt.grid()
-
-    # Label nodes with node IDs and their positions
-    for i, node in enumerate(nodes):
-        plt.text(node[0], node[1], f'{i}', fontsize=8, ha='center')
-    plt.show()
 
     # 2. Calculate cost between each node
     cost = distance.cdist(nodes, nodes, 'euclidean')
-    metadata["cost"] = cost
 
     m = gp.Model()
 
     # A. Integer Constraints (4), (5)
     # Note: All edges are now binary
-    print("Integer Constraints (4), (5)")
     x = m.addMVar((k, len(node_indices), len(node_indices)), name='x', vtype=GRB.BINARY)
 
     # B. Degree Constraints (6), (7), (8), (9), (10)
     # (6) and (7) Only one robot arrives to and leaves from a target (B_k is a depot, so we don't need to remove it from targets)
-    print("Degree Constraints (6), (7)")
     _ = m.addConstrs(x[:, i, :].sum() == rp for i in target_indices)
     _ = m.addConstrs(x[:, :, i].sum() == rp for i in target_indices)
 
@@ -100,7 +81,9 @@ def solve_milp_with_optimizations(num_of_robots: int,
             _ = m.addConstrs(x[ki, :, i].sum() <= 1 for i in target_indices)
 
         # (8) and (9) Begin and end at same position B_k
+        # _ = m.addConstr(x[ki,B_k[ki,0],B_k[ki,1],:,:].sum() >= 1)
         _ = m.addConstr(x[ki, B_k[ki], :].sum() <= 1)
+        # _ = m.addConstr(x[ki,:,:,B_k[ki,0],B_k[ki,1]].sum() >= 1)
         _ = m.addConstr(x[ki, :, B_k[ki]].sum() <= 1)
 
         # (10) Every robot that visits a target leaves the target
@@ -110,7 +93,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
         _ = m.addConstrs(x[ki, i, i] == 0 for i in node_indices)
 
     # C. Capacity and Flow Constraints (11), (12), (13), (14)
-    print("Capacity and Flow Constraints (11), (12), (13), (14)")
     p = m.addMVar((k, len(node_indices), len(node_indices)), name='p', vtype=GRB.INTEGER, lb=0, ub=len(target_indices))
 
     for ki in range(k):
@@ -161,66 +143,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
     p_max = m.addVar(vtype=GRB.CONTINUOUS, name="p_max")
     _ = m.addConstrs((cost * x[ki]).sum() <= p_max for ki in range(k))
     m.setObjective(p_max)
-
-    def visualize_paths_brute_force(edges):
-        # Only plot the paths for the robots that were assigned a path
-        active_robots = []
-        for ki in range(k):
-            if (cost * edges[ki]).sum() > 0.01:
-                active_robots.append(ki)
-
-        subplot_per_hor_axis = int(np.ceil(np.sqrt(len(active_robots))))
-        subplot_per_vert_axis = int(np.ceil(len(active_robots) / subplot_per_hor_axis))
-        fig, axs = plt.subplots(subplot_per_hor_axis, subplot_per_vert_axis,
-                                figsize=(subplot_per_hor_axis * 4, subplot_per_vert_axis * 4))
-        fig.tight_layout()
-        fig.subplots_adjust(bottom=0.1, top=0.9, right=0.9, left=0.1, wspace=0.3, hspace=0.3)
-
-        hor_i = 0
-        vert_i = 0
-        for robot_i, ki in enumerate(active_robots):
-            # print(f"Robot #{ki}\n-------")
-            # print(f"Staring position: {B_k[ki]} -> {[nodes[B_k[ki, 0], B_k[ki, 1], 0], nodes[B_k[ki, 0], B_k[ki, 1], 1]]}")
-            if subplot_per_hor_axis == 1 and subplot_per_vert_axis == 1:
-                ax = axs
-            elif subplot_per_vert_axis == 1:
-                ax = axs[hor_i]
-            else:
-                ax = axs[hor_i][vert_i]
-            ax.set_title(f"Robot #{robot_i + 1} (cost={(cost * edges[ki]).sum():.3f})")
-            ax.scatter(targets[:, 0], targets[:, 1], c='blue', s=10)
-            ax.scatter(depots[:, 0], depots[:, 1], c='red', s=50)
-            ax.scatter(nodes[B_k[ki], 0], nodes[B_k[ki], 1], c='red', s=100)
-
-            for i, j in itertools.product(node_indices, node_indices):
-                if edges[ki, i, j] > 0.5:  # In case there is any floating math errors
-                    # print(f"Connection from {[i1,j1]} to {[i2,j2]}")
-                    ax.scatter(nodes[i, 0], nodes[i, 1], c="purple", s=8)
-                    ax.scatter(nodes[j, 0], nodes[j, 1], c="purple", s=8)
-                    ax.plot([nodes[i, 0], nodes[j, 0]], [nodes[i, 1], nodes[j, 1]], color="purple", linewidth=1)
-
-            vert_i += 1
-            if vert_i >= subplot_per_vert_axis:
-                vert_i = 0
-                hor_i += 1
-            ax.grid()
-
-        for h in range(subplot_per_hor_axis):
-            for v in range(subplot_per_vert_axis):
-                if subplot_per_hor_axis == 1 and subplot_per_vert_axis == 1:
-                    ax = axs
-                elif subplot_per_vert_axis == 1:
-                    ax = axs[h]
-                else:
-                    ax = axs[h][v]
-                ax.set_box_aspect(1)
-
-        fig.suptitle(
-            f"Paths for all robots (# of active/available robots={len(active_robots)}/{k}, sum of costs={(cost * edges).sum():.3f})")
-        if "visualize_paths_graph_path" in metadata:
-            plt.savefig(metadata["visualize_paths_graph_path"])
-        # fig.savefig(f"../../../data/2015_mrpcp_k={k}_n={n}_{datetime.datetime.now().strftime('%Y-%m-%d-%H:%M:%S')}.png")
-        plt.show()
 
     def extract_and_calculate_milp_costs(x, start_nodes, num_robots, num_nodes, cost_matrix):
         print("Extracting Costs")
@@ -274,10 +196,10 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
                 # If this solution's maximum costing tour ~= the cost of tour that only travels between depot and the furthest node,
                 # then, this is guaranteed to be optimal.
-                if (MILPSolver.min_cost - max_fuel_cost_to_node * 4) < 0.10:
+                if (MILPSolver.min_cost - L_min) < 0.10:
                     print("!This is guaranteed to be the optimal solution!")
                     what.terminate()
-                    visualize_paths_brute_force(MILPSolver.min_cost_edges)
+                    # visualize_paths_brute_force(MILPSolver.min_cost_edges)
 
                 MILPSolver.min_cost_edges = what.cbGetSolution(what._x)
 
@@ -297,49 +219,118 @@ def solve_milp_with_optimizations(num_of_robots: int,
     # solver = MILPSolver(m)
     solver.solve()  # Optimize until the first optimal solution is found
 
-    milp_solution_x = np.array([x[ki].x for ki in range(k)]).reshape(k, len(node_indices), len(node_indices))
-    milp_paths, milp_costs = extract_and_calculate_milp_costs(milp_solution_x, B_k, k, len(node_indices), cost)
+    opt_node_paths = convertEdgesToPaths(solver.min_cost_edges, nodes, depot_indices)
+    metadata["k"] = len(opt_node_paths)
 
-    # Apply 2-opt/3-opt algorithm to each path -> iteratively remove two/three edges and reconnect the two paths in a
-    # different way that reduces the total distance.
-    optimized_paths_2opt = []  # Initialize an empty list to store optimized paths
-    optimized_paths_kopt = []
-    for path in milp_paths:
-        opt_path2, opt_dist2 = k_opt(path, cost, 2)
-        optimized_paths_2opt.append(opt_path2)
+    opt_world_paths = []
+    for ki in range(metadata["k"]):
+        robot_world_path = []
+        for i, subtour in enumerate(opt_node_paths[ki]):
+            robot_world_path.append(nodes[subtour].tolist())
+        opt_world_paths.append(robot_world_path)
 
-        # Apply 3-opt algorithm to each path
-        # opt_pathk, opt_distk = k_opt(path, cost, 3)
-        # optimized_paths_kopt.append(opt_pathk)
+    # milp_solution_x = np.array([x[ki].x for ki in range(k)]).reshape(k, len(node_indices), len(node_indices))
+    # milp_paths, milp_costs = extract_and_calculate_milp_costs(milp_solution_x, B_k, k, len(node_indices), cost)
 
-    # Calculate costs for each robot
-    optimized_costs_2opt = [calculate_path_cost(path, cost) for path in optimized_paths_2opt]  # two opt
-
-    # optimized_costs_kopt = [calculate_path_cost(path, cost) for path in
-    #                         optimized_paths_kopt]  # Calculate costs for each robot with 3-opt
-
-    # Call the updated visualization function with costs
-    # visualize_individual_paths(optimized_paths_2opt, nodes, targets, depots, B_k, optimized_costs_2opt, metadata)
-    # visualize_individual_paths(optimized_paths_kopt, nodes, targets, depots, B_k, optimized_costs_kopt)  # three opt
-
-    # Calculate cost reduction for each robot
-    for index, (milp_cost, opt_cost) in enumerate(zip(milp_costs, optimized_costs_2opt)):
-        cost_reduction = milp_cost - opt_cost
-        print(f"Cost reduction for Robot (two-opt) {index + 1}: {cost_reduction:.2f}")
-
-    # Calculate cost reduction for each robot
-    # for index, (milp_cost, opt_cost) in enumerate(zip(milp_costs, optimized_costs_kopt)):
+    # # Apply 2-opt/3-opt algorithm to each path -> iteratively remove two/three edges and reconnect the two paths in a
+    # # different way that reduces the total distance.
+    # optimized_paths_2opt = []  # Initialize an empty list to store optimized paths
+    # optimized_paths_kopt = []
+    # for path in milp_paths:
+    #     opt_path2, opt_dist2 = k_opt(path, cost, 2)
+    #     optimized_paths_2opt.append(opt_path2)
+    #
+    #     # Apply 3-opt algorithm to each path
+    #     # opt_pathk, opt_distk = k_opt(path, cost, 3)
+    #     # optimized_paths_kopt.append(opt_pathk)
+    #
+    # # Calculate costs for each robot
+    # optimized_costs_2opt = [calculate_path_cost(path, cost) for path in optimized_paths_2opt]  # two opt
+    #
+    # # optimized_costs_kopt = [calculate_path_cost(path, cost) for path in
+    # #                         optimized_paths_kopt]  # Calculate costs for each robot with 3-opt
+    #
+    # # Call the updated visualization function with costs
+    # # visualize_individual_paths(optimized_paths_2opt, nodes, targets, depots, B_k, optimized_costs_2opt, metadata)
+    # # visualize_individual_paths(optimized_paths_kopt, nodes, targets, depots, B_k, optimized_costs_kopt)  # three opt
+    #
+    # # Calculate cost reduction for each robot
+    # for index, (milp_cost, opt_cost) in enumerate(zip(milp_costs, optimized_costs_2opt)):
     #     cost_reduction = milp_cost - opt_cost
-    #     print(f"Cost reduction for Robot (k-opt) {index + 1}: {cost_reduction:.2f}")
-
-    print("MILP solution completed...returning paths to server endpoint /solve")
-    # worldPath = convertToWorldPath(n_a, d, optimized_paths_2opt)
-    # print(paths)
-    print(milp_paths)
-    worldPath = convertToWorldPath(n_a, square_side_dist, milp_paths)
+    #     print(f"Cost reduction for Robot (two-opt) {index + 1}: {cost_reduction:.2f}")
+    #
+    # # Calculate cost reduction for each robot
+    # # for index, (milp_cost, opt_cost) in enumerate(zip(milp_costs, optimized_costs_kopt)):
+    # #     cost_reduction = milp_cost - opt_cost
+    # #     print(f"Cost reduction for Robot (k-opt) {index + 1}: {cost_reduction:.2f}")
+    #
+    # print("MILP solution completed...returning paths to server endpoint /solve")
+    # # worldPath = convertToWorldPath(n_a, d, optimized_paths_2opt)
+    # # print(paths)
+    # print(milp_paths)
 
     # print("The optimized paths with 2-OPT are: ", optimized_paths_2opt)
     # print("The paths are: ", paths)
-    print("The world paths are: ", worldPath)
-    print("Returning MILP solution to be sent to a json file...")
-    return milp_paths, worldPath, metadata
+    # print("The world paths are: ", worldPath)
+    # print("Returning MILP solution to be sent to a json file...")
+    return opt_node_paths, opt_world_paths, metadata
+
+
+def convertEdgesToPaths(edges, nodes, depot_indices):
+    edges = np.copy(edges)
+    paths = []
+    for ki in range(len(edges)):
+        subtour_idx = 0
+        list_of_subtours = [[]]
+        curr_node = depot_indices[0]
+        list_of_subtours[subtour_idx].append(curr_node)
+        while True:
+            if edges[ki][curr_node].sum() < 0.5:
+                break
+            next_node = np.argmax(edges[ki][curr_node])
+            list_of_subtours[subtour_idx].append(depot_indices[0] if next_node == depot_indices[1] else next_node)
+            edges[ki][curr_node][next_node] = 0
+            curr_node = next_node
+            if curr_node == depot_indices[1]:
+                subtour_idx += 1
+                list_of_subtours.append([depot_indices[0]])
+
+        filtered_list_of_subtours = []
+        for i, si in enumerate(list_of_subtours):
+            all_depot = True
+            for ni in si:
+                if not np.isclose(nodes[ni], nodes[depot_indices[0]]).all():
+                    all_depot = False
+            if not all_depot:
+                filtered_list_of_subtours.append(si)
+        if len(filtered_list_of_subtours):
+            paths.append(filtered_list_of_subtours)
+    return paths
+
+
+if __name__ == "__main__":
+    num_of_robots = 3
+    n_a = 4
+    square_side_dist = 3.
+    fuel_capacity_ratio = 1.5
+    rp = 3
+
+    from src.http_server.json_handlers import saveGraphPath
+    metadata = {"mode": "h1",
+                "v": 5.,
+                "t": 100.,
+                "dt": 0.1,
+                "lookback_time": 5.
+                # "visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
+                # "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")
+                }
+    optimized_node_paths, optimized_world_paths, metadata = solve_milp_with_optimizations(num_of_robots,
+                                                                             n_a,
+                                                                             square_side_dist,
+                                                                             fuel_capacity_ratio,
+                                                                             rp,
+                                                                             metadata)
+
+    from src.visualization.visualization_pipeline import run_visualization_pipeline
+    run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)
+
