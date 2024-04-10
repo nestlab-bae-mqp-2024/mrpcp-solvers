@@ -1,10 +1,7 @@
-import itertools
-
 import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
-from src.heuristic_attempts.yasars_heuristic_attempts.utils.construct_map import construct_map
-from src.http_server.heuristic2 import initAllNodes
+from src.utils.construct_map import construct_map
 
 
 def get_next_nodes(edges, node, node_indices):

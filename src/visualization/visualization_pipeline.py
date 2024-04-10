@@ -3,7 +3,7 @@ from src.visualization.mean_time_between_revisitation import visualize_mean_time
 from src.visualization.pseudo_simulate import pseudo_simulate
 from src.visualization.paths_and_subtours import visualize_paths, visualize_subtours
 from src.visualization.visitation_frequency import visualize_visitation_frequency
-from src.http_server.utils.visualize import visualize_coverage, visualize_node_visitations, visualize_paths_heuristic2, \
+from src.http_server.utils.visualize import visualize_node_visitations, visualize_paths_heuristic2, \
     convertToNodePaths, visualize_coverage_stepwise
 from src.visualization.discretization import discretize_world_points
 from src.http_server.mrpcp import solve_milp_with_optimizations

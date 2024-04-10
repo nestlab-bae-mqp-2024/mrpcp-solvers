@@ -1,5 +1,5 @@
-from src.heuristic_attempts.yasars_heuristic_attempts.utils.construct_map import construct_map
-from src.heuristic_attempts.yasars_heuristic_attempts.utils.tsp_solver import k_opt
+from src.utils.construct_map import construct_map
+from src.utils.tsp_solver import k_opt
 from concurrent.futures import ProcessPoolExecutor
 from scipy.spatial import distance
 from typing import Dict
@@ -263,7 +263,6 @@ if __name__ == "__main__":
     fuel_capacity_ratio = 1.5
     rp = 3
 
-    from src.http_server.json_handlers import saveGraphPath
     metadata = {"mode": "h1",
                 "v": 5.,
                 "t": 100.,
