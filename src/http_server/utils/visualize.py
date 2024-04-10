@@ -231,7 +231,7 @@ def visualize_coverage(step_requirement, robot_paths, world_paths, metadata):
     #coverage_ax.plot(r, [comparison] * number_of_steps, '--')
 
     average_coverage = sum(coverage_list[timestep:]) / len(coverage_list[timestep:])
-    # print(average_coverage)
+
     if "average_coverage" in metadata:
         metadata["average_coverage"] = average_coverage
 
@@ -267,10 +267,11 @@ def visualize_coverage_stepwise(step_requirement_time, world_paths, metadata, t=
                 if path[2] <= curr_time and path[2] >= curr_time-step_requirement_time:
                     number_of_covered_nodes += 1
 
-        coverage = round(100 * number_of_covered_nodes / (n_a * n_a), 2)
+        coverage = min(round(100 * (number_of_covered_nodes / (n_a * n_a)), 2), 100)
 
         coverage_list.append(coverage)
 
+    print(coverage_list)
     r = np.arange(0., t + dt, dt)
     coverage_ax.plot(r, coverage_list)
 
