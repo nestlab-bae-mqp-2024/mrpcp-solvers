@@ -207,11 +207,13 @@ def yasars_heuristic(num_of_robots: int,
     # print(f"{sum(opt_node_path_costs)=} {max(opt_node_path_costs)=}")
     metadata["opt_node_path_costs"] = opt_node_path_costs
     opt_world_paths = []
-    for ki in range(k):
+    for ki in range(min(k, len(opt_node_paths))):
         robot_world_path = []
         for i, subtour in enumerate(opt_node_paths[ki]):
             robot_world_path.append(nodes[subtour].tolist())
         opt_world_paths.append(robot_world_path)
+    metadata["k"] = min(k, len(opt_node_paths))
+
     print(f"Step 5 took {time.time() - start} seconds.")
 
     return opt_node_paths, opt_world_paths, metadata
@@ -257,8 +259,8 @@ def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
 
 
 if __name__ == "__main__":
-    num_of_robots = 8
-    n_a = 8
+    num_of_robots = 128
+    n_a = 10
     square_side_dist = 3.
     fuel_capacity_ratio = 1.5
     rp = 3
