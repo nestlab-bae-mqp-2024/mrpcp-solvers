@@ -208,6 +208,10 @@ if __name__ == "__main__":
     from src.http_server.json_handlers import saveGraphPath
 
     metadata = {"mode": "h2",
+                "v": 0.2,
+                "t": 100.,
+                "dt": 0.1,
+                "lookback_time": 50.
                 # "visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
                 # "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")
                 }

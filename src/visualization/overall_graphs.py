@@ -6,23 +6,31 @@ This program defines the methods that are used to visualize the overall graphs n
 """
 from matplotlib import pyplot as plt
 
-from src.http_server.utils.visualize import visualize_coverage
+from src.http_server.utils.visualize import visualize_coverage_stepwise
 from src.visualization.discretization import discretize_world_points
 from src.visualization.pseudo_simulate import pseudo_simulate
 from src.visualization.visitation_frequency import visualize_visitation_frequency
 
+metadata = {
+    "v": 5.,
+    "t": 100.,
+    "dt": 0.1,
+    "lookback_time": 5.
+}
+
 # 1. Define the robot world paths to test
 robot_world_path = None
 # 2. Pseudo-Simulate and create the 2d histogram of the normalized visitation frequency
-all_world_points = pseudo_simulate(robot_world_path, v=1., t=30, dt=0.1)
+all_world_points = pseudo_simulate(robot_world_path, metadata)
 metadata = visualize_visitation_frequency(all_world_points)
 discretized = discretize_world_points(all_world_points, metadata)
 # 3. percent coverage over time
-metadata, avg_coverage = visualize_coverage(20, None, discretized, metadata)
-
-# TODO: Plot 1 is percent coverage vs surveillance radius of robots for H1, H2
-# Keep constant: robots = 8, 1.5 fcr, rp = 1 time = 30s, time step = 0.1s, vary speeds-> three lines for different speeds (0.1, 0.15, 0.2)
-# X axis is radius
+metadata = visualize_coverage_stepwise(discretized, metadata)
+# TODO: Plot 1 is percent coverage vs number of robots for H1, H2, and MILP
+# For this, the number of nodes per axis will be the same (nodes = ceil(1/sqrt(2)*r)^2
+t = 30  # Define the time to simulate
+dt = 0.1    # Define the time step
+v = 0.5  # robot speed
 num_robots_list_h = [8, 64, 1024]   # Define different numbers of robots to test for H1 and H2
 # Run simulations for each algorithm and each number of robots
 percent_coverage_data = {

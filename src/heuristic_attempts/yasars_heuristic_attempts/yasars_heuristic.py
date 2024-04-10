@@ -257,14 +257,18 @@ def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
 
 
 if __name__ == "__main__":
-    num_of_robots = 9
-    n_a = 3
+    num_of_robots = 8
+    n_a = 8
     square_side_dist = 3.
     fuel_capacity_ratio = 1.5
-    rp = 2
+    rp = 3
 
     from src.http_server.json_handlers import saveGraphPath
     metadata = {"mode": "h1",
+                "v": 5.,
+                "t": 100.,
+                "dt": 0.1,
+                "lookback_time": 5.
                 # "visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
                 # "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")
                 }

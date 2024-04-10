@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import colors, cm, pyplot as plt, pyplot
+from matplotlib import colors, cm, ticker, pyplot as plt, pyplot
 import itertools
 
 from src.http_server.utils.conversions import convertToNodePaths
@@ -180,97 +180,100 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
 
 
 # visualizes percent coverage over time
-def visualize_coverage(step_requirement, robot_paths, world_paths, metadata):
-    print("Visualizing coverage over time")
-    timestep = 2
-    ssd = metadata["ssd"]
-    n_a = metadata["n_a"]
-    coverage_figure = plt.figure(figsize=(5, 5))
-    coverage_ax = plt.subplot()
-    plt.xlabel('number of steps')
-    plt.ylabel('% coverage')
-
-    num_of_robots = 0
-    # code to convert world_paths to node_path format if necessary
-    if world_paths is not None:
-        num_of_robots = len(world_paths)
-        updated_paths = convertToNodePaths(world_paths, ssd, n_a)
-
-    elif robot_paths is not None:  # if given robot_paths, assuming already in node_path format
-        num_of_robots = len(robot_paths)
-        updated_paths = robot_paths
-
-    number_of_steps = max(len(updated_paths[ki]) for ki in range(num_of_robots))
-
-    comparison = 100 * step_requirement / (n_a * n_a / num_of_robots)
-
-    coverage_list = []
-
-    binary_heatmap = np.zeros((n_a, n_a))
-    path_counter = [0 for ki in range(num_of_robots)]
-
-    for step_counter in range(0, number_of_steps):
-        for a in range(0, n_a):
-            for b in range(0, n_a):
-                binary_heatmap[a][b] = max(0, binary_heatmap[a][b] - 1)
-
-        for ki in range(num_of_robots):
-            if path_counter[ki] >= len(updated_paths[ki]) - 1:
-                path_counter[ki] = 0
-            else:
-                path_counter[ki] += 1
-
-            (x, y) = updated_paths[ki][path_counter[ki]]
-            binary_heatmap[x][y] = step_requirement
-
-        coverage = round(100 * len(binary_heatmap[binary_heatmap > 0]) / (n_a * n_a), 2)
-        coverage_list.append(coverage)
-
-    r = [*range(0, len(coverage_list))]
-    coverage_ax.plot(r, coverage_list[0:number_of_steps])
-    # coverage_ax.plot(r, [comparison] * number_of_steps, '--')
-
-    average_coverage = sum(coverage_list[timestep:]) / len(coverage_list[timestep:])
-
-    if "average_coverage" in metadata:
-        metadata["average_coverage"] = average_coverage
-
-    plt.suptitle("Percent Coverage Over Time")
-    if "percent_coverage_visualization" in metadata:
-        plt.savefig(metadata["percent_coverage_visualization"])
-    else:
-        plt.show()
-    # print(metadata)
-    return metadata
+# def visualize_coverage(step_requirement, robot_paths, world_paths, metadata):
+#     print("Visualizing coverage over time")
+#     timestep = 2
+#     ssd = metadata["ssd"]
+#     n_a = metadata["n_a"]
+#     coverage_figure = plt.figure(figsize=(5, 5))
+#     coverage_ax = plt.subplot()
+#     plt.xlabel('number of steps')
+#     plt.ylabel('% coverage')
+#
+#     num_of_robots = 0
+#     # code to convert world_paths to node_path format if necessary
+#     if world_paths is not None:
+#         num_of_robots = len(world_paths)
+#         updated_paths = convertToNodePaths(world_paths, ssd, n_a)
+#
+#     elif robot_paths is not None:  # if given robot_paths, assuming already in node_path format
+#         num_of_robots = len(robot_paths)
+#         updated_paths = robot_paths
+#
+#     number_of_steps = max(len(updated_paths[ki]) for ki in range(num_of_robots))
+#
+#     comparison = 100 * step_requirement / (n_a * n_a / num_of_robots)
+#
+#     coverage_list = []
+#
+#     binary_heatmap = np.zeros((n_a, n_a))
+#     path_counter = [0 for ki in range(num_of_robots)]
+#
+#     for step_counter in range(0, number_of_steps):
+#         for a in range(0, n_a):
+#             for b in range(0, n_a):
+#                 binary_heatmap[a][b] = max(0, binary_heatmap[a][b] - 1)
+#
+#         for ki in range(num_of_robots):
+#             if path_counter[ki] >= len(updated_paths[ki]) - 1:
+#                 path_counter[ki] = 0
+#             else:
+#                 path_counter[ki] += 1
+#
+#             (x, y) = updated_paths[ki][path_counter[ki]]
+#             binary_heatmap[x][y] = step_requirement
+#
+#         coverage = round(100 * len(binary_heatmap[binary_heatmap > 0]) / (n_a * n_a), 2)
+#         coverage_list.append(coverage)
+#
+#     r = [*range(0, len(coverage_list))]
+#     coverage_ax.plot(r, coverage_list[0:number_of_steps])
+#     #coverage_ax.plot(r, [comparison] * number_of_steps, '--')
+#
+#     average_coverage = sum(coverage_list[timestep:]) / len(coverage_list[timestep:])
+#
+#     if "average_coverage" in metadata:
+#         metadata["average_coverage"] = average_coverage
+#
+#     plt.suptitle("Percent Coverage Over Time")
+#     if "percent_coverage_visualization" in metadata:
+#         plt.savefig(metadata["percent_coverage_visualization"])
+#     else:
+#         plt.show()
+#     # print(metadata)
+#     return metadata
 
 
 # visualizes percent coverage over time
-def visualize_coverage_stepwise(step_requirement_time, world_paths, metadata, t=10, dt=0.1):
+def visualize_coverage_stepwise(world_paths, metadata):
     #time :: seconds
 
     print("Visualizing coverage over time")
     timestep = 2
     ssd = metadata["ssd"]
     n_a = metadata["n_a"]
-    coverage_figure = plt.figure(figsize=(5, 5))
-    coverage_ax = plt.subplot()
-    plt.xlabel('time (s)')
-    plt.ylabel('% coverage')
-
+    t = metadata["t"]
+    dt = metadata["dt"]
+    lookback_time = metadata["lookback_time"]
+    fig, coverage_ax = plt.subplots(figsize=(6, 6))
+    plt.xlabel("Time (s)")
+    plt.ylabel("Instantaneous Percentage of Area Coverage")
+    plt.title(f"Instantaneous Percentage of Area Coverage \n(Lookback period of {lookback_time:.2f}s) vs. Time (s)")
+    plt.xlim(0., t)
+    plt.ylim(0., 100.)
+    coverage_ax.yaxis.set_major_formatter(ticker.FormatStrFormatter("%d%%"))
+    coverage_ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%.1fs"))
+    plt.grid()
 
     coverage_list = []
     for curr_time in np.arange(0., t + dt, dt):
-        number_of_covered_nodes = 0
         covered_nodes = set()
         for robot_path in world_paths:
             for path in robot_path:
-                if path[2] <= curr_time and path[2] >= curr_time-step_requirement_time:
+                if curr_time >= path[2] >= curr_time-lookback_time:
                     covered_nodes.add((path[0], path[1]))
-                    #number_of_covered_nodes += 1
 
-
-        coverage = min(round(100 * (len(covered_nodes) / (n_a * n_a)), 2), 100)
-
+        coverage = 100. * (len(covered_nodes) / (n_a * n_a))
         coverage_list.append(coverage)
 
     print(coverage_list)
@@ -279,12 +282,13 @@ def visualize_coverage_stepwise(step_requirement_time, world_paths, metadata, t=
 
     #coverage_ax.plot(r, [comparison] * number_of_steps, '--')
 
-    average_coverage = sum(coverage_list) / len(coverage_list)
-    print(average_coverage)
+    average_coverage = sum(coverage_list[len(coverage_list)//10:]) / (len(coverage_list)*0.9)
+    plt.axhline(y=average_coverage, color='r', linestyle='--')
+    print(f"{average_coverage=}")
     if "average_coverage" in metadata:
         metadata["average_coverage"] = average_coverage
 
-    plt.suptitle("Percent Coverage Over Time")
+    # plt.suptitle("Percent Coverage Over Time")
     if "percent_coverage_visualization" in metadata:
         plt.savefig(metadata["percent_coverage_visualization"])
     else:
