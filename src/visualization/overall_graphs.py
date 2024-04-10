@@ -19,11 +19,10 @@ metadata = visualize_visitation_frequency(all_world_points)
 discretized = discretize_world_points(all_world_points, metadata)
 # 3. percent coverage over time
 metadata, avg_coverage = visualize_coverage(20, None, discretized, metadata)
-# TODO: Plot 1 is percent coverage vs number of robots for H1, H2
-# For this, the number of nodes per axis will be the same (nodes = ceil(1/sqrt(2)*r)^2
-t = 30  # Define the time to simulate
-dt = 0.1    # Define the time step
-v = 0.5  # robot speed
+
+# TODO: Plot 1 is percent coverage vs surveillance radius of robots for H1, H2
+# Keep constant: robots = 8, 1.5 fcr, rp = 1 time = 30s, time step = 0.1s, vary speeds-> three lines for different speeds (0.1, 0.15, 0.2)
+# X axis is radius
 num_robots_list_h = [8, 64, 1024]   # Define different numbers of robots to test for H1 and H2
 # Run simulations for each algorithm and each number of robots
 percent_coverage_data = {
@@ -47,8 +46,9 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-# TODO: Plot 2 is percent coverage vs robot speed for H1, H2, and MILP
-v_list = [0.5, 2.0, 5.0]   # Define different robot speeds m/s
+# TODO: Plot 2 is percent coverage vs robot speed for H1, H2
+# Keep constant: speed = 0.2 m/s, time = 30s, time step = 0.1s, vary number of robots and speed -> three lines for different number of robots (8, 64, 1024)
+# speed is X axis
 plt.xlabel('Number of Robots')
 plt.ylabel('Percent Coverage')
 plt.title('Percent Coverage vs. Number of Robots (Different Robot Speeds)')
@@ -56,15 +56,19 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
-# TODO: Plot 3 is percent coverage vs robot field of view (number of nodes?) for H1, H2, and MILP
-# For this, speed will be constant 0.5 m/s
+# TODO: Plot 3 is percent coverage vs number of robots for H1, H2, varing surveillance
+# For this, speed will be constant 0.5 m/s -> three lines for different surveillance radii
+#  (0.01, 0.05, 0.1) (3 values in total) -> Corresponds to nodes/axis of 100, 20, 10
+# X axis (8, 16, 32, 64, 128, 256, 512, 1024) robots
 plt.xlabel('Number of Robots')
 plt.ylabel('Percent Coverage')
 plt.title('Percent Coverage vs. Number of Robots (Different Surveillance Radii)')
 plt.legend()
 plt.grid(True)
 plt.show()
-# TODO: Plot 4 is percent coverage vs L_min ratio = 1.5, 5, 10 for H1, H2
+# TODO: Plot 4 is percent coverage vs number of robots = 1.5, 5, 10 for H1, H2 varing L_min
+# For this, speed will be constant 0.5 m/s, number of robots = 64 -> three lines for different L_min ratios (1.5, 3, 4.5)
+# X axis is number of robots (8, 16, 32, 64, 128, 256, 512, 1024) robots
 plt.xlabel('Number of Robots')
 plt.ylabel('Percent Coverage')
 plt.title('Percent Coverage vs. Number of Robots (Different Fuel Capacities')
