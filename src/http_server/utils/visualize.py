@@ -266,8 +266,6 @@ def visualize_coverage_stepwise(step_requirement_time, world_paths, metadata, t=
             for path in robot_path:
                 if path[2] <= curr_time and path[2] >= curr_time-step_requirement_time:
                     covered_nodes.add((path[0], path[1]))
-                    #number_of_covered_nodes += 1
-
 
         coverage = min(round(100 * (len(covered_nodes) / (n_a * n_a)), 2), 100)
 

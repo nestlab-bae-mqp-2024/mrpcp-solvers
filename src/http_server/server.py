@@ -134,6 +134,7 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                         "average_coverage": None}
             robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(n_a), float(ssd),
                                                                                       float(fcr), int(rp), metadata)
+
             metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("h1 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
@@ -173,6 +174,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                                                                                            float(fcr), int(rp), None,
                                                                                            None, None,
                                                                                            metadata)  # Run the other heuristic solver
+
+
             metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("h2 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
