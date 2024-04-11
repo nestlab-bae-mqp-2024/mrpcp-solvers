@@ -102,20 +102,20 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                         "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
                         "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
                         "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
+                        "milp_visualize_subfolder": saveGraphPath(job_id, "intermediate_solutions/"),
                         "average_coverage": None, "v": 5.,
                         "t": 100.,
                         "dt": 0.1,
-                        "lookback_time": 5.}
+                        "lookback_time": 5.,
+                        "job_id": job_id,
+                        "saveResultsToCache": saveResultsToCache}
             print(
                 f"Running MILP solver function with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode=m...")
             robot_node_path_w_subtours, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(n_a), float(ssd), float(fcr), int(rp), metadata)
             metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
             runtime = time.time() - start_time
-            print(f"{robot_node_path_w_subtours=}")
-            print(f"{robot_world_path=}")
             log_runtime("MILP", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
-            print(
-                f"MILP solver function completed with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, mode=m.")
+            print(f"MILP solver function completed with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, mode=m.")
             # Save result in a JSON file within the cache folder
             result_data = {'job_id': job_id,
                            'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'm'},

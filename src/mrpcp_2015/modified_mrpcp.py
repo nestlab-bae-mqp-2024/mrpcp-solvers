@@ -5,6 +5,8 @@ Date: 2/17/2024
 This program defines the methods relating to solving the MRPCP (Multi-Robot Path Coverage Problem) using MILP (Mixed-Integer Linear Programming)
 and TSP (Travelling Salesman Problem) using 2-OPT and k-OPT algorithms.
 """
+import time
+
 from src.utils.construct_map import construct_map
 from typing import Dict
 from matplotlib import pyplot as plt
@@ -17,6 +19,7 @@ import os
 from src.http_server.utils.conversions import convertToWorldPath
 from src.http_server.utils.tsp_solver import k_opt
 from src.http_server.utils.visualize import visualize_individual_paths
+from src.visualization.visualization_pipeline import run_visualization_pipeline
 
 
 def solve_milp_with_optimizations(num_of_robots: int,
@@ -182,17 +185,56 @@ def solve_milp_with_optimizations(num_of_robots: int,
         min_cost_edges = None
         min_cost = np.inf
         selected_nodes = None
+        opt_node_paths = None
+        opt_world_paths = None
+        start_time = None
+        sol_counter = 0
 
         def __init__(self, model, num_threads=1):
             self.model = model
             MILPSolver.selected_nodes = []
             self.num_threads = num_threads
+            MILPSolver.start_time = time.time()
 
         @staticmethod
         def cb(what, where):
             if where == GRB.Callback.MIPSOL and what.cbGet(GRB.Callback.MIPSOL_OBJ) < MILPSolver.min_cost:
                 MILPSolver.min_cost = what.cbGet(GRB.Callback.MIPSOL_OBJ)
                 print(f"Found a new solution with lower cost({MILPSolver.min_cost:.3f})!")
+                MILPSolver.min_cost_edges = what.cbGetSolution(what._x)
+
+                # Convert edges to the node/world paths
+                MILPSolver.opt_node_paths = convertEdgesToPaths(MILPSolver.min_cost_edges, nodes, depot_indices)
+                MILPSolver.opt_world_paths = []
+                for ki in range(len(MILPSolver.opt_node_paths)):
+                    robot_world_path = []
+                    for i, subtour in enumerate(MILPSolver.opt_node_paths[ki]):
+                        robot_world_path.append(nodes[subtour].tolist())
+                    MILPSolver.opt_world_paths.append(robot_world_path)
+
+                metadata["k"] = len(MILPSolver.opt_node_paths)
+                # Generate the visualizations
+                if "visualize_paths_graph_path" in metadata:
+                    metadata_new_sol = metadata.copy()
+                    metadata_new_sol["milp_visualize_subfolder"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], f"{MILPSolver.sol_counter}")
+                    os.makedirs(metadata_new_sol["milp_visualize_subfolder"], exist_ok=True)
+                    metadata_new_sol["visualize_paths_graph_path"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], metadata["visualize_paths_graph_path"].split("/")[-1])
+                    metadata_new_sol["visitation_frequency_graph_path"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], metadata["visitation_frequency_graph_path"].split("/")[-1])
+                    metadata_new_sol["percent_coverage_visualization"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], metadata["percent_coverage_visualization"].split("/")[-1])
+                    metadata_new_sol["node_visitation_heatmap"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], metadata["node_visitation_heatmap"].split("/")[-1])
+                    metadata_new_sol["mean_time_between_revisitation"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], metadata["mean_time_between_revisitation"].split("/")[-1])
+                    run_visualization_pipeline(MILPSolver.opt_node_paths, MILPSolver.opt_world_paths, metadata_new_sol)
+
+                    # Save result in a JSON file within the cache folder
+                    result_data = {'job_id': metadata["job_id"],
+                                   'params': {'k': k, 'n_a': n_a, 'ssd': square_side_dist, 'fcr': fuel_capacity_ratio, 'rp': rp, 'mode': 'm'},
+                                   'robot_node_path': MILPSolver.opt_node_paths, 'robot_world_path': MILPSolver.opt_world_paths,
+                                   'status': 'in-progress'}
+                    stats_data = {'job_id': metadata["job_id"], 'runtime': time.time() - MILPSolver.start_time,
+                                  'average_coverage': metadata_new_sol['average_coverage']}
+                    metadata["saveResultsToCache"](metadata["job_id"], result_data, os.path.join(metadata_new_sol["milp_visualize_subfolder"], f"result.json"))  # Save the results to the cache
+                    metadata["saveResultsToCache"](metadata["job_id"], stats_data, os.path.join(metadata_new_sol["milp_visualize_subfolder"], f"stats.json"))
+                    MILPSolver.sol_counter += 1
 
                 # If this solution's maximum costing tour ~= the cost of tour that only travels between depot and the furthest node,
                 # then, this is guaranteed to be optimal.
@@ -200,8 +242,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
                     print("!This is guaranteed to be the optimal solution!")
                     what.terminate()
                     # visualize_paths_brute_force(MILPSolver.min_cost_edges)
-
-                MILPSolver.min_cost_edges = what.cbGetSolution(what._x)
 
         def solve(self):
             self.model.optimize(MILPSolver.cb)
@@ -218,16 +258,6 @@ def solve_milp_with_optimizations(num_of_robots: int,
     m._x = x
     # solver = MILPSolver(m)
     solver.solve()  # Optimize until the first optimal solution is found
-
-    opt_node_paths = convertEdgesToPaths(solver.min_cost_edges, nodes, depot_indices)
-    metadata["k"] = len(opt_node_paths)
-
-    opt_world_paths = []
-    for ki in range(metadata["k"]):
-        robot_world_path = []
-        for i, subtour in enumerate(opt_node_paths[ki]):
-            robot_world_path.append(nodes[subtour].tolist())
-        opt_world_paths.append(robot_world_path)
 
     # milp_solution_x = np.array([x[ki].x for ki in range(k)]).reshape(k, len(node_indices), len(node_indices))
     # milp_paths, milp_costs = extract_and_calculate_milp_costs(milp_solution_x, B_k, k, len(node_indices), cost)
@@ -273,7 +303,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
     # print("The paths are: ", paths)
     # print("The world paths are: ", worldPath)
     # print("Returning MILP solution to be sent to a json file...")
-    return opt_node_paths, opt_world_paths, metadata
+    return solver.opt_node_paths, solver.opt_world_paths, metadata
 
 
 def convertEdgesToPaths(edges, nodes, depot_indices):
@@ -331,6 +361,5 @@ if __name__ == "__main__":
                                                                              rp,
                                                                              metadata)
 
-    from src.visualization.visualization_pipeline import run_visualization_pipeline
     run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)
 
