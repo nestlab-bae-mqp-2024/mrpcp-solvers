@@ -67,7 +67,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
         print("Initializing robot fuel levels...")
         robot_fuel = [L for ki in range(k)]  # robot fuel is a list storing each robot's fuel at the present moment
         print("Initializing last node...")
-        last_node = [(0,0) for ki in range(k)]
+        last_node = [(0, 0) for ki in range(k)]
     else:
         print("Conducting recalculation")
         world_posns = convertToWorldPath(n_a, square_side_dist, curr_robots_pos)
@@ -207,3 +207,35 @@ def a_star_search(start, goal, n_a):
 
     i = len(final_path)
     return final_path[:i], dist, robot_failed
+
+
+if __name__ == "__main__":
+    num_of_robots = 8
+    n_a = 8
+    square_side_dist = 3.
+    fuel_capacity_ratio = 1.5
+    rp = 3
+
+    from src.http_server.json_handlers import saveGraphPath
+
+    metadata = {"mode": "h2",
+                "v": 0.2,
+                "t": 100.,
+                "dt": 0.1,
+                "lookback_time": 50.
+                # "visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
+                # "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")
+                }
+    optimized_node_paths, optimized_world_paths, metadata = generate_robot_paths_redundancy(num_of_robots,
+                                                                                            n_a,
+                                                                                            square_side_dist,
+                                                                                            fuel_capacity_ratio,
+                                                                                            rp,
+                                                                                            None,
+                                                                                            None,
+                                                                                            None,
+                                                                                            metadata)
+
+    from src.visualization.visualization_pipeline import run_visualization_pipeline
+
+    run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)

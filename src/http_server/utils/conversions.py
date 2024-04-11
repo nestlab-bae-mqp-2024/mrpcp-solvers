@@ -114,23 +114,32 @@ def nodePathToIds(node_path, n_a):
 
     for path in node_path:
         path_ids = []  # List to store the IDs for the current path
+        subtour = []  # List to store nodes in the current subtour
         for node_coord in path:
             x, y = node_coord
             # Calculate the ID based on the node's position
             if x / 2 == 1:
-                node_id = ((x+1)*n_a)-(y+1)
+                node_id = ((abs(x) + 1) * n_a) - (abs(y) + 1)
             else:
-                node_id = (x*n_a)+y
+                node_id = (abs(x) * n_a) + abs(y)
             # Check if the current node coordinate is already assigned an ID
             if node_coord not in node_id_mapping:
                 node_id_mapping[node_coord] = node_id
                 next_node_id += 1
             # Append the ID of the current node coordinate to the path IDs list
-            path_ids.append(node_id_mapping[node_coord])
+            if node_id == 0:  # Check if the current node ID is zero
+                if subtour:
+                    path_ids.append(subtour)
+                    subtour = []  # Clear the subtour list
+            subtour.append(node_id_mapping[node_coord])
+        # Append the last subtour if any
+        if subtour:
+            path_ids.append(subtour)
         # Append the path IDs list to the node path IDs list
         node_path_ids.append(path_ids)
 
     return node_path_ids
+
 
 
 

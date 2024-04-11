@@ -1,5 +1,5 @@
-from src.heuristic_attempts.yasars_heuristic_attempts.utils.construct_map import construct_map
-from src.heuristic_attempts.yasars_heuristic_attempts.utils.tsp_solver import k_opt
+from src.utils.construct_map import construct_map
+from src.utils.tsp_solver import k_opt
 from concurrent.futures import ProcessPoolExecutor
 from scipy.spatial import distance
 from typing import Dict
@@ -207,11 +207,13 @@ def yasars_heuristic(num_of_robots: int,
     # print(f"{sum(opt_node_path_costs)=} {max(opt_node_path_costs)=}")
     metadata["opt_node_path_costs"] = opt_node_path_costs
     opt_world_paths = []
-    for ki in range(k):
+    for ki in range(min(k, len(opt_node_paths))):
         robot_world_path = []
         for i, subtour in enumerate(opt_node_paths[ki]):
             robot_world_path.append(nodes[subtour].tolist())
         opt_world_paths.append(robot_world_path)
+    metadata["k"] = min(k, len(opt_node_paths))
+
     print(f"Step 5 took {time.time() - start} seconds.")
 
     return opt_node_paths, opt_world_paths, metadata
@@ -257,14 +259,17 @@ def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
 
 
 if __name__ == "__main__":
-    num_of_robots = 9
-    n_a = 3
+    num_of_robots = 128
+    n_a = 10
     square_side_dist = 3.
     fuel_capacity_ratio = 1.5
-    rp = 2
+    rp = 3
 
-    from src.http_server.json_handlers import saveGraphPath
     metadata = {"mode": "h1",
+                "v": 5.,
+                "t": 100.,
+                "dt": 0.1,
+                "lookback_time": 5.
                 # "visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
                 # "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")
                 }

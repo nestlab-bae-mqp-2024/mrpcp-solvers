@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def construct_map(n, d):
+def construct_map(n, d, milp=False):
     # nodes = targets + depots
     # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
     targets = np.mgrid[-1:1:n * 1j, -1.:1:n * 1j] * (d / 2.)
@@ -13,9 +13,15 @@ def construct_map(n, d):
 
     # Specify depots
     # One depot node in the corner
-    depots = np.array([
-        [-1., -1.],
-    ]) * (d / 2.)
+    if milp:
+        depots = np.array([
+            [-1., -1.],
+            [-1., -1.],
+        ]) * (d / 2.)
+    else:
+        depots = np.array([
+            [-1., -1.],
+        ]) * (d / 2.)
     # print(f"{depots=}")
     depot_indices = list(range(len(targets), len(targets) + len(depots)))
 

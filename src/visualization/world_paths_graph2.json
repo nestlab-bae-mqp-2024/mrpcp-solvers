@@ -1,0 +1,39 @@
+{
+  "parameters": {
+    "speeds": [0.1, 0.15, 0.2],
+    "num_robots": [8, 64, 1024],
+    "mode": ["h1, h2"]
+  },
+  "data": [
+    {
+      "num_robots": 8,
+      "world_coords": None,
+      "mode": "h1"
+    },
+    {
+      "num_robots": 64,
+      "world_coords": None,
+      "mode": "h1"
+    },
+    {
+      "num_robots": 1024,
+      "world_coords": None,
+      "mode": "h1"
+    },
+    {
+      "num_robots": 8,
+      "world_coords": None,
+      "mode": "h2"
+    },
+    {
+      "num_robots": 64,
+      "world_coords": None,
+      "mode": "h2"
+    },
+    {
+      "num_robots": 1024,
+      "world_coords": None,
+      "mode": "h2"
+    }
+  ]
+}

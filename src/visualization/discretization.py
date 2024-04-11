@@ -19,6 +19,6 @@ def discretize_world_points(all_world_points, metadata):
                     last_posn = position
                     discretized_points[ki].append((node[0], node[1], position[2]))
 
-    print(discretized_points)
+    # print(discretized_points)
     return discretized_points
     #print(all_nodes)
