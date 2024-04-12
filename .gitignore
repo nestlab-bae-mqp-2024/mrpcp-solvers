@@ -2,3 +2,6 @@
 src/.*
 gurobi.lic
 data/*
+cache/*
+runtime_analysis.txt
+src/http_server/runtime_analysis.txt

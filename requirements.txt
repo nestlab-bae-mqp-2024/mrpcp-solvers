@@ -1,0 +1,5 @@
+gurobipy
+matplotlib
+scipy
+flask
+tqdm
