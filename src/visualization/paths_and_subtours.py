@@ -79,7 +79,7 @@ def visualize_paths(paths, metadata):
         f"Paths for all robots (# of active/available robots={len(active_robots)}/{len(paths)}, sum of costs={total_cost:.3f})")
     if "visualize_paths_graph_path" in metadata:
         plt.savefig(metadata["visualize_paths_graph_path"])
-    plt.show()
+    #plt.show()
 
     return metadata
 

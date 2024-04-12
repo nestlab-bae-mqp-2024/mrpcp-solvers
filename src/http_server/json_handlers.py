@@ -8,7 +8,6 @@ import os
 
 from flask import json
 
-
 def saveResultsToCache(job_id, result_data, filename):
     # Get the current working directory
     current_dir = os.getcwd()
@@ -24,7 +23,6 @@ def saveResultsToCache(job_id, result_data, filename):
     with open(os.path.join(job_folder_path, filename), 'w') as file:
         json.dump(result_data, file)
         print("Result and parameters saved to ", filename)
-
 
 def saveGraphPath(job_id, title):
     # Get the current working directory
@@ -44,7 +42,6 @@ def saveGraphPath(job_id, title):
 
     # Construct the save path for the visualization under the 'graphs' directory
     return os.path.join(visualization_folder_path, title)
-
 
 def export_world_paths(result):
     # Extract world paths from the result

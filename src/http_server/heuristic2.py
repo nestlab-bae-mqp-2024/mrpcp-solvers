@@ -50,9 +50,15 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     metadata["L"] = L
     metadata["mode"] = "h2"
 
+    print(k)
+    print(n_a)
+    print(square_side_dist)
+    print(fuel_capacity_ratio)
+    print(rp)
     # Initialize the nodes
     print("Initializing nodes...")
     initAllNodes(n_a)
+
     dist_betw_each_node = square_side_dist / (n_a - 1)
 
     # logic for if recalc or not
@@ -73,8 +79,12 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     robot_paths = [[] for ki in range(k)]
     nodes_seen = []
 
+    nodes_covered = set()  # nodes covered is a set of every node that has been covered so far
+
+    print("!!", nodes_covered)
     while n_a * n_a - len(nodes_covered) > 0:
         for ki in range(0, k):
+            print(ki)
             goal = (0, 0)
             while goal in nodes_covered and math.dist(goal, (0, 0)) < robot_fuel[ki] and len(
                     nodes_covered) < n_a * n_a:  # if goal is already covered, find a different one
@@ -124,6 +134,7 @@ def initAllNodes(n_a):
     :param n_a:
     :return:
     """
+
     for x in range(0, n_a):
         for y in range(0, n_a):
             all_nodes.add((x, y))
