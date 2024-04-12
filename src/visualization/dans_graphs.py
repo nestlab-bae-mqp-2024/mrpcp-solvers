@@ -72,9 +72,7 @@ def adding_to_json_4():
 
 
 def adding_to_json_3():
-    current_dir = os.getcwd()
-
-    with open("src/visualization/world_paths_graph4.json", 'r') as file:
+    with open("src/visualization/world_paths_graph3.json", 'r') as file:
         formatted_results = json.load(file)
 
     tests_to_be_run = formatted_results.get('data')
@@ -86,7 +84,6 @@ def adding_to_json_3():
     for test in tqdm(tests_to_be_run):
         k = test.get('num_robots')
         fov = test.get('radius')
-
         if fov == 0.01:
             n_a = 50
         elif fov == 0.05:
@@ -110,9 +107,8 @@ def adding_to_json_3():
 
             run_solver(k, n_a, ssd, fcr, rp, mode, job_id)
 
-        if os.path.exists(os.path.join(job_folder_path, 'result.json')):
-            with open(os.path.join(job_folder_path, 'result.json'), 'r') as file:
-                single_run = json.load(file)
+        with open(os.path.join(job_folder_path, 'result.json'), 'r') as file:
+            single_run = json.load(file)
 
         metadata = {"k": k,
                     "n_a": n_a,
