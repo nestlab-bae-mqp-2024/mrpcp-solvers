@@ -23,6 +23,8 @@ import os
 from src.http_server.utils.metric_calculations import calculate_mean_distance_per_path
 from src.visualization.visualization_pipeline import run_visualization_pipeline
 
+from tqdm import tqdm
+
 app = Flask(__name__)
 analysis_file = "runtime_analysis.txt"  # File path for storing runtime analysis
 
@@ -299,7 +301,7 @@ def adding_to_json_4():
     rp = 1
     ssd = 3
 
-    for test in tests_to_be_run:
+    for test in tqdm(tests_to_be_run):
         k = test.get('num_robots')
         fcr = test.get('L_min')
         mode = test.get('mode')
@@ -307,6 +309,7 @@ def adding_to_json_4():
         # Generate job ID based on parameters
         job_id = f"{k}_{n_a}_{ssd}_{fcr}_{rp}_{mode}"
 
+        print(job_id)
         # Check if folder with job ID exists in the cache folder
         job_folder_path = os.path.join(os.getcwd(), 'cache', job_id)
 
@@ -332,18 +335,19 @@ def adding_to_json_4():
                     "average_coverage": 0.}
 
 
-        all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
+        if int(test.get('world_coords')) == 0:
+            all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
 
-        discretized = discretize_world_points(all_world_points, metadata)
+            discretized = discretize_world_points(all_world_points, metadata)
 
-        avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
+            avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
 
-        test['world_coords'] = avg_covg
+            test['world_coords'] = avg_covg
 
-        print("%coverage for: ", job_id, "is:" , avg_covg)
+            print("%coverage for: ", job_id, "is:" , avg_covg)
 
-    with open(os.path.join(os.getcwd(), 'src/visualization/world_paths_graph4.json'), 'w') as file:
-        json.dump(formatted_results, file)
+            with open(os.path.join(os.getcwd(), 'src/visualization/world_paths_graph4.json'), 'w') as file:
+                json.dump(formatted_results, file)
 
 
 if __name__ == '__main__':
