@@ -2,3 +2,4 @@
 src/.*
 gurobi.lic
 data/*
+cache/*
