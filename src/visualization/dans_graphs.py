@@ -19,7 +19,7 @@ def adding_to_json_4():
     tests_to_be_run = formatted_results.get('data')
 
     n_a = 10
-    rp = 1
+    rp = 2
     ssd = 3
 
     for test in tqdm(tests_to_be_run):
@@ -67,19 +67,20 @@ def adding_to_json_4():
             print("%coverage for: ", job_id, "is:" , avg_covg)
 
             i+=1
-            with open(os.path.join(os.getcwd(), 'src/visualization/world_paths_graph4.json'), 'w') as file:
+            with open("src/visualization/world_paths_graph4.json", 'w') as file:
                 json.dump(formatted_results, file, indent=4)
+
 
 def adding_to_json_3():
     current_dir = os.getcwd()
 
-    with open(os.path.join(os.getcwd(), 'src/visualization/world_paths_graph3.json'), 'r') as file:
+    with open("src/visualization/world_paths_graph4.json", 'r') as file:
         formatted_results = json.load(file)
 
     tests_to_be_run = formatted_results.get('data')
 
     fcr = 1.5
-    rp = 1
+    rp = 2
     ssd = 3
 
     for test in tqdm(tests_to_be_run):
@@ -102,7 +103,7 @@ def adding_to_json_3():
 
         print(job_id)
         # Check if folder with job ID exists in the cache folder
-        job_folder_path = os.path.join(os.getcwd(), 'cache', job_id)
+        job_folder_path = os.path.join("cache", job_id)
 
         if not os.path.exists(os.path.join(job_folder_path, 'result.json')):
             print("Test:"+job_id+ " does not exist! Attempting to create ...")
@@ -140,11 +141,11 @@ def adding_to_json_3():
 
 
             i+=1
-            with open(os.path.join(os.getcwd(), 'src/visualization/world_paths_graph3.json'), 'w') as file:
+            with open("src/visualization/world_paths_graph3.json", 'w') as file:
                 json.dump(formatted_results, file, indent=4)
 
 
 if __name__ == "__main__":
-    adding_to_json_4()
+    adding_to_json_3()
 
 
