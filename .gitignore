@@ -3,3 +3,4 @@ src/.*
 gurobi.lic
 data/*
 cache/*
+runtime_analysis.txt
