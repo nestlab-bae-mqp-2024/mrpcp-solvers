@@ -272,16 +272,12 @@ def visualize_coverage_stepwise(world_paths, metadata):
             for path in robot_path:
                 if curr_time >= path[2] >= curr_time-lookback_time:
                     covered_nodes.add((path[0], path[1]))
-<<<<<<< HEAD
 
         coverage = min(round(100 * (len(covered_nodes) / (n_a * n_a)), 2), 100)
-=======
->>>>>>> ae46e87aba745e51ddef5517e4c4a3cd126234ec
 
         coverage = 100. * (len(covered_nodes) / (n_a * n_a))
         coverage_list.append(coverage)
 
-    print(coverage_list)
     r = np.arange(0., t + dt, dt)
     coverage_ax.plot(r, coverage_list)
 
@@ -290,17 +286,44 @@ def visualize_coverage_stepwise(world_paths, metadata):
     average_coverage = sum(coverage_list[len(coverage_list)//10:]) / (len(coverage_list)*0.9)
     plt.axhline(y=average_coverage, color='r', linestyle='--')
     print(f"{average_coverage=}")
+
     if "average_coverage" in metadata:
         metadata["average_coverage"] = average_coverage
 
     # plt.suptitle("Percent Coverage Over Time")
     if "percent_coverage_visualization" in metadata:
         plt.savefig(metadata["percent_coverage_visualization"])
-    else:
-        plt.show()
+    #else:
+        #plt.show()
     # print(metadata)
     return metadata
 
+
+def visualize_coverage_stepwise_no_plotting(world_paths, metadata):
+    #time :: seconds
+    timestep = 2
+    ssd = metadata["ssd"]
+    n_a = metadata["n_a"]
+    t = metadata["t"]
+    dt = metadata["dt"]
+    lookback_time = metadata["lookback_time"]
+
+    coverage_list = []
+    for curr_time in np.arange(0., t + dt, dt):
+        covered_nodes = set()
+        for robot_path in world_paths:
+            for path in robot_path:
+                if curr_time >= path[2] >= curr_time-lookback_time:
+                    covered_nodes.add((path[0], path[1]))
+
+        coverage = min(round(100 * (len(covered_nodes) / (n_a * n_a)), 2), 100)
+
+        coverage = 100. * (len(covered_nodes) / (n_a * n_a))
+        coverage_list.append(coverage)
+
+    average_coverage = sum(coverage_list[len(coverage_list)//10:]) / (len(coverage_list)*0.9)
+
+    return average_coverage
 
 def visualize_node_visitations(step_requirement, robot_paths, world_paths,
                                metadata):

@@ -4,7 +4,7 @@ import itertools
 def discretize_world_points(all_world_points, metadata):
     ssd = metadata["ssd"]
     n_a = metadata["n_a"]
-    k = metadata["k"]
+    k = len(all_world_points)
     dist_betw_each_node = ssd/(n_a-1)
     one_side = np.arange(-ssd/2, ssd/2 + ssd/(n_a-1), dist_betw_each_node)
 

@@ -31,7 +31,7 @@ def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
     # print(discretized)
     # 3. percent coverage over time
     #metadata = visualize_coverage(20, None, discretized, metadata)
-    metadata = visualize_coverage_stepwise(discretized, metadata)
+    #metadata = visualize_coverage_stepwise(discretized, metadata)
 
     # 4. node visitation over time
     # metadata = visualize_node_visitations(20, None, discretized, metadata)

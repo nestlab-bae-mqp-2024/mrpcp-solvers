@@ -52,12 +52,13 @@ def solve_endpoint():
     job_folder_path = os.path.join(cache_folder_path, job_id)
 
     if os.path.exists(os.path.join(job_folder_path, 'result.json')):
-        print(f"Job folder exists: {job_folder_path}. Returning the content of the JSON file...")
+        #print(f"Job folder exists: {job_folder_path}. Returning the content of the JSON file...")
         # If folder exists, read JSON file and return its content
         with open(os.path.join(job_folder_path, 'result.json'), 'r') as file:
             result = json.load(file)
-        print(f"Contents of the JSON file: {result}")  # Print contents of JSON file
-        # export_world_paths(result)
+        #print(f"Contents of the JSON file: {result}")  # Print contents of JSON file
+        #export_world_paths(result)
+        adding_to_json_4()
         return jsonify(result), 200
 
     print(
@@ -109,7 +110,7 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
             print(
                 f"Running MILP solver function with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode=m...")
             robot_node_path_w_subtours, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(n_a), float(ssd), float(fcr), int(rp), metadata)
-            metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
+            #metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
             runtime = time.time() - start_time
             print(f"{robot_node_path_w_subtours=}")
             print(f"{robot_world_path=}")
@@ -141,13 +142,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                         "dt": 0.1,
                         "lookback_time": 5.}
             robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(n_a), float(ssd),
-<<<<<<< HEAD
-                                                                                      float(fcr), int(rp), metadata)
-
-=======
                                                                                       float(fcr), int(rp), metadata, True)
->>>>>>> ae46e87aba745e51ddef5517e4c4a3cd126234ec
-            metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
+            #metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("h1 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
@@ -192,7 +188,7 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                                                                                            metadata)  # Run the other heuristic solver
 
 
-            metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
+            #metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("h2 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
@@ -279,6 +275,75 @@ def log_runtime(func_name, params, runtime):
         f.write(f"Parameters: {params}\n")
         f.write(f"Runtime: {minutes} minutes {seconds:.6f} seconds\n")
         f.write("\n")
+
+
+import os
+
+from flask import json, jsonify
+
+from src.visualization.pseudo_simulate import pseudo_simulate
+from src.http_server.utils.visualize import visualize_coverage_stepwise_no_plotting
+
+from src.http_server.server import run_solver
+from src.visualization.discretization import discretize_world_points
+
+def adding_to_json_4():
+    current_dir = os.getcwd()
+
+    with open(os.path.join(os.getcwd(), 'src/visualization/world_paths_graph4.json'), 'r') as file:
+        formatted_results = json.load(file)
+
+    tests_to_be_run = formatted_results.get('data')
+
+    n_a = 10
+    rp = 1
+    ssd = 3
+
+    for test in tests_to_be_run:
+        k = test.get('num_robots')
+        fcr = test.get('L_min')
+        mode = test.get('mode')
+
+        # Generate job ID based on parameters
+        job_id = f"{k}_{n_a}_{ssd}_{fcr}_{rp}_{mode}"
+
+        # Check if folder with job ID exists in the cache folder
+        job_folder_path = os.path.join(os.getcwd(), 'cache', job_id)
+
+        if not os.path.exists(os.path.join(job_folder_path, 'result.json')):
+            print("Test:"+job_id+ " does not exist! Attempting to create ...")
+
+            run_solver(k, n_a, ssd, fcr, rp, mode, job_id)
+
+        if os.path.exists(os.path.join(job_folder_path, 'result.json')):
+            with open(os.path.join(job_folder_path, 'result.json'), 'r') as file:
+                single_run = json.load(file)
+
+        metadata = {"k": k,
+                    "n_a": n_a,
+                    "ssd": ssd,
+                    "fcr": fcr,
+                    "rp": rp,
+                    "mode": mode,
+                    "v": 5.,
+                    "t": 100.,
+                    "dt": 0.1,
+                    "lookback_time": 5.,
+                    "average_coverage": 0.}
+
+
+        all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
+
+        discretized = discretize_world_points(all_world_points, metadata)
+
+        avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
+
+        test['world_coords'] = avg_covg
+
+        print("%coverage for: ", job_id, "is:" , avg_covg)
+
+    with open(os.path.join(os.getcwd(), 'src/visualization/world_paths_graph4.json'), 'w') as file:
+        json.dump(formatted_results, file)
 
 
 if __name__ == '__main__':
