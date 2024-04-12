@@ -3,11 +3,13 @@ version: "3.8"
 services:
   jupyter:
     init: true
-    build: docker/jupyter-gurobi
+    build:
+      dockerfile: docker/jupyter-gurobi/Dockerfile
+      context: .
     environment:
       JUPYTER_TOKEN: easy
     ports:
       - "8888:8888"
     volumes:
-      - "./jupyter:/app"
+      - "./src:/app/src"
       - "./gurobi.lic:/opt/gurobi/gurobi.lic"
