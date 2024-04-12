@@ -81,10 +81,8 @@ def generate_robot_paths_redundancy(num_of_robots: int,
 
     nodes_covered = set()  # nodes covered is a set of every node that has been covered so far
 
-    print("!!", nodes_covered)
     while n_a * n_a - len(nodes_covered) > 0:
         for ki in range(0, k):
-            print(ki)
             goal = (0, 0)
             while goal in nodes_covered and math.dist(goal, (0, 0)) < robot_fuel[ki] and len(
                     nodes_covered) < n_a * n_a:  # if goal is already covered, find a different one
