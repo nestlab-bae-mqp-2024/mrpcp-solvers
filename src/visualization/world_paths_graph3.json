@@ -75,31 +75,31 @@
         {
             "mode": "h1",
             "num_robots": 128,
-            "percent_coverage": 0,
+            "percent_coverage": 79.56870672738717,
             "radius": 0.01
         },
         {
             "mode": "h1",
             "num_robots": 128,
-            "percent_coverage": 0,
+            "percent_coverage": 83.52354770632012,
             "radius": 0.05
         },
         {
             "mode": "h1",
             "num_robots": 128,
-            "percent_coverage": 0,
+            "percent_coverage": 74.6247547113925,
             "radius": 0.1
         },
         {
             "mode": "h1",
             "num_robots": 256,
-            "percent_coverage": 0,
+            "percent_coverage": 79.29872264800622,
             "radius": 0.01
         },
         {
             "mode": "h1",
             "num_robots": 256,
-            "percent_coverage": 0,
+            "percent_coverage": 83.52354770632012,
             "radius": 0.05
         },
         {
