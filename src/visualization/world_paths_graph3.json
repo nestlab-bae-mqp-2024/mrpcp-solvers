@@ -105,43 +105,43 @@
         {
             "mode": "h1",
             "num_robots": 256,
-            "percent_coverage": 0,
+            "percent_coverage": 85.53260024436298,
             "radius": 0.1
         },
         {
             "mode": "h1",
             "num_robots": 512,
-            "percent_coverage": 0,
+            "percent_coverage": 79.35713280758266,
             "radius": 0.01
         },
         {
             "mode": "h1",
             "num_robots": 512,
-            "percent_coverage": 0,
+            "percent_coverage": 82.86497093561405,
             "radius": 0.05
         },
         {
             "mode": "h1",
             "num_robots": 512,
-            "percent_coverage": 0,
+            "percent_coverage": 84.5577400125884,
             "radius": 0.1
         },
         {
             "mode": "h1",
             "num_robots": 1024,
-            "percent_coverage": 0,
+            "percent_coverage": 79.35713280758266,
             "radius": 0.01
         },
         {
             "mode": "h1",
             "num_robots": 1024,
-            "percent_coverage": 0,
+            "percent_coverage": 83.52354770632012,
             "radius": 0.05
         },
         {
             "mode": "h1",
             "num_robots": 1024,
-            "percent_coverage": 0,
+            "percent_coverage": 85.61109259876338,
             "radius": 0.1
         }
     ],
