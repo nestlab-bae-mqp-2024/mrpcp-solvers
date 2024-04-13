@@ -275,14 +275,14 @@ def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
 
 if __name__ == "__main__":
     num_of_robots = 8
-    n_a = 30
+    n_a = 8
     square_side_dist = 3.
     fuel_capacity_ratio = 1.5
     rp = 3
 
     metadata = {"mode": "h1",
-                "v": 5.,
-                "t": 100.,
+                "v": 0.2,
+                "t": 3600.,
                 "dt": 0.1,
                 "lookback_time": 5.
                 # "visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
