@@ -84,7 +84,7 @@ def solve_endpoint():
     return jsonify(result_data), 200
 
 
-def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
+def run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=False):
     """
     This function runs the MILP solver function with the provided parameters.
     Once the solver completes, it saves the result to a JSON file in the cache folder.
@@ -115,7 +115,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
             print(
                 f"Running MILP solver function with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode=m...")
             robot_node_path_w_subtours, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(n_a), float(ssd), float(fcr), int(rp), metadata)
-            #metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
+            if not skip_vis:
+                metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("MILP", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(f"MILP solver function completed with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, mode=m.")
@@ -144,8 +145,9 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                         "dt": 0.1,
                         "lookback_time": 5.}
             robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(n_a), float(ssd),
-                                                                                      float(fcr), int(rp), metadata, True)
-            #metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
+                                                                                      float(fcr), int(rp), metadata, False)
+            if not skip_vis:
+                metadata = run_visualization_pipeline(robot_node_path_w_subtours, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("h1 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
@@ -188,9 +190,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id):
                                                                                            float(fcr), int(rp), None,
                                                                                            None, None,
                                                                                            metadata)  # Run the other heuristic solver
-
-
-            metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
+            if not skip_vis:
+                metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
             log_runtime("h2 heuristic", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": mode}, runtime)
             print(
