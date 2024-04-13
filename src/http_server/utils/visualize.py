@@ -1,7 +1,7 @@
 import numpy as np
 from matplotlib import colors, cm, ticker, pyplot as plt, pyplot
 import itertools
-
+from tqdm import tqdm
 from src.http_server.utils.conversions import convertToNodePaths
 
 
@@ -245,7 +245,7 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
 
 
 # visualizes percent coverage over time
-def visualize_coverage_stepwise(world_paths, metadata):
+def visualize_coverage_stepwise(world_paths, metadata, plot=True):
     #time :: seconds
 
     print("Visualizing coverage over time")
@@ -255,18 +255,9 @@ def visualize_coverage_stepwise(world_paths, metadata):
     t = metadata["t"]
     dt = metadata["dt"]
     lookback_time = metadata["lookback_time"]
-    fig, coverage_ax = plt.subplots(figsize=(6, 6))
-    plt.xlabel("Time (s)")
-    plt.ylabel("Instantaneous Percentage of Area Coverage")
-    plt.title(f"Instantaneous Percentage of Area Coverage \n(Lookback period of {lookback_time:.2f}s) vs. Time (s)")
-    plt.xlim(0., t)
-    plt.ylim(0., 100.)
-    coverage_ax.yaxis.set_major_formatter(ticker.FormatStrFormatter("%d%%"))
-    coverage_ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%.1fs"))
-    plt.grid()
 
     coverage_list = []
-    for curr_time in np.arange(0., t + dt, dt):
+    for curr_time in tqdm(np.arange(0., t + dt, dt)):
         covered_nodes = set()
         for robot_path in world_paths:
             for path in robot_path:
@@ -278,20 +269,30 @@ def visualize_coverage_stepwise(world_paths, metadata):
         coverage = 100. * (len(covered_nodes) / (n_a * n_a))
         coverage_list.append(coverage)
 
-    r = np.arange(0., t + dt, dt)
-    coverage_ax.plot(r, coverage_list)
 
     #coverage_ax.plot(r, [comparison] * number_of_steps, '--')
 
     average_coverage = sum(coverage_list[len(coverage_list)//10:]) / (len(coverage_list)*0.9)
-    plt.axhline(y=average_coverage, color='r', linestyle='--')
     print(f"{average_coverage=}")
 
-    if "average_coverage" in metadata:
-        metadata["average_coverage"] = average_coverage
+    if plot:
+        fig, coverage_ax = plt.subplots(figsize=(6, 6))
+        plt.xlabel("Time (s)")
+        plt.ylabel("Instantaneous Percentage of Area Coverage")
+        plt.title(f"Instantaneous Percentage of Area Coverage \n(Lookback period of {lookback_time:.2f}s) vs. Time (s)")
+        plt.xlim(0., t)
+        plt.ylim(0., 100.)
+        coverage_ax.yaxis.set_major_formatter(ticker.FormatStrFormatter("%d%%"))
+        coverage_ax.xaxis.set_major_formatter(ticker.FormatStrFormatter("%.1fs"))
+        plt.grid()
+        r = np.arange(0., t + dt, dt)
+        coverage_ax.plot(r, coverage_list)
+        plt.axhline(y=average_coverage, color='r', linestyle='--')
+
+    metadata["average_coverage"] = average_coverage
 
     # plt.suptitle("Percent Coverage Over Time")
-    if "percent_coverage_visualization" in metadata:
+    if plot and "percent_coverage_visualization" in metadata:
         plt.savefig(metadata["percent_coverage_visualization"])
     #else:
         #plt.show()
@@ -300,30 +301,8 @@ def visualize_coverage_stepwise(world_paths, metadata):
 
 
 def visualize_coverage_stepwise_no_plotting(world_paths, metadata):
-    #time :: seconds
-    timestep = 2
-    ssd = metadata["ssd"]
-    n_a = metadata["n_a"]
-    t = metadata["t"]
-    dt = metadata["dt"]
-    lookback_time = metadata["lookback_time"]
-
-    coverage_list = []
-    for curr_time in np.arange(0., t + dt, dt):
-        covered_nodes = set()
-        for robot_path in world_paths:
-            for path in robot_path:
-                if curr_time >= path[2] >= curr_time-lookback_time:
-                    covered_nodes.add((path[0], path[1]))
-
-        coverage = min(round(100 * (len(covered_nodes) / (n_a * n_a)), 2), 100)
-
-        coverage = 100. * (len(covered_nodes) / (n_a * n_a))
-        coverage_list.append(coverage)
-
-    average_coverage = sum(coverage_list[len(coverage_list)//10:]) / (len(coverage_list)*0.9)
-
-    return average_coverage
+    metadata = visualize_coverage_stepwise(world_paths, metadata, False)
+    return metadata["average_coverage"]
 
 def visualize_node_visitations(step_requirement, robot_paths, world_paths,
                                metadata):
