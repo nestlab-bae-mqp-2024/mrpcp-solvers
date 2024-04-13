@@ -1,7 +1,7 @@
 import os
 
 from flask import json, jsonify
-
+import numbers
 from src.visualization.pseudo_simulate import pseudo_simulate
 from src.http_server.utils.visualize import visualize_coverage_stepwise_no_plotting
 
@@ -48,27 +48,23 @@ def adding_to_json_4():
                     "fcr": fcr,
                     "rp": rp,
                     "mode": mode,
-                    "v": 5.,
-                    "t": 100.,
+                    "v": 0.2,
+                    "t": 300.,
                     "dt": 0.1,
-                    "lookback_time": 5.,
-                    "average_coverage": 0.}
+                    "lookback_time": 30.}
 
-        i = 0
-        if int(test.get('percent_coverage')) == 0 and i < 1000:
-            all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
+        all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
 
-            discretized = discretize_world_points(all_world_points, metadata)
+        discretized = discretize_world_points(all_world_points, metadata)
 
-            avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
+        avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
 
-            test['percent_coverage'] = avg_covg
+        test['percent_coverage'] = avg_covg
 
-            print("%coverage for: ", job_id, "is:" , avg_covg)
+        print("%coverage for: ", job_id, "is:" , avg_covg)
 
-            i+=1
-            with open("src/visualization/world_paths_graph4.json", 'w') as file:
-                json.dump(formatted_results, file, indent=4)
+        with open("src/visualization/world_paths_graph4.json", 'w') as file:
+            json.dump(formatted_results, file, indent=4)
 
 
 def adding_to_json_3():
