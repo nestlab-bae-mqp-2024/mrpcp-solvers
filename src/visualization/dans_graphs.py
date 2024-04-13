@@ -37,7 +37,7 @@ def adding_to_json_4():
         if not os.path.exists(os.path.join(job_folder_path, 'result.json')):
             print("Test:"+job_id+ " does not exist! Attempting to create ...")
 
-            run_solver(k, n_a, ssd, fcr, rp, mode, job_id)
+            run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=True)
 
         with open(os.path.join(job_folder_path, 'result.json'), 'r') as file:
             single_run = json.load(file)
@@ -105,7 +105,7 @@ def adding_to_json_3():
         if not os.path.exists(os.path.join(job_folder_path, 'result.json')):
             print("Test:"+job_id+ " does not exist! Attempting to create ...")
 
-            run_solver(k, n_a, ssd, fcr, rp, mode, job_id)
+            run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=True)
 
         with open(os.path.join(job_folder_path, 'result.json'), 'r') as file:
             single_run = json.load(file)
@@ -142,6 +142,6 @@ def adding_to_json_3():
 
 
 if __name__ == "__main__":
-    adding_to_json_3()
+    adding_to_json_4()
 
 
