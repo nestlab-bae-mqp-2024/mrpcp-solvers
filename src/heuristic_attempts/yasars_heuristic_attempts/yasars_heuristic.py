@@ -227,9 +227,24 @@ def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
     err_thresh = 0.01
     best_p, best_p_a, best_p_c, best_max_p_c = np.inf, None, [np.inf], np.inf
     # print(f"{best_p=}")
+    # Ensure maxp is big enough
     while True:
-        # print(f"{maxSum_max=} {delta=} {maxSum=}")
+        p, p_a, p_c, max_p_c = countf(high, maxp)
+        if p == np.inf:
+            maxp += 1
+        else:
+            break
+
+    # Try to reduce maxSum now (cost of each subtour)
+    while True:
         p, p_a, p_c, max_p_c = countf(maxSum, maxp)
+        # print(f"2 {maxp=} {best_p=} {maxSum=} {maxSum_min=} {maxSum_max=}")
+        # If we can't divide it to the number of robots we have, increase by one
+        if best_p == np.inf and maxSum_max - maxSum_min < err_thresh:
+            maxp += 1
+            maxSum = low
+            maxSum_min = low
+            maxSum_max = high
 
         if p > maxp:
             maxSum_min = maxSum
@@ -259,8 +274,8 @@ def divideArrayByP(maxp, countf, low, high, force_p_equals=False):
 
 
 if __name__ == "__main__":
-    num_of_robots = 128
-    n_a = 10
+    num_of_robots = 8
+    n_a = 30
     square_side_dist = 3.
     fuel_capacity_ratio = 1.5
     rp = 3
@@ -279,7 +294,7 @@ if __name__ == "__main__":
                                                                              fuel_capacity_ratio,
                                                                              rp,
                                                                              metadata,
-                                                                             skip_tsp_optimization=False)
+                                                                             skip_tsp_optimization=True)
 
     from src.visualization.visualization_pipeline import run_visualization_pipeline
     run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)
