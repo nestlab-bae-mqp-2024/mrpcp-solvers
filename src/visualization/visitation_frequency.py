@@ -9,13 +9,13 @@ def visualize_visitation_frequency(all_robot_world_points, metadata=None):
         # print(f"{robot_world_points=}")
         all_world_points.extend(robot_world_points)
     all_world_points = np.array(all_world_points)
-    heatmap, xedges, yedges = np.histogram2d(all_world_points[:, 0], all_world_points[:, 1], bins=9)
+    heatmap, xedges, yedges = np.histogram2d(all_world_points[:, 0], all_world_points[:, 1], bins=min(metadata["n_a"], 10))
     extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
 
     heatmap_normalized = heatmap / heatmap.sum() * 100.
 
     fig = plt.figure()
-    pos = plt.imshow(heatmap_normalized.T, extent=extent, origin='lower', vmin=0, vmax=np.round(heatmap_normalized.max(), decimals=2))
+    pos = plt.imshow(heatmap_normalized.T, extent=extent, origin='lower', vmin=0, vmax=np.round(10., decimals=2))
     cb = fig.colorbar(pos)
     cb.locator = ticker.MaxNLocator(nbins=10)
     cb.formatter = ticker.FormatStrFormatter("%.1f%%")
