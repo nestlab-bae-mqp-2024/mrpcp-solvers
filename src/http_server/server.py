@@ -107,9 +107,9 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=False):
                         "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
                         "milp_visualize_subfolder": saveGraphPath(job_id, "intermediate_solutions/"),
                         "average_coverage": None, "v": 0.2,
-                        "t": 3600.,
+                        "t": 300.,
                         "dt": 0.1,
-                        "lookback_time": 5.,
+                        "lookback_time": 30.,
                         "job_id": job_id,
                         "saveResultsToCache": saveResultsToCache}
             print(
@@ -141,9 +141,9 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=False):
                         "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
                         "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
                         "average_coverage": None, "v": 0.2,
-                        "t": 3600.,
+                        "t": 300.,
                         "dt": 0.1,
-                        "lookback_time": 5.}
+                        "lookback_time": 30.}
             robot_node_path_w_subtours, robot_world_path, metadata = yasars_heuristic(int(k), int(n_a), float(ssd),
                                                                                       float(fcr), int(rp), metadata, False)
             if not skip_vis:
@@ -183,9 +183,9 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=False):
                         "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
                         "average_coverage": None,
                         "v": 0.2,
-                        "t": 3600.,
+                        "t": 300.,
                         "dt": 0.1,
-                        "lookback_time": 5.}
+                        "lookback_time": 30.}
             edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(n_a), int(ssd),
                                                                                            float(fcr), int(rp), None,
                                                                                            None, None,
@@ -233,9 +233,9 @@ def recalc_endpoint():
                 "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
                 "average_coverage": None,
                 "v": 0.2,
-                "t": 3600.,
+                "t": 300.,
                 "dt": 0.1,
-                "lookback_time": 5.}
+                "lookback_time": 30.}
     # TODO: add into account that when you recalculate, you need to update the number of robots you are calculating for
     robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(
         int(k - len(curr_robots_pos)), int(n_a), int(ssd), float(fcr), int(rp), failed_robot_id, curr_robots_pos,
