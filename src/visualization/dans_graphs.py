@@ -112,32 +112,26 @@ def adding_to_json_3():
                     "fcr": fcr,
                     "rp": rp,
                     "mode": mode,
-                    "v": 5.,
-                    "t": 100.,
+                    "v": 0.2,
+                    "t": 300.,
                     "dt": 0.1,
-                    "lookback_time": 5.,
-                    "average_coverage": 0.}
+                    "lookback_time": 30.}
 
+        all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
 
-        i = 0
-        if int(test.get('percent_coverage')) == 0 and i < 1000:
-            all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
+        discretized = discretize_world_points(all_world_points, metadata)
 
-            discretized = discretize_world_points(all_world_points, metadata)
+        avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
 
-            avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
+        test['percent_coverage'] = avg_covg
 
-            test['percent_coverage'] = avg_covg
+        print("%coverage for: ", job_id, "is:" , avg_covg)
 
-            print("%coverage for: ", job_id, "is:" , avg_covg)
-
-
-            i+=1
-            with open("src/visualization/world_paths_graph3.json", 'w') as file:
-                json.dump(formatted_results, file, indent=4)
+        with open("src/visualization/world_paths_graph3.json", 'w') as file:
+            json.dump(formatted_results, file, indent=4)
 
 
 if __name__ == "__main__":
-    adding_to_json_4()
+    adding_to_json_3()
 
 

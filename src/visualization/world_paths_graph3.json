@@ -1,1 +1,168 @@
-{"data": [{"mode": "h2", "num_robots": 8, "percent_coverage": 10.392540792540792, "radius": 0.01}, {"mode": "h2", "num_robots": 8, "percent_coverage": 52.50527250527251, "radius": 0.05}, {"mode": "h2", "num_robots": 8, "percent_coverage": 17.772227772227772, "radius": 0.1}, {"mode": "h2", "num_robots": 16, "percent_coverage": 18.816916416916417, "radius": 0.01}, {"mode": "h2", "num_robots": 16, "percent_coverage": 37.249694749694754, "radius": 0.05}, {"mode": "h2", "num_robots": 16, "percent_coverage": 43.37440337440338, "radius": 0.1}, {"mode": "h2", "num_robots": 32, "percent_coverage": 31.341858141858143, "radius": 0.01}, {"mode": "h2", "num_robots": 32, "percent_coverage": 54.98723498723499, "radius": 0.05}, {"mode": "h2", "num_robots": 32, "percent_coverage": 0, "radius": 0.1}, {"mode": "h2", "num_robots": 64, "percent_coverage": 0, "radius": 0.01}, {"mode": "h2", "num_robots": 64, "percent_coverage": 0, "radius": 0.05}, {"mode": "h2", "num_robots": 64, "percent_coverage": 0, "radius": 0.1}, {"mode": "h2", "num_robots": 128, "percent_coverage": 0, "radius": 0.01}, {"mode": "h2", "num_robots": 128, "percent_coverage": 0, "radius": 0.05}, {"mode": "h2", "num_robots": 128, "percent_coverage": 0, "radius": 0.1}, {"mode": "h2", "num_robots": 256, "percent_coverage": 0, "radius": 0.01}, {"mode": "h2", "num_robots": 256, "percent_coverage": 0, "radius": 0.05}, {"mode": "h2", "num_robots": 256, "percent_coverage": 0, "radius": 0.1}, {"mode": "h2", "num_robots": 512, "percent_coverage": 0, "radius": 0.01}, {"mode": "h2", "num_robots": 512, "percent_coverage": 0, "radius": 0.05}, {"mode": "h2", "num_robots": 512, "percent_coverage": 0, "radius": 0.1}, {"mode": "h2", "num_robots": 1024, "percent_coverage": 0, "radius": 0.01}, {"mode": "h2", "num_robots": 1024, "percent_coverage": 0, "radius": 0.05}, {"mode": "h2", "num_robots": 1024, "percent_coverage": 0, "radius": 0.1}], "parameters": {"mode": ["h1, h2"], "num_robots": [8, 16, 32, 64, 128, 256, 512, 1024], "radius": [0.01, 0.05, 0.1]}}
+{
+    "data": [
+        {
+            "mode": "h1",
+            "num_robots": 8,
+            "percent_coverage": 23.301655003887593,
+            "radius": 0.01
+        },
+        {
+            "mode": "h1",
+            "num_robots": 8,
+            "percent_coverage": 55.445407086526714,
+            "radius": 0.05
+        },
+        {
+            "mode": "h1",
+            "num_robots": 8,
+            "percent_coverage": 68.55603687659669,
+            "radius": 0.1
+        },
+        {
+            "mode": "h1",
+            "num_robots": 16,
+            "percent_coverage": 37.45274538116924,
+            "radius": 0.01
+        },
+        {
+            "mode": "h1",
+            "num_robots": 16,
+            "percent_coverage": 67.83035284534785,
+            "radius": 0.05
+        },
+        {
+            "mode": "h1",
+            "num_robots": 16,
+            "percent_coverage": 74.6247547113925,
+            "radius": 0.1
+        },
+        {
+            "mode": "h1",
+            "num_robots": 32,
+            "percent_coverage": 60.646510422451776,
+            "radius": 0.01
+        },
+        {
+            "mode": "h1",
+            "num_robots": 32,
+            "percent_coverage": 76.40055166796253,
+            "radius": 0.05
+        },
+        {
+            "mode": "h1",
+            "num_robots": 32,
+            "percent_coverage": 74.6247547113925,
+            "radius": 0.1
+        },
+        {
+            "mode": "h1",
+            "num_robots": 64,
+            "percent_coverage": 79.35713280758266,
+            "radius": 0.01
+        },
+        {
+            "mode": "h1",
+            "num_robots": 64,
+            "percent_coverage": 77.33338887037654,
+            "radius": 0.05
+        },
+        {
+            "mode": "h1",
+            "num_robots": 64,
+            "percent_coverage": 84.39557184642156,
+            "radius": 0.1
+        },
+        {
+            "mode": "h1",
+            "num_robots": 128,
+            "percent_coverage": 0,
+            "radius": 0.01
+        },
+        {
+            "mode": "h1",
+            "num_robots": 128,
+            "percent_coverage": 0,
+            "radius": 0.05
+        },
+        {
+            "mode": "h1",
+            "num_robots": 128,
+            "percent_coverage": 0,
+            "radius": 0.1
+        },
+        {
+            "mode": "h1",
+            "num_robots": 256,
+            "percent_coverage": 0,
+            "radius": 0.01
+        },
+        {
+            "mode": "h1",
+            "num_robots": 256,
+            "percent_coverage": 0,
+            "radius": 0.05
+        },
+        {
+            "mode": "h1",
+            "num_robots": 256,
+            "percent_coverage": 0,
+            "radius": 0.1
+        },
+        {
+            "mode": "h1",
+            "num_robots": 512,
+            "percent_coverage": 0,
+            "radius": 0.01
+        },
+        {
+            "mode": "h1",
+            "num_robots": 512,
+            "percent_coverage": 0,
+            "radius": 0.05
+        },
+        {
+            "mode": "h1",
+            "num_robots": 512,
+            "percent_coverage": 0,
+            "radius": 0.1
+        },
+        {
+            "mode": "h1",
+            "num_robots": 1024,
+            "percent_coverage": 0,
+            "radius": 0.01
+        },
+        {
+            "mode": "h1",
+            "num_robots": 1024,
+            "percent_coverage": 0,
+            "radius": 0.05
+        },
+        {
+            "mode": "h1",
+            "num_robots": 1024,
+            "percent_coverage": 0,
+            "radius": 0.1
+        }
+    ],
+    "parameters": {
+        "mode": [
+            "h1, h1"
+        ],
+        "num_robots": [
+            8,
+            16,
+            32,
+            64,
+            128,
+            256,
+            512,
+            1024
+        ],
+        "radius": [
+            0.01,
+            0.05,
+            0.1
+        ]
+    }
+}
