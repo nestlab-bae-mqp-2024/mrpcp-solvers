@@ -23,146 +23,146 @@
         {
             "num_robots": 8,
             "L_min": 1.5,
-            "percent_coverage": 87.009657009657,
-            "mode": "h2"
+            "percent_coverage": 68.55603687659669,
+            "mode": "h1"
         },
         {
             "num_robots": 8,
             "L_min": 3,
-            "percent_coverage": 82.00910200910201,
-            "mode": "h2"
+            "percent_coverage": 60.24843570661631,
+            "mode": "h1"
         },
         {
             "num_robots": 8,
             "L_min": 4.5,
-            "percent_coverage": 66.00732600732601,
-            "mode": "h2"
+            "percent_coverage": 33.061201821615015,
+            "mode": "h1"
         },
         {
             "num_robots": 16,
             "L_min": 1.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 74.6247547113925,
+            "mode": "h1"
         },
         {
             "num_robots": 16,
             "L_min": 3,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 74.6247547113925,
+            "mode": "h1"
         },
         {
             "num_robots": 16,
             "L_min": 4.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
         },
         {
             "num_robots": 32,
             "L_min": 1.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 74.6247547113925,
+            "mode": "h1"
         },
         {
             "num_robots": 32,
             "L_min": 3,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 84.8257988078048,
+            "mode": "h1"
         },
         {
             "num_robots": 32,
             "L_min": 4.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 74.6247547113925,
+            "mode": "h1"
         },
         {
             "num_robots": 64,
             "L_min": 1.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 84.39557184642156,
+            "mode": "h1"
         },
         {
             "num_robots": 64,
             "L_min": 3,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 74.6247547113925,
+            "mode": "h1"
         },
         {
             "num_robots": 64,
             "L_min": 4.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 84.47813691732385,
+            "mode": "h1"
         },
         {
             "num_robots": 128,
             "L_min": 1.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 74.6247547113925,
+            "mode": "h1"
         },
         {
             "num_robots": 128,
             "L_min": 3,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 85.19160279906697,
+            "mode": "h1"
         },
         {
             "num_robots": 128,
             "L_min": 4.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 85.67255359324669,
+            "mode": "h1"
         },
         {
             "num_robots": 256,
             "L_min": 1.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
         },
         {
             "num_robots": 256,
             "L_min": 3,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
         },
         {
             "num_robots": 256,
             "L_min": 4.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 84.47813691732385,
+            "mode": "h1"
         },
         {
             "num_robots": 512,
             "L_min": 1.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 84.5577400125884,
+            "mode": "h1"
         },
         {
             "num_robots": 512,
             "L_min": 3,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 84.5577400125884,
+            "mode": "h1"
         },
         {
             "num_robots": 512,
             "L_min": 4.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 84.5577400125884,
+            "mode": "h1"
         },
         {
             "num_robots": 1024,
             "L_min": 1.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 85.61109259876338,
+            "mode": "h1"
         },
         {
             "num_robots": 1024,
             "L_min": 3,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 74.6247547113925,
+            "mode": "h1"
         },
         {
             "num_robots": 1024,
             "L_min": 4.5,
-            "percent_coverage": 0.0,
-            "mode": "h2"
+            "percent_coverage": 84.47813691732385,
+            "mode": "h1"
         }
     ]
 }
