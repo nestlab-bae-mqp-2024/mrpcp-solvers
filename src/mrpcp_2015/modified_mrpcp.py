@@ -203,7 +203,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
         def cb(what, where):
             if where == GRB.Callback.MIPSOL and what.cbGet(GRB.Callback.MIPSOL_OBJ) < MILPSolver.min_cost:
                 MILPSolver.min_cost = what.cbGet(GRB.Callback.MIPSOL_OBJ)
-                print(f"Found a new solution with lower cost({MILPSolver.min_cost:.3f})!")
+                print(f"Found a new solution with lower cost({MILPSolver.min_cost:.3f})!", flush=True)
                 MILPSolver.min_cost_edges = what.cbGetSolution(what._x)
 
                 # Convert edges to the node/world paths
@@ -255,6 +255,8 @@ def solve_milp_with_optimizations(num_of_robots: int,
     # Print the number of available CPU threads
     print(f"Number of available CPU threads: {num_threads_available}")
 
+    os.makedirs(metadata["milp_visualize_subfolder"], exist_ok=True)
+    m.setParam("LogFile", os.path.join(metadata["milp_visualize_subfolder"], "gurobi.log"))
     solver = MILPSolver(m, num_threads_available - 1)  # Create an instance of your MILP solver with multi-threading
 
     # Set the number of threads for Gurobi
