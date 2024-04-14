@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def get_next_node(robot_world_path, si, pi):
     if pi < len(robot_world_path[si]) - 1:
         nsi = si
@@ -35,7 +34,8 @@ def pseudo_simulate(robot_world_paths, metadata):
         robot_world_points.append(datum)
         for curr_time in np.arange(0., t + dt, dt):
             dist_travelled = 0
-            while dist_travelled < ds:
+
+            while len(robot_world_paths[ki]) > 1 and dist_travelled < ds:
                 nsi, npi = get_next_node(robot_world_path, si, pi)
                 new_robot_world_point = np.array(robot_world_path[nsi][npi])
                 delta_new_goal = new_robot_world_point - robot_world_point

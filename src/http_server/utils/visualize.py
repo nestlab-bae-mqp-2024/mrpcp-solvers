@@ -1,7 +1,6 @@
 import numpy as np
 from matplotlib import colors, cm, ticker, pyplot as plt, pyplot
 import itertools
-from tqdm import tqdm
 from src.http_server.utils.conversions import convertToNodePaths
 
 
@@ -257,7 +256,7 @@ def visualize_coverage_stepwise(world_paths, metadata, plot=True):
     lookback_time = metadata["lookback_time"]
 
     coverage_list = []
-    for curr_time in tqdm(np.arange(0., t + dt, dt)):
+    for curr_time in np.arange(0., t + dt, dt):
         covered_nodes = set()
         for robot_path in world_paths:
             for path in robot_path:
@@ -396,7 +395,6 @@ def visualize_paths_heuristic2(robot_paths, metadata):
 
         ax.set_title(f"Robot #{ki+1}")
         ax.grid()
-        ax.legend()
 
     # if visualization_path:
     #     pyplot.savefig(visualization_path.replace("visualization.png", "h2_visualization.png"))
@@ -449,7 +447,6 @@ def visualize_individual_paths(paths, nodes, targets, depots, b_k, costs, metada
         # Set title with cost
         ax.set_title(f"Robot #{index + 1} (Cost: {costs[index]:.2f})")
         ax.grid()
-        ax.legend()
 
     # Hide any unused subplots
     for i in range(index + 1, num_rows * 2):
