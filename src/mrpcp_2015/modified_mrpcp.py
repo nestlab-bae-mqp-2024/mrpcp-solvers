@@ -227,7 +227,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
                     metadata_new_sol["node_visitation_heatmap"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], metadata["node_visitation_heatmap"].split("/")[-1])
                     metadata_new_sol["mean_time_between_revisitation"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], metadata["mean_time_between_revisitation"].split("/")[-1])
                     run_visualization_pipeline(MILPSolver.opt_node_paths, MILPSolver.opt_world_paths, metadata_new_sol)
-                    plt.close()
+                    plt.close("all")
 
                     # Save result in a JSON file within the cache folder
                     result_data = {'job_id': metadata["job_id"],
