@@ -20,6 +20,9 @@ from src.http_server.utils.conversions import convertToWorldPath
 from src.http_server.utils.tsp_solver import k_opt
 from src.http_server.utils.visualize import visualize_individual_paths
 from src.visualization.visualization_pipeline import run_visualization_pipeline
+import matplotlib
+from src.http_server.json_handlers import saveGraphPath
+from src.http_server.json_handlers import *
 
 
 def solve_milp_with_optimizations(num_of_robots: int,
@@ -224,6 +227,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
                     metadata_new_sol["node_visitation_heatmap"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], metadata["node_visitation_heatmap"].split("/")[-1])
                     metadata_new_sol["mean_time_between_revisitation"] = os.path.join(metadata_new_sol["milp_visualize_subfolder"], metadata["mean_time_between_revisitation"].split("/")[-1])
                     run_visualization_pipeline(MILPSolver.opt_node_paths, MILPSolver.opt_world_paths, metadata_new_sol)
+                    plt.close()
 
                     # Save result in a JSON file within the cache folder
                     result_data = {'job_id': metadata["job_id"],
@@ -339,21 +343,32 @@ def convertEdgesToPaths(edges, nodes, depot_indices):
 
 
 if __name__ == "__main__":
-    num_of_robots = 8
-    n_a = 8
+    # Make sure matplotlib gui is turned off
+    matplotlib.use('Agg')
+
+    num_of_robots = 3
+    n_a = 4
     square_side_dist = 3.
     fuel_capacity_ratio = 1.5
-    rp = 3
+    rp = 2
 
-    from src.http_server.json_handlers import saveGraphPath
+    job_id = f"mrpcp-standalone/{num_of_robots}_{n_a}_{square_side_dist}_{fuel_capacity_ratio}_{rp}_m"
+
     metadata = {"mode": "h1",
-                "v": 5.,
-                "t": 100.,
+                "v": 0.2,
+                "t": 300.,
                 "dt": 0.1,
-                "lookback_time": 5.
-                # "visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
-                # "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")
+                "lookback_time": 30.,
+                "visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
+                "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
+                "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
+                "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
+                "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
+                "milp_visualize_subfolder": saveGraphPath(job_id, "intermediate_solutions/"),
+                "job_id": job_id,
+                "saveResultsToCache": saveResultsToCache,
                 }
+    start_time = time.time()
     optimized_node_paths, optimized_world_paths, metadata = solve_milp_with_optimizations(num_of_robots,
                                                                              n_a,
                                                                              square_side_dist,
@@ -361,5 +376,15 @@ if __name__ == "__main__":
                                                                              rp,
                                                                              metadata)
 
-    run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)
+    metadata = run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)
+
+    # Save result in a JSON file within the cache folder
+    result_data = {'job_id': metadata["job_id"],
+                   'params': {'k': num_of_robots, 'n_a': n_a, 'ssd': square_side_dist, 'fcr': fuel_capacity_ratio, 'rp': rp, 'mode': 'm'},
+                   'robot_node_path': optimized_node_paths, 'robot_world_path': optimized_world_paths,
+                   'status': 'completed'}
+    stats_data = {'job_id': metadata["job_id"], 'runtime': time.time() - start_time,
+                  'average_coverage': metadata['average_coverage']}
+    metadata["saveResultsToCache"](metadata["job_id"], result_data, "result.json")  # Save the results to the cache
+    metadata["saveResultsToCache"](metadata["job_id"], stats_data, "stats.json")
 
