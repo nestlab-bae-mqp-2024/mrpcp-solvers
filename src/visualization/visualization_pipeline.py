@@ -10,8 +10,8 @@ def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
     # 1. Visualize the paths assigned to each robot
     # TODO: convert world to node and then use visualize_paths
     print("Running visualization pipeline...")
-    print("Robot node path: ", robot_node_path)
-    print("Robot world path: ", robot_world_path)
+    # print("Robot node path: ", robot_node_path)
+    # print("Robot world path: ", robot_world_path)
     if metadata["mode"] == "h2":
         metadata = visualize_paths_heuristic2(robot_node_path, metadata)
         # print("Converted to node path: ", convertToNodePaths(robot_world_path, metadata['ssd'], metadata['n_a']))
