@@ -147,7 +147,8 @@
     ],
     "parameters": {
         "mode": [
-            "h1, h1"
+            "h1",
+            "h2"
         ],
         "num_robots": [
             8,
