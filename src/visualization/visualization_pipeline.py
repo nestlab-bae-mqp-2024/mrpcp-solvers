@@ -8,11 +8,10 @@ from src.visualization.visitation_frequency import visualize_visitation_frequenc
 
 def run_visualization_pipeline(robot_node_path, robot_world_path, metadata):
     # 1. Visualize the paths assigned to each robot
-    # TODO: convert world to node and then use visualize_paths
     print("Running visualization pipeline...")
-    # print("Robot node path: ", robot_node_path)
-    # print("Robot world path: ", robot_world_path)
-    if metadata["mode"] == "h2":
+    print("Robot node path: ", robot_node_path)
+    print("Robot world path: ", robot_world_path)
+    if metadata["mode"] == "h2" or metadata["mode"] == "recalc":
         metadata = visualize_paths_heuristic2(robot_node_path, metadata)
         # print("Converted to node path: ", convertToNodePaths(robot_world_path, metadata['ssd'], metadata['n_a']))
         # node_ids = nodePathToIds(convertToNodePaths(robot_world_path, metadata['ssd'], metadata['n_a']), metadata['n_a'])

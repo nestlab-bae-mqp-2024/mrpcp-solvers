@@ -186,8 +186,10 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=False):
                         "lookback_time": 30.}
             edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(n_a), int(ssd),
                                                                                            float(fcr), int(rp), None,
-                                                                                           None, None,
+                                                                                           None,
                                                                                            metadata)  # Run the other heuristic solver
+            print(len(edges))
+            print(len(robot_world_path))
             if not skip_vis:
                 metadata = run_visualization_pipeline(edges, robot_world_path, metadata)
             runtime = time.time() - start_time
@@ -220,29 +222,35 @@ def recalc_endpoint():
     curr_robots_pos = request.args.get('curr_robots_pos')
     curr_fuel_levels = request.args.get('curr_fuel_levels')
     curr_robots_pos = json.loads(curr_robots_pos)
-    failed_robot_id = request.args.get('failed_robot_id')
+    curr_fuel_levels = json.loads(curr_fuel_levels)
+    print("Recalculating paths for job_id:", job_id)
+    print("Current robot positions:", curr_robots_pos)
+    print("Current fuel levels:", curr_fuel_levels)
+    # print(len(curr_robots_pos), len(curr_fuel_levels))
     k, n_a, ssd, fcr, rp, mode = getParamsFromJobId(job_id)
-    new_job_id = f"{k}_{n_a}_{ssd}_{fcr}_{rp}_recalc"
+    new_job_id = f"{len(curr_robots_pos)}_{n_a}_{ssd}_{fcr}_{rp}_recalc"
+    print("New job ID:", new_job_id)
     start_time = time.time()
-    metadata = {"visualize_paths_graph_path": saveGraphPath(job_id, "all_robot_paths.png"),
-                "visitation_frequency_graph_path": saveGraphPath(job_id, "visitation_frequency.png"),
-                "percent_coverage_visualization": saveGraphPath(job_id, "percent_coverage_visualization.png"),
-                "node_visitation_heatmap": saveGraphPath(job_id, "node_visitation_heatmap.png"),
-                "mean_time_between_revisitation": saveGraphPath(job_id, "mean_time_between_revisitation.png"),
+    metadata = {"visualize_paths_graph_path": saveGraphPath(new_job_id, "all_robot_paths.png"),
+                "visitation_frequency_graph_path": saveGraphPath(new_job_id, "visitation_frequency.png"),
+                "percent_coverage_visualization": saveGraphPath(new_job_id, "percent_coverage_visualization.png"),
+                "node_visitation_heatmap": saveGraphPath(new_job_id, "node_visitation_heatmap.png"),
+                "mean_time_between_revisitation": saveGraphPath(new_job_id, "mean_time_between_revisitation.png"),
                 "average_coverage": None,
                 "v": 0.2,
                 "t": 300.,
                 "dt": 0.1,
                 "lookback_time": 30.}
-    # TODO: add into account that when you recalculate, you need to update the number of robots you are calculating for
     robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(
-        int(k - len(curr_robots_pos)), int(n_a), int(ssd), float(fcr), int(rp), failed_robot_id, curr_robots_pos,
+        int(len(curr_robots_pos)), int(n_a), int(ssd), float(fcr), int(rp), curr_robots_pos,
         curr_fuel_levels, metadata)  # Run the other heuristic solver
+    print(len(robot_node_path))
+    print(len(robot_world_path))
     metadata = run_visualization_pipeline(robot_node_path, robot_world_path, metadata)
     runtime = time.time() - start_time
-    log_runtime("solve_endpoint", {"k": k, "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": 'recalc'}, runtime)
+    log_runtime("solve_endpoint", {"k": len(curr_robots_pos), "n_a": n_a, "ssd": ssd, "fcr": fcr, "rp": rp, "mode": 'recalc'}, runtime)
     result_data = {'job_id': job_id,
-                   'params': {'k': k, 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'recalc'},
+                   'params': {'k': len(curr_robots_pos), 'n_a': n_a, 'ssd': ssd, 'fcr': fcr, 'rp': rp, 'mode': 'recalc'},
                    'robot_node_path': robot_node_path, 'robot_world_path': robot_world_path,
                    'status': 'completed'}
     stats_data = {'job_id': new_job_id, 'runtime': runtime, 'average_coverage': metadata['average_coverage']}
