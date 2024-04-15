@@ -168,73 +168,73 @@
         {
             "num_robots": 8,
             "L_min": 1.5,
-            "percent_coverage": 0,
+            "percent_coverage": 39.19693435521493,
             "mode": "h2"
         },
         {
             "num_robots": 8,
             "L_min": 3,
-            "percent_coverage": 0,
+            "percent_coverage": 46.15313414047169,
             "mode": "h2"
         },
         {
             "num_robots": 8,
             "L_min": 4.5,
-            "percent_coverage": 0,
+            "percent_coverage": 47.97956236809952,
             "mode": "h2"
         },
         {
             "num_robots": 16,
             "L_min": 1.5,
-            "percent_coverage": 0,
+            "percent_coverage": 65.25602576918804,
             "mode": "h2"
         },
         {
             "num_robots": 16,
             "L_min": 3,
-            "percent_coverage": 0,
+            "percent_coverage": 76.30789736754414,
             "mode": "h2"
         },
         {
             "num_robots": 16,
             "L_min": 4.5,
-            "percent_coverage": 0,
+            "percent_coverage": 75.36265689214706,
             "mode": "h2"
         },
         {
             "num_robots": 32,
             "L_min": 1.5,
-            "percent_coverage": 0,
+            "percent_coverage": 91.09296901032988,
             "mode": "h2"
         },
         {
             "num_robots": 32,
             "L_min": 3,
-            "percent_coverage": 0,
+            "percent_coverage": 88.65452256655189,
             "mode": "h2"
         },
         {
             "num_robots": 32,
             "L_min": 4.5,
-            "percent_coverage": 0,
+            "percent_coverage": 88.65452256655189,
             "mode": "h2"
         },
         {
             "num_robots": 64,
             "L_min": 1.5,
-            "percent_coverage": 0,
+            "percent_coverage": 94.43889074012365,
             "mode": "h2"
         },
         {
             "num_robots": 64,
             "L_min": 3,
-            "percent_coverage": 0,
+            "percent_coverage": 94.43889074012365,
             "mode": "h2"
         },
         {
             "num_robots": 64,
             "L_min": 4.5,
-            "percent_coverage": 0,
+            "percent_coverage": 94.43889074012365,
             "mode": "h2"
         },
         {

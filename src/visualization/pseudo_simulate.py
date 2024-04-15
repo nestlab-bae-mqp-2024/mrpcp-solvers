@@ -32,10 +32,17 @@ def pseudo_simulate(robot_world_paths, metadata):
         datum = robot_world_point.copy().tolist()
         datum.append(0.)
         robot_world_points.append(datum)
+
         for curr_time in np.arange(0., t + dt, dt):
             dist_travelled = 0
 
-            while len(robot_world_paths[ki]) > 1 and dist_travelled < ds:
+#            while len(robot_world_paths[ki]) > 1 and dist_travelled < ds:
+            prev_dist_travelled = 0
+            prev_counter = 0
+            while dist_travelled < ds and prev_counter < 200:
+                if prev_dist_travelled == dist_travelled:
+                    prev_counter += 1
+
                 nsi, npi = get_next_node(robot_world_path, si, pi)
                 new_robot_world_point = np.array(robot_world_path[nsi][npi])
                 delta_new_goal = new_robot_world_point - robot_world_point
@@ -55,4 +62,5 @@ def pseudo_simulate(robot_world_paths, metadata):
             robot_world_points.append(datum)
         all_robot_world_points.append(np.array(robot_world_points))
 
+    print(np.array(all_robot_world_points))
     return np.array(all_robot_world_points)
