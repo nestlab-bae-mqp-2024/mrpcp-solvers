@@ -59,8 +59,6 @@ def solve_endpoint():
         with open(os.path.join(job_folder_path, 'result.json'), 'r') as file:
             result = json.load(file)
         #print(f"Contents of the JSON file: {result}")  # Print contents of JSON file
-        #export_world_paths(result)
-        adding_to_json_3()
         return jsonify(result), 200
 
     print(
