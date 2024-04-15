@@ -50,14 +50,10 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     metadata["L"] = L
     metadata["mode"] = "h2"
 
-    print(k)
-    print(n_a)
-    print(square_side_dist)
-    print(fuel_capacity_ratio)
-    print(rp)
     # Initialize the nodes
     print("Initializing nodes...")
-    initAllNodes(n_a)
+
+    all_nodes = initAllNodes(n_a)
 
     dist_betw_each_node = square_side_dist / (n_a - 1)
 
@@ -76,10 +72,15 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                       round((square_side_dist / 2 + world_posns[ki][1]) / (dist_betw_each_node))) for ki in range(k)]
         last_node[failed_robot_id] = (0, 0)
 
+
     robot_paths = [[] for ki in range(k)]
     nodes_seen = []
 
+
+
     nodes_covered = set()  # nodes covered is a set of every node that has been covered so far
+
+    nodes_uncovered = []
 
     while n_a * n_a - len(nodes_covered) > 0:
         for ki in range(0, k):
@@ -132,6 +133,7 @@ def initAllNodes(n_a):
     :param n_a:
     :return:
     """
+    all_nodes.clear()
 
     for x in range(0, n_a):
         for y in range(0, n_a):
@@ -167,6 +169,7 @@ def a_star_search(start, goal, n_a):
     :param alpha:
     :return:
     """
+
     robot_failed = False
     frontier = PriorityQueue()
     frontier.put((0, (start[0], start[1])))
@@ -204,6 +207,7 @@ def a_star_search(start, goal, n_a):
     final_path.reverse()
 
     i = len(final_path)
+
     return final_path[:i], dist, robot_failed
 
 

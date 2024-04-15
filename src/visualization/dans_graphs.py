@@ -53,18 +53,19 @@ def adding_to_json_4():
                     "dt": 0.1,
                     "lookback_time": 30.}
 
-        all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
+        if int(test.get('percent_coverage')) == 0:
+            all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
 
-        discretized = discretize_world_points(all_world_points, metadata)
+            discretized = discretize_world_points(all_world_points, metadata)
 
-        avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
+            avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
 
-        test['percent_coverage'] = avg_covg
+            test['percent_coverage'] = avg_covg
 
-        print("%coverage for: ", job_id, "is:" , avg_covg)
+            print("%coverage for: ", job_id, "is:" , avg_covg)
 
-        with open("src/visualization/world_paths_graph4.json", 'w') as file:
-            json.dump(formatted_results, file, indent=4)
+            with open("src/visualization/world_paths_graph4.json", 'w') as file:
+                json.dump(formatted_results, file, indent=4)
 
 
 def adding_to_json_3():
@@ -117,21 +118,26 @@ def adding_to_json_3():
                     "dt": 0.1,
                     "lookback_time": 30.}
 
-        all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
 
-        discretized = discretize_world_points(all_world_points, metadata)
+        if int(test.get('percent_coverage')) == 0:
+            print("pseudo simulating ...")
+            all_world_points = pseudo_simulate(single_run.get('robot_world_path'), metadata)
 
-        avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
+            print("dicretizing ...")
+            discretized = discretize_world_points(all_world_points, metadata)
 
-        test['percent_coverage'] = avg_covg
+            print("calculating percent coverage ...")
+            avg_covg = visualize_coverage_stepwise_no_plotting(discretized, metadata)
 
-        print("%coverage for: ", job_id, "is:" , avg_covg)
+            test['percent_coverage'] = avg_covg
 
-        with open("src/visualization/world_paths_graph3.json", 'w') as file:
-            json.dump(formatted_results, file, indent=4)
+            print("%coverage for: ", job_id, "is:" , avg_covg)
 
+            with open("src/visualization/world_paths_graph3.json", 'w') as file:
+                json.dump(formatted_results, file, indent=4)
 
+        else:
+            with open("src/visualization/world_paths_graph3.json", 'w') as file:
+                json.dump(formatted_results, file, indent=4)
 if __name__ == "__main__":
-    adding_to_json_3()
-
-
+    adding_to_json_4()
