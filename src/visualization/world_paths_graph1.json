@@ -1,12 +1,12 @@
 {
     "parameters": {
-        "speeds": [
+        "speed": [
             0.1,
             0.15,
             0.2
         ],
         "radius": [
-            0.01,
+            0.02,
             0.05,
             0.1
         ],
@@ -18,7 +18,7 @@
     "data": [
         {
             "speed": 0.1,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 12.322781295123805,
             "mode": "h1"
         },
@@ -36,7 +36,7 @@
         },
         {
             "speed": 0.15,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 18.568788181717203,
             "mode": "h1"
         },
@@ -54,7 +54,7 @@
         },
         {
             "speed": 0.2,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 24.160924136398997,
             "mode": "h1"
         },
@@ -72,7 +72,7 @@
         },
         {
             "speed": 0.1,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 2.7305416712947523,
             "mode": "h2"
         },
@@ -90,7 +90,7 @@
         },
         {
             "speed": 0.15,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 4.483409233959043,
             "mode": "h2"
         },
@@ -108,7 +108,7 @@
         },
         {
             "speed": 0.2,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 6.000103669147302,
             "mode": "h2"
         },

@@ -5,57 +5,43 @@ Date: 2/17/2024
 This program defines the methods that are used to visualize the overall graphs needed for BAE Systems
 """
 import json
+from math import sqrt
 
 from matplotlib import pyplot as plt
 
-from src.http_server.utils.visualize import visualize_coverage_stepwise
-from src.visualization.discretization import discretize_world_points
-from src.visualization.pseudo_simulate import pseudo_simulate
-from src.visualization.visitation_frequency import visualize_visitation_frequency
-
-metadata = {
-    "v": 5.,
-    "t": 100.,
-    "dt": 0.1,
-    "lookback_time": 5.
-}
-
-# TODO: Plot 1 is percent coverage vs Surveillance Radius for H1, H2, and MILP
-# For this, the number of nodes per axis will be the same (nodes = ceil(1/sqrt(2)*r)^2
 def plot_coverage_vs_radius():
     # Load data from JSON
     with open('world_paths_graph1.json', 'r') as json_file:
         data = json.load(json_file)
 
-    # Access parameters and data
-    speeds = data["parameters"]["speeds"]
-    radius = data["parameters"]["radius"]
+    radius_list = data["parameters"]["speed"]
     modes = data["parameters"]["mode"]
 
-    # Initialize lists to store coverage for each combination
-    coverage_data = {mode: [] for mode in modes}
+    coverage_data = {mode: {radius: [] for radius in radius_list} for mode in modes}
 
-    # Run simulations for each combination of speed, radius, and mode
-    for mode in modes:
-        for entry in data["data"]:
-            if entry["mode"] == mode:
-                world_coords = pseudo_simulate(entry["world_coords"], metadata)
-                metadata = visualize_visitation_frequency(world_coords)
-                discretized = discretize_world_points(world_coords, metadata)
-                metadata = visualize_coverage_stepwise(discretized, metadata)
-                coverage_data[mode].append((entry["speed"], entry["radius"], metadata["average_coverage"]))
+    # Run simulations for each combination of mode, speed, and num_robots
+    for entry in data["data"]:
+        mode = entry["mode"]
+        speed = entry["speed"]
+        radius_f = entry["radius"]
+        n_a = 1/radius_f
+        radius_m = 3000 / (n_a * sqrt(2))
+        coverage = entry["percent_coverage"]
+        coverage_data[mode][speed].append((radius_m, coverage))
 
-    # Plot percent coverage vs. surveillance radius for each mode
+    # Plot percent coverage vs. speed for each mode and number of robots
     plt.figure()
-    for mode, data in coverage_data.items():
-        speeds = [entry[0] for entry in data]
-        radius = [entry[1] for entry in data]
-        coverage = [entry[2] for entry in data]
-        plt.scatter(radius, coverage, label=mode)
+    for mode, mode_data in coverage_data.items():
+        for speed, data in mode_data.items():
+            radius = [entry[0] for entry in data]
+            coverage = [entry[1] for entry in data]
+            plt.plot(radius, coverage, label=f'{mode.upper()}, Speed: {speed*100} m/s')
 
-    plt.xlabel('Surveillance Radius')
-    plt.ylabel('Percent Coverage')
-    plt.title('Percent Coverage vs. Surveillance Radius')
+    plt.ylim(0, 100)
+    plt.text(0.45, 0.85, 'Constants: k = 8, fcr = 1.5, rp = 3, ssd = 3', fontsize=8, transform=plt.gcf().transFigure)
+    plt.xlabel('Surveillance Radius (m)')
+    plt.ylabel('Field Coverage (%)')
+    plt.title('Field Coverage vs. Surveillance Radius')
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -69,35 +55,34 @@ def plot_coverage_vs_speed():
         data = json.load(json_file)
 
     # Access parameters and data
-    speeds = data["parameters"]["speeds"]
-    num_robots = data["parameters"]["num_robots"]
+    num_robots_list = data["parameters"]["num_robots"]
+    speed_list = data["parameters"]["speed"]
     modes = data["parameters"]["mode"]
-    simulation_data = data["data"]
 
-    # Initialize lists to store coverage for each combination
-    coverage_data = {mode: [] for mode in modes}
+    # Initialize dictionary to store coverage data for each mode and number of robots
+    coverage_data = {mode: {num_robots: [] for num_robots in num_robots_list} for mode in modes}
 
-    # Run simulations for each combination of speed, radius, and mode
-    for mode in modes:
-        for entry in data["data"]:
-            if entry["mode"] == mode:
-                world_coords = pseudo_simulate(entry["world_coords"], metadata)
-                metadata = visualize_visitation_frequency(world_coords)
-                discretized = discretize_world_points(world_coords, metadata)
-                metadata = visualize_coverage_stepwise(discretized, metadata)
-                coverage_data[mode].append((entry["speed"], entry["num_robots"], metadata["average_coverage"]))
+    # Run simulations for each combination of mode, speed, and num_robots
+    for entry in data["data"]:
+        mode = entry["mode"]
+        speed = entry["speed"]
+        num_robots = entry["num_robots"]
+        coverage = entry["percent_coverage"]
+        coverage_data[mode][num_robots].append((speed, coverage))
 
-    # Plot percent coverage vs. surveillance radius for each mode
+    # Plot percent coverage vs. speed for each mode and number of robots
     plt.figure()
-    for mode, data in coverage_data.items():
-        speeds = [entry[0] for entry in data]
-        num_robots = [entry[1] for entry in data]
-        coverage = [entry[2] for entry in data]
-        plt.scatter(num_robots, coverage, label=mode)
+    for mode, mode_data in coverage_data.items():
+        for num_robots, data in mode_data.items():
+            speed = [entry[0]*100 for entry in data]
+            coverage = [entry[1] for entry in data]
+            plt.plot(speed, coverage, label=f'{mode.upper()}, Robots: {num_robots}')
 
-    plt.xlabel('Number of Robots')
-    plt.ylabel('Percent Coverage')
-    plt.title('Percent Coverage vs. Number of Robots (Different Robot Speeds)')
+    plt.ylim(0, 100)
+    plt.text(0.15, 0.15, 'Constants: n_a = 10, fcr = 1.5, rp = 3, ssd = 3', fontsize=8, transform=plt.gcf().transFigure)
+    plt.xlabel('Robot Speed (m/s)')
+    plt.ylabel('Field Coverage (%)')
+    plt.title('Field Coverage vs. Robot Speed (Varying Number of Robots)')
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -111,10 +96,8 @@ def plot_coverage_vs_num_robots():
         data = json.load(json_file)
 
     # Access parameters and data
-    num_robots_list = data["parameters"]["num_robots"]
     radius_list = data["parameters"]["radius"]
     modes = data["parameters"]["mode"]
-    simulation_data = data["data"]
 
     # Initialize dictionary to store coverage data for each mode and radius
     coverage_data = {mode: {radius: [] for radius in radius_list} for mode in modes}
@@ -122,25 +105,29 @@ def plot_coverage_vs_num_robots():
     # Run simulations for each combination of mode, radius, and num_robots
     for entry in data["data"]:
         mode = entry["mode"]
-        radius = entry["radius"]
+        radius_f = entry["radius"]
         num_robots = entry["num_robots"]
         coverage = entry["percent_coverage"]
-        coverage_data[mode][radius].append((num_robots, coverage))
+        coverage_data[mode][radius_f].append((num_robots, coverage))
 
     # Plot percent coverage vs. number of robots for each mode and surveillance radius
     plt.figure()
     for mode, mode_data in coverage_data.items():
-        for radius, data in mode_data.items():
+        for radius_f, data in mode_data.items():
+            n_a = 1/radius_f
+            radius_m = 3000 / (n_a * sqrt(2))
             num_robots = [entry[0] for entry in data]
             coverage = [entry[1] for entry in data]
-            plt.plot(num_robots, coverage, label=f'{mode.upper()}, Surveillance Radius: {radius}')
+            plt.plot(num_robots, coverage, label=f'{mode.upper()}, Surveillance Radius: {radius_m:.2f} m')
 
-    # Set x-axis limit to start at 8 robots
-    plt.xlim(left=8)
+    plt.xscale('log', base=2)
+
+    plt.ylim(0, 100)
+    plt.text(0.45, 0.43, 'Constants: fcr = 1.5, rp = 3, ssd = 3 v = 20 m/s', fontsize=8, transform=plt.gcf().transFigure)
 
     plt.xlabel('Number of Robots')
-    plt.ylabel('Percent Coverage')
-    plt.title('Percent Coverage vs. Number of Robots')
+    plt.ylabel('Field Coverage (%)')
+    plt.title('Field Coverage vs. Number of Robots (Varying Surveillance Radius)')
     plt.legend()
     plt.grid(True)
     plt.show()
@@ -150,7 +137,7 @@ def plot_coverage_vs_num_robots():
 # For this, speed will be constant 0.5 m/s, number of robots = 64 -> three lines for different L_min ratios (1.5, 3, 4.5)
 # X axis is number of robots (8, 16, 32, 64, 128, 256, 512, 1024) robots
 def plot_coverage_vs_fuel_capacity():
-    with open('world_paths_graph4.json', 'r') as json_file:
+    with open('world_paths_graph4-n_a30.json', 'r') as json_file:
         data = json.load(json_file)
 
     parameters = data["parameters"]
@@ -179,18 +166,21 @@ def plot_coverage_vs_fuel_capacity():
         for L_min, data_points in fuel_data.items():
             num_robots = [entry[0] for entry in data_points]
             coverage = [entry[1] for entry in data_points]
-            plt.plot(num_robots, coverage, label=f'L_min={L_min}, {mode.upper()}')
+            plt.plot(num_robots, coverage, label=f'{mode.upper()}, Fuel: {L_min*8.48 :.2f} km')
 
+    plt.xscale('log', base=2)
+    # plt.xlim(0, 1024)
+    plt.ylim(0, 100)
 
-    # Set x-axis limit to start at 8 robots
-    plt.xlim(left=8)
-
+    plt.text(0.15, 0.15, 'Constants: n_a = 30, rp = 3, ssd = 3 km, v = 20 m/s', fontsize=8, transform=plt.gcf().transFigure)
     plt.xlabel('Number of Robots')
-    plt.ylabel('Percent Coverage')
-    plt.title('Percent Coverage vs. Number of Robots (Different Fuel Capacities)')
+    plt.ylabel('Field Coverage (%)')
+    plt.title('Field Coverage vs. Number of Robots (Varying Fuel Capacities)')
     plt.legend()
     plt.grid(True)
     plt.show()
 
-# plot_coverage_vs_num_robots()
+plot_coverage_vs_radius()
+plot_coverage_vs_speed()
+plot_coverage_vs_num_robots()
 plot_coverage_vs_fuel_capacity()

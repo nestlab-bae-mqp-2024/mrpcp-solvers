@@ -11,7 +11,7 @@
             1024
         ],
         "radius": [
-            0.01,
+            0.02,
             0.05,
             0.1
         ],
@@ -23,9 +23,9 @@
     "data": [
         {
             "num_robots": 8,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 6.000103669147302,
-            "mode": "h2"
+            "mode": "h1"
         },
         {
             "num_robots": 8,
@@ -41,7 +41,7 @@
         },
         {
             "num_robots": 16,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 42.43982376244965,
             "mode": "h1"
         },
@@ -59,7 +59,7 @@
         },
         {
             "num_robots": 32,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 64.4963974971304,
             "mode": "h1"
         },
@@ -77,7 +77,7 @@
         },
         {
             "num_robots": 64,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 74.0828760783442,
             "mode": "h1"
         },
@@ -95,7 +95,7 @@
         },
         {
             "num_robots": 128,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 79.50949683438847,
             "mode": "h1"
         },
@@ -113,7 +113,7 @@
         },
         {
             "num_robots": 256,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 80.07369395386714,
             "mode": "h1"
         },
@@ -131,7 +131,7 @@
         },
         {
             "num_robots": 512,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 79.56870672738712,
             "mode": "h1"
         },
@@ -149,7 +149,7 @@
         },
         {
             "num_robots": 1024,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 79.56870672738712,
             "mode": "h1"
         },
@@ -167,7 +167,7 @@
         },
         {
             "num_robots": 8,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 6.000103669147302,
             "mode": "h2"
         },
@@ -185,7 +185,7 @@
         },
         {
             "num_robots": 16,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 10.353408123218186,
             "mode": "h2"
         },
@@ -203,7 +203,7 @@
         },
         {
             "num_robots": 32,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 18.28112110777896,
             "mode": "h2"
         },
@@ -221,7 +221,7 @@
         },
         {
             "num_robots": 64,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 31.233411085193843,
             "mode": "h2"
         },
@@ -239,7 +239,7 @@
         },
         {
             "num_robots": 128,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 51.7400273982747,
             "mode": "h2"
         },
@@ -257,7 +257,7 @@
         },
         {
             "num_robots": 256,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 79.20835277129827,
             "mode": "h2"
         },
@@ -275,7 +275,7 @@
         },
         {
             "num_robots": 512,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 92.55046836239781,
             "mode": "h2"
         },
@@ -293,7 +293,7 @@
         },
         {
             "num_robots": 1024,
-            "radius": 0.01,
+            "radius": 0.02,
             "percent_coverage": 92.55046836239781,
             "mode": "h2"
         },
