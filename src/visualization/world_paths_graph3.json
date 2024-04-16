@@ -1,154 +1,5 @@
 {
-    "data": [
-        {
-            "mode": "h1",
-            "num_robots": 8,
-            "percent_coverage": 23.301655003887593,
-            "radius": 0.01
-        },
-        {
-            "mode": "h1",
-            "num_robots": 8,
-            "percent_coverage": 55.445407086526714,
-            "radius": 0.05
-        },
-        {
-            "mode": "h1",
-            "num_robots": 8,
-            "percent_coverage": 68.55603687659669,
-            "radius": 0.1
-        },
-        {
-            "mode": "h1",
-            "num_robots": 16,
-            "percent_coverage": 37.45274538116924,
-            "radius": 0.01
-        },
-        {
-            "mode": "h1",
-            "num_robots": 16,
-            "percent_coverage": 67.83035284534785,
-            "radius": 0.05
-        },
-        {
-            "mode": "h1",
-            "num_robots": 16,
-            "percent_coverage": 74.6247547113925,
-            "radius": 0.1
-        },
-        {
-            "mode": "h1",
-            "num_robots": 32,
-            "percent_coverage": 60.646510422451776,
-            "radius": 0.01
-        },
-        {
-            "mode": "h1",
-            "num_robots": 32,
-            "percent_coverage": 76.40055166796253,
-            "radius": 0.05
-        },
-        {
-            "mode": "h1",
-            "num_robots": 32,
-            "percent_coverage": 74.6247547113925,
-            "radius": 0.1
-        },
-        {
-            "mode": "h1",
-            "num_robots": 64,
-            "percent_coverage": 79.35713280758266,
-            "radius": 0.01
-        },
-        {
-            "mode": "h1",
-            "num_robots": 64,
-            "percent_coverage": 77.33338887037654,
-            "radius": 0.05
-        },
-        {
-            "mode": "h1",
-            "num_robots": 64,
-            "percent_coverage": 84.39557184642156,
-            "radius": 0.1
-        },
-        {
-            "mode": "h1",
-            "num_robots": 128,
-            "percent_coverage": 79.56870672738717,
-            "radius": 0.01
-        },
-        {
-            "mode": "h1",
-            "num_robots": 128,
-            "percent_coverage": 83.52354770632012,
-            "radius": 0.05
-        },
-        {
-            "mode": "h1",
-            "num_robots": 128,
-            "percent_coverage": 74.6247547113925,
-            "radius": 0.1
-        },
-        {
-            "mode": "h1",
-            "num_robots": 256,
-            "percent_coverage": 79.29872264800622,
-            "radius": 0.01
-        },
-        {
-            "mode": "h1",
-            "num_robots": 256,
-            "percent_coverage": 83.52354770632012,
-            "radius": 0.05
-        },
-        {
-            "mode": "h1",
-            "num_robots": 256,
-            "percent_coverage": 85.53260024436298,
-            "radius": 0.1
-        },
-        {
-            "mode": "h1",
-            "num_robots": 512,
-            "percent_coverage": 79.35713280758266,
-            "radius": 0.01
-        },
-        {
-            "mode": "h1",
-            "num_robots": 512,
-            "percent_coverage": 82.86497093561405,
-            "radius": 0.05
-        },
-        {
-            "mode": "h1",
-            "num_robots": 512,
-            "percent_coverage": 84.5577400125884,
-            "radius": 0.1
-        },
-        {
-            "mode": "h1",
-            "num_robots": 1024,
-            "percent_coverage": 79.35713280758266,
-            "radius": 0.01
-        },
-        {
-            "mode": "h1",
-            "num_robots": 1024,
-            "percent_coverage": 83.52354770632012,
-            "radius": 0.05
-        },
-        {
-            "mode": "h1",
-            "num_robots": 1024,
-            "percent_coverage": 85.61109259876338,
-            "radius": 0.1
-        }
-    ],
     "parameters": {
-        "mode": [
-            "h1, h1"
-        ],
         "num_robots": [
             8,
             16,
@@ -163,6 +14,300 @@
             0.01,
             0.05,
             0.1
+        ],
+        "mode": [
+            "h1",
+            "h2"
         ]
-    }
+    },
+    "data": [
+        {
+            "num_robots": 8,
+            "radius": 0.01,
+            "percent_coverage": 6.000103669147302,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 8,
+            "radius": 0.05,
+            "percent_coverage": 45.70208078788552,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 8,
+            "radius": 0.1,
+            "percent_coverage": 69.59087711503572,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 16,
+            "radius": 0.01,
+            "percent_coverage": 42.43982376244965,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 16,
+            "radius": 0.05,
+            "percent_coverage": 56.3354807656707,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 16,
+            "radius": 0.1,
+            "percent_coverage": 74.95501499500166,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 32,
+            "radius": 0.01,
+            "percent_coverage": 64.4963974971304,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 32,
+            "radius": 0.05,
+            "percent_coverage": 70.05738827798142,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 32,
+            "radius": 0.1,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 64,
+            "radius": 0.01,
+            "percent_coverage": 74.0828760783442,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 64,
+            "radius": 0.05,
+            "percent_coverage": 78.446999148432,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 64,
+            "radius": 0.1,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 128,
+            "radius": 0.01,
+            "percent_coverage": 79.50949683438847,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 128,
+            "radius": 0.05,
+            "percent_coverage": 83.55335258617498,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 128,
+            "radius": 0.1,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 256,
+            "radius": 0.01,
+            "percent_coverage": 80.07369395386714,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 256,
+            "radius": 0.05,
+            "percent_coverage": 83.55335258617498,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 256,
+            "radius": 0.1,
+            "percent_coverage": 84.47813691732385,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 512,
+            "radius": 0.01,
+            "percent_coverage": 79.56870672738712,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 512,
+            "radius": 0.05,
+            "percent_coverage": 83.52354770632012,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 512,
+            "radius": 0.1,
+            "percent_coverage": 84.5577400125884,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 1024,
+            "radius": 0.01,
+            "percent_coverage": 79.56870672738712,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 1024,
+            "radius": 0.05,
+            "percent_coverage": 82.86497093561405,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 1024,
+            "radius": 0.1,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 8,
+            "radius": 0.01,
+            "percent_coverage": 6.000103669147302,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 8,
+            "radius": 0.05,
+            "percent_coverage": 16.23171905661076,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 8,
+            "radius": 0.1,
+            "percent_coverage": 49.018105076085746,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 16,
+            "radius": 0.01,
+            "percent_coverage": 10.353408123218186,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 16,
+            "radius": 0.05,
+            "percent_coverage": 28.258450886741457,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 16,
+            "radius": 0.1,
+            "percent_coverage": 69.94964641415824,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 32,
+            "radius": 0.01,
+            "percent_coverage": 18.28112110777896,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 32,
+            "radius": 0.05,
+            "percent_coverage": 41.64658076937317,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 32,
+            "radius": 0.1,
+            "percent_coverage": 93.78244288940724,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 64,
+            "radius": 0.01,
+            "percent_coverage": 31.233411085193843,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 64,
+            "radius": 0.05,
+            "percent_coverage": 59.70926357880706,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 64,
+            "radius": 0.1,
+            "percent_coverage": 97.8651560590914,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 128,
+            "radius": 0.01,
+            "percent_coverage": 51.7400273982747,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 128,
+            "radius": 0.05,
+            "percent_coverage": 94.40954866896219,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 128,
+            "radius": 0.1,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 256,
+            "radius": 0.01,
+            "percent_coverage": 79.20835277129827,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 256,
+            "radius": 0.05,
+            "percent_coverage": 96.21626124625125,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 256,
+            "radius": 0.1,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 512,
+            "radius": 0.01,
+            "percent_coverage": 92.55046836239781,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 512,
+            "radius": 0.05,
+            "percent_coverage": 96.21626124625125,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 512,
+            "radius": 0.1,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 1024,
+            "radius": 0.01,
+            "percent_coverage": 92.55046836239781,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 1024,
+            "radius": 0.05,
+            "percent_coverage": 96.21626124625125,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 1024,
+            "radius": 0.1,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        }
+    ]
 }

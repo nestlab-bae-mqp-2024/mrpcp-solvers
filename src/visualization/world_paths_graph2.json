@@ -1,39 +1,133 @@
 {
-  "parameters": {
-    "speeds": [0.1, 0.15, 0.2],
-    "num_robots": [8, 64, 1024],
-    "mode": ["h1, h2"]
-  },
-  "data": [
-    {
-      "num_robots": 8,
-      "world_coords": None,
-      "mode": "h1"
+    "parameters": {
+        "num_robots": [
+            8,
+            16,
+            32,
+            64,
+            128,
+            256,
+            512,
+            1024
+        ],
+        "speed": [
+            0.1,
+            0.15,
+            0.2
+        ],
+        "mode": [
+            "h1",
+            "h2"
+        ]
     },
-    {
-      "num_robots": 64,
-      "world_coords": None,
-      "mode": "h1"
-    },
-    {
-      "num_robots": 1024,
-      "world_coords": None,
-      "mode": "h1"
-    },
-    {
-      "num_robots": 8,
-      "world_coords": None,
-      "mode": "h2"
-    },
-    {
-      "num_robots": 64,
-      "world_coords": None,
-      "mode": "h2"
-    },
-    {
-      "num_robots": 1024,
-      "world_coords": None,
-      "mode": "h2"
-    }
-  ]
+    "data": [
+        {
+            "num_robots": 8,
+            "speed": 0.1,
+            "percent_coverage": 39.961864563663966,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 64,
+            "speed": 0.1,
+            "percent_coverage": 52.05968380910067,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 1024,
+            "speed": 0.1,
+            "percent_coverage": 52.05968380910067,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 8,
+            "speed": 0.15,
+            "percent_coverage": 56.53189677514902,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 64,
+            "speed": 0.15,
+            "percent_coverage": 70.63941649079936,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 1024,
+            "speed": 0.15,
+            "percent_coverage": 70.63941649079936,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 8,
+            "speed": 0.2,
+            "percent_coverage": 69.59087711503572,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 64,
+            "speed": 0.2,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 1024,
+            "speed": 0.2,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 8,
+            "speed": 0.1,
+            "percent_coverage": 26.69924839868192,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 64,
+            "speed": 0.1,
+            "percent_coverage": 78.46717760746418,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 1024,
+            "speed": 0.1,
+            "percent_coverage": 68.63341849013291,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 8,
+            "speed": 0.15,
+            "percent_coverage": 38.77559332074494,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 64,
+            "speed": 0.15,
+            "percent_coverage": 91.32770557962161,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 1024,
+            "speed": 0.15,
+            "percent_coverage": 83.99237291273279,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 8,
+            "speed": 0.2,
+            "percent_coverage": 49.018105076085746,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 64,
+            "speed": 0.2,
+            "percent_coverage": 97.8651560590914,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 1024,
+            "speed": 0.2,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        }
+    ]
 }

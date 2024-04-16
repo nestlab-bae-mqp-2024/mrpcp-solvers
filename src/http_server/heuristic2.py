@@ -17,7 +17,6 @@ def generate_robot_paths_redundancy(num_of_robots: int,
                                     square_side_dist: float,
                                     fuel_capacity_ratio: float,
                                     rp: int,
-                                    failed_robot_id: int = None,
                                     curr_robots_pos: list = None,
                                     curr_fuel_levels: list = None,
                                     metadata: Dict = None):
@@ -58,7 +57,7 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     dist_betw_each_node = square_side_dist / (n_a - 1)
 
     # logic for if recalc or not
-    if failed_robot_id is None and curr_fuel_levels is None and curr_robots_pos is None:
+    if curr_fuel_levels is None and curr_robots_pos is None:
         print("Conducting heuristic2")
         print("Initializing robot fuel levels...")
         robot_fuel = [L for ki in range(k)]  # robot fuel is a list storing each robot's fuel at the present moment
@@ -66,17 +65,15 @@ def generate_robot_paths_redundancy(num_of_robots: int,
         last_node = [(0, 0) for ki in range(k)]
     else:
         print("Conducting recalculation")
-        world_posns = convertToWorldPath(n_a, square_side_dist, curr_robots_pos)
+        world_posns = curr_robots_pos
         robot_fuel = curr_fuel_levels
         last_node = [(round((square_side_dist / 2 + world_posns[ki][0]) / (dist_betw_each_node)),
                       round((square_side_dist / 2 + world_posns[ki][1]) / (dist_betw_each_node))) for ki in range(k)]
-        last_node[failed_robot_id] = (0, 0)
-
+        metadata["mode"] = "recalc"
+        print(metadata)
 
     robot_paths = [[] for ki in range(k)]
     nodes_seen = []
-
-
 
     nodes_covered = set()  # nodes covered is a set of every node that has been covered so far
 

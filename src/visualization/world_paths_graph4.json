@@ -16,14 +16,15 @@
             4.5
         ],
         "mode": [
-            "h1, h2"
+            "h1",
+            "h2"
         ]
     },
     "data": [
         {
             "num_robots": 8,
             "L_min": 1.5,
-            "percent_coverage": 68.55603687659669,
+            "percent_coverage": 69.59087711503572,
             "mode": "h1"
         },
         {
@@ -41,91 +42,91 @@
         {
             "num_robots": 16,
             "L_min": 1.5,
-            "percent_coverage": 74.6247547113925,
+            "percent_coverage": 74.95501499500166,
             "mode": "h1"
         },
         {
             "num_robots": 16,
             "L_min": 3,
-            "percent_coverage": 74.6247547113925,
+            "percent_coverage": 74.95501499500166,
             "mode": "h1"
         },
         {
             "num_robots": 16,
             "L_min": 4.5,
+            "percent_coverage": 74.95501499500166,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 32,
+            "L_min": 1.5,
             "percent_coverage": 85.53260024436298,
             "mode": "h1"
         },
         {
             "num_robots": 32,
-            "L_min": 1.5,
-            "percent_coverage": 74.6247547113925,
+            "L_min": 3,
+            "percent_coverage": 85.53260024436298,
             "mode": "h1"
         },
         {
             "num_robots": 32,
-            "L_min": 3,
-            "percent_coverage": 84.8257988078048,
-            "mode": "h1"
-        },
-        {
-            "num_robots": 32,
-            "L_min": 4.5,
-            "percent_coverage": 74.6247547113925,
-            "mode": "h1"
-        },
-        {
-            "num_robots": 64,
-            "L_min": 1.5,
-            "percent_coverage": 84.39557184642156,
-            "mode": "h1"
-        },
-        {
-            "num_robots": 64,
-            "L_min": 3,
-            "percent_coverage": 74.6247547113925,
-            "mode": "h1"
-        },
-        {
-            "num_robots": 64,
             "L_min": 4.5,
             "percent_coverage": 84.47813691732385,
             "mode": "h1"
         },
         {
-            "num_robots": 128,
-            "L_min": 1.5,
-            "percent_coverage": 74.6247547113925,
-            "mode": "h1"
-        },
-        {
-            "num_robots": 128,
-            "L_min": 3,
-            "percent_coverage": 85.19160279906697,
-            "mode": "h1"
-        },
-        {
-            "num_robots": 128,
-            "L_min": 4.5,
-            "percent_coverage": 85.67255359324669,
-            "mode": "h1"
-        },
-        {
-            "num_robots": 256,
+            "num_robots": 64,
             "L_min": 1.5,
             "percent_coverage": 85.53260024436298,
             "mode": "h1"
         },
         {
-            "num_robots": 256,
+            "num_robots": 64,
             "L_min": 3,
             "percent_coverage": 85.53260024436298,
             "mode": "h1"
         },
         {
-            "num_robots": 256,
+            "num_robots": 64,
             "L_min": 4.5,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 128,
+            "L_min": 1.5,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 128,
+            "L_min": 3,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 128,
+            "L_min": 4.5,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 256,
+            "L_min": 1.5,
             "percent_coverage": 84.47813691732385,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 256,
+            "L_min": 3,
+            "percent_coverage": 85.53260024436298,
+            "mode": "h1"
+        },
+        {
+            "num_robots": 256,
+            "L_min": 4.5,
+            "percent_coverage": 85.53260024436298,
             "mode": "h1"
         },
         {
@@ -149,13 +150,13 @@
         {
             "num_robots": 1024,
             "L_min": 1.5,
-            "percent_coverage": 85.61109259876338,
+            "percent_coverage": 85.53260024436298,
             "mode": "h1"
         },
         {
             "num_robots": 1024,
             "L_min": 3,
-            "percent_coverage": 74.6247547113925,
+            "percent_coverage": 85.53260024436298,
             "mode": "h1"
         },
         {
@@ -163,6 +164,150 @@
             "L_min": 4.5,
             "percent_coverage": 84.47813691732385,
             "mode": "h1"
+        },
+        {
+            "num_robots": 8,
+            "L_min": 1.5,
+            "percent_coverage": 39.19693435521493,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 8,
+            "L_min": 3,
+            "percent_coverage": 46.15313414047169,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 8,
+            "L_min": 4.5,
+            "percent_coverage": 47.97956236809952,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 16,
+            "L_min": 1.5,
+            "percent_coverage": 65.25602576918804,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 16,
+            "L_min": 3,
+            "percent_coverage": 76.30789736754414,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 16,
+            "L_min": 4.5,
+            "percent_coverage": 75.36265689214706,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 32,
+            "L_min": 1.5,
+            "percent_coverage": 91.09296901032988,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 32,
+            "L_min": 3,
+            "percent_coverage": 88.65452256655189,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 32,
+            "L_min": 4.5,
+            "percent_coverage": 88.65452256655189,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 64,
+            "L_min": 1.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 64,
+            "L_min": 3,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 64,
+            "L_min": 4.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 128,
+            "L_min": 1.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 128,
+            "L_min": 3,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 128,
+            "L_min": 4.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 256,
+            "L_min": 1.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 256,
+            "L_min": 3,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 256,
+            "L_min": 4.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 512,
+            "L_min": 1.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 512,
+            "L_min": 3,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 512,
+            "L_min": 4.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 1024,
+            "L_min": 1.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 1024,
+            "L_min": 3,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
+        },
+        {
+            "num_robots": 1024,
+            "L_min": 4.5,
+            "percent_coverage": 94.43889074012365,
+            "mode": "h2"
         }
     ]
 }
