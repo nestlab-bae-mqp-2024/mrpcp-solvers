@@ -81,7 +81,7 @@ def adding_to_json_3():
     for test in tqdm(tests_to_be_run):
         k = test.get('num_robots')
         fov = test.get('radius')
-        if fov == 0.01:
+        if fov == 0.02:
             n_a = 50
         elif fov == 0.05:
             n_a = 20
@@ -221,7 +221,7 @@ def adding_to_json_1():
     for test in tqdm(tests_to_be_run):
         v = test.get('speed')
         fov = test.get('radius')
-        if fov == 0.01:
+        if fov == 0.02:
             n_a = 50
         elif fov == 0.05:
             n_a = 20
@@ -284,5 +284,5 @@ def adding_to_json_1():
 if __name__ == "__main__":
     # adding_to_json_4()
     # adding_to_json_3()
-    # adding_to_json_2()
-    adding_to_json_1()
+    adding_to_json_2()
+    # adding_to_json_1()
