@@ -242,7 +242,7 @@ def recalc_endpoint():
                 "dt": 0.1,
                 "lookback_time": 30.}
     robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(
-        int(len(curr_robots_pos)), int(n_a), int(ssd), float(fcr), int(rp), curr_robots_pos,
+        int(len(curr_robots_pos)), int(n_a), float(ssd), float(fcr), int(rp), curr_robots_pos,
         curr_fuel_levels, metadata)  # Run the other heuristic solver
     print(len(robot_node_path))
     print(len(robot_world_path))
