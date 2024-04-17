@@ -56,7 +56,9 @@ def visualize_paths(paths, metadata):
                 ax.plot([nodes[curr_node, 0], nodes[next_node, 0]], [nodes[curr_node, 1], nodes[next_node, 1]],
                         color="purple", linewidth=1)
 
-        ax.set_title(f"Robot #{robot_i + 1} (cost={total_cost_i:.3f})")
+        ax.set_title(f"{'Subtour' if 'is_subtour' in metadata else 'Robot'} #{robot_i + 1} (cost={total_cost_i:.3f})")
+        if 'is_subtour' in metadata:
+            ax.text(0., 0., f"S{robot_i}", ha="center", va="center", size=100, alpha=0.3)
         total_cost += total_cost_i
 
         vert_i += 1
@@ -79,7 +81,8 @@ def visualize_paths(paths, metadata):
         f"Paths for all robots (# of active/available robots={len(active_robots)}/{len(paths)}, sum of costs={total_cost:.3f})")
     if "visualize_paths_graph_path" in metadata:
         plt.savefig(metadata["visualize_paths_graph_path"])
-    #plt.show()
+    else:
+        plt.show()
 
     return metadata
 

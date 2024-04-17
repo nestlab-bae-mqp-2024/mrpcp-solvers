@@ -1,11 +1,14 @@
 from src.utils.construct_map import construct_map
 from src.utils.tsp_solver import k_opt
+from src.visualization.paths_and_subtours import visualize_subtours
 from concurrent.futures import ProcessPoolExecutor
 from scipy.spatial import distance
 from typing import Dict
 import numpy as np
 import time
 import os
+import matplotlib.pyplot as plt
+from matplotlib import ticker
 
 
 def yasars_heuristic(num_of_robots: int,
@@ -62,9 +65,25 @@ def yasars_heuristic(num_of_robots: int,
     nodes_costs = cost[:depot_indices[0], depot_indices[0]]
     # print(f"{nodes_costs.shape=}")
     sorted_indices = np.lexsort((nodes_costs, heading_values))
-    # for i, ti in enumerate(sorted_indices):
-    #     print(f"{i=} {ti=} {heading_values[ti]=} {nodes_costs[ti]=}")
+    # for i, ni in enumerate(sorted_indices):
+    #     print(f"{i=} {ni=} {heading_values[ni]=} {nodes_costs[ni]=}")
     print(f"Step 1 took {time.time() - start} seconds.")
+    # Step 1 visualization
+    sort_map = np.zeros((n, n))
+    for i, ni in enumerate(sorted_indices):
+        sort_map[int(np.floor(ni / n)), int(ni) % n] = i
+    fig, ax = plt.subplots()
+    pos = plt.imshow(sort_map.T, origin='lower')
+    ax.add_patch(plt.Rectangle((-0.5, -0.5), 1, 1, color='r'))
+    plt.text(0, 0, "Depot", ha="center", va="center", color="w")
+    for (i, j), label in np.ndenumerate(sort_map):
+        if i == j == 0: continue
+        tc = "white" if sort_map[i, j] < sort_map.mean() else "black"
+        plt.text(i, j, f"{int(sort_map[i, j])}", ha="center", va="center", color=tc)
+    fig.suptitle("Heuristic 1 Node Sort Order")
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.show()
 
     # Step 2: Divide nodes to subtours s.t. cost <= L
     start = time.time()
@@ -119,14 +138,32 @@ def yasars_heuristic(num_of_robots: int,
     # print(f"{len(tsp_subtours)=} {maxSum=}")
     # print(f"{distributed_nodes_indices=}")
     # print(f"{tsp_upper_bound=}")
-    # visualize_subtours(tsp_subtours, nodes, node_indices, target_indices, depot_indices, cost, mode="faster")
+    # visualize_subtours(tsp_subtours, {"n_a": n, "ssd": d, "is_subtour": True})
     print(f"Step 2 took {time.time() - start} seconds.")
+    # Step 2 visualization
+    node_partition_map = np.zeros((n, n))
+    for c, si in enumerate(tsp_subtours):
+        for i, ni in enumerate(si):
+            if ni == 64: continue  # Depot
+            node_partition_map[int(np.floor(ni / n)), int(ni) % n] = c
+    fig, ax = plt.subplots()
+    pos = plt.imshow(node_partition_map.T, origin='lower')
+    ax.add_patch(plt.Rectangle((-0.5, -0.5), 1, 1, color='r'))
+    plt.text(0, 0, "Depot", ha="center", va="center", color="w")
+    for (i, j), label in np.ndenumerate(node_partition_map):
+        if i == j == 0: continue
+        tc = "white" if node_partition_map[i, j] < node_partition_map.mean() else "black"
+        plt.text(i, j, f"{int(node_partition_map[i, j])}", ha="center", va="center", color=tc)
+
+    fig.suptitle("Heuristic 1 Fuel Satisfying Node Grouping")
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+    plt.show()
+
 
     # Step 3: Further optimize the subtours by running tsp on them
     if skip_tsp_optimization:
         print(f"Skipping TSP optimization ...")
-        tsp_indices = np.array(tsp_costs).argsort().tolist()
-        print(f"Step 3 took {time.time() - start} seconds.")
     else:
         start = time.time()
         tsp_subtours_prev, tsp_costs_prev = tsp_subtours, tsp_costs
@@ -154,7 +191,7 @@ def yasars_heuristic(num_of_robots: int,
 
         tsp_indices = np.array(tsp_costs).argsort().tolist()
         print(f"Step 3 took {time.time() - start} seconds.")
-        # visualize_subtours(tsp_subtours, nodes)
+        visualize_subtours([tsp_subtours[tsp_indices[si]] for si in range(len(tsp_subtours))], {"n_a": n, "ssd": d, "is_subtour": True})
 
     # Step 4: Ensure rp
     start = time.time()
@@ -210,6 +247,7 @@ def yasars_heuristic(num_of_robots: int,
     for ki in range(min(k, len(opt_node_paths))):
         robot_world_path = []
         for i, subtour in enumerate(opt_node_paths[ki]):
+            print(f"Assigned subtour {i} to robot {ki}")
             robot_world_path.append(nodes[subtour].tolist())
         opt_world_paths.append(robot_world_path)
     metadata["k"] = min(k, len(opt_node_paths))
@@ -294,8 +332,8 @@ if __name__ == "__main__":
                                                                              fuel_capacity_ratio,
                                                                              rp,
                                                                              metadata,
-                                                                             skip_tsp_optimization=True)
+                                                                             skip_tsp_optimization=False)
 
-    from src.visualization.visualization_pipeline import run_visualization_pipeline
-    run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)
+    # from src.visualization.visualization_pipeline import run_visualization_pipeline
+    # run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)
 
