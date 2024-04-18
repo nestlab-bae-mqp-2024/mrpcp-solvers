@@ -40,7 +40,7 @@ def plot_coverage_vs_radius():
             plt.plot(radius, coverage, marker='o', label=f'{mode.upper()}, Speed: {speed*100} m/s')
 
     plt.ylim(0, 100)
-    plt.text(0.45, 0.85, 'Constants: k = 8, fcr = 1.5, rp = 3, ssd = 3 km', fontsize=8, transform=plt.gcf().transFigure)
+    plt.text(0.5, 0.85, 'Constants: k=8, fcr=1.5, rp=3, ssd=3km', fontsize=8, transform=plt.gcf().transFigure)
     plt.xlabel('Surveillance Radius (m)')
     plt.ylabel('Field Coverage (%)')
     plt.title('Field Coverage vs. Surveillance Radius (Varying Speed)')
@@ -84,7 +84,7 @@ def plot_coverage_vs_speed():
             plt.plot(speed, coverage, linestyle=line_style, marker='o', label=f'{mode.upper()}, Robots: {num_robots}')
 
     plt.ylim(0, 100)
-    plt.text(0.15, 0.15, 'Constants: n_a = 10, fcr = 1.5, rp = 3, ssd = 3 km', fontsize=8, transform=plt.gcf().transFigure)
+    plt.text(0.15, 0.15, 'Constants: radius=212.13m, fcr=1.5, rp=3, ssd=3km', fontsize=8, transform=plt.gcf().transFigure)
     plt.xlabel('Robot Speed (m/s)')
     plt.ylabel('Field Coverage (%)')
     plt.title('Field Coverage vs. Robot Speed (Varying Number of Robots)')
@@ -131,7 +131,7 @@ def plot_coverage_vs_num_robots():
     plt.gca().xaxis.set_major_formatter(ScalarFormatter())
 
     plt.ylim(0, 100)
-    plt.text(0.43, 0.43, 'Constants: fcr = 1.5, rp = 3, ssd = 3 km, v = 20 m/s', fontsize=8, transform=plt.gcf().transFigure)
+    plt.text(0.45, 0.43, 'Constants: fcr=1.5, rp=3, ssd=3km, v=20m/s', fontsize=8, transform=plt.gcf().transFigure)
 
     plt.xlabel('Number of Robots')
     plt.ylabel('Field Coverage (%)')
@@ -183,7 +183,7 @@ def plot_coverage_vs_fuel_capacity():
     # plt.xlim(0, 1024)
     plt.ylim(0, 100)
 
-    plt.text(0.14, 0.15, 'Constants: n_a = 30, rp = 3, ssd = 3 km, v = 20 m/s', fontsize=8, transform=plt.gcf().transFigure)
+    plt.text(0.13, 0.15, 'Constants: radius=70.71m, rp=3, ssd=3km, v=20m/s', fontsize=8, transform=plt.gcf().transFigure)
     plt.xlabel('Number of Robots')
     plt.ylabel('Field Coverage (%)')
     plt.title('Field Coverage vs. Number of Robots (Varying Fuel Capacities)')
