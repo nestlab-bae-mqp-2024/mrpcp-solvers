@@ -8,6 +8,8 @@ import json
 from math import sqrt
 
 from matplotlib import pyplot as plt
+from matplotlib.ticker import ScalarFormatter
+
 
 def plot_coverage_vs_radius():
     # Load data from JSON
@@ -35,16 +37,18 @@ def plot_coverage_vs_radius():
         for speed, data in mode_data.items():
             radius = [entry[0] for entry in data]
             coverage = [entry[1] for entry in data]
-            plt.plot(radius, coverage, label=f'{mode.upper()}, Speed: {speed*100} m/s')
+            plt.plot(radius, coverage, marker='o', label=f'{mode.upper()}, Speed: {speed*100} m/s')
 
     plt.ylim(0, 100)
-    plt.text(0.45, 0.85, 'Constants: k = 8, fcr = 1.5, rp = 3, ssd = 3', fontsize=8, transform=plt.gcf().transFigure)
+    plt.text(0.5, 0.85, 'Constants: k=8, fcr=1.5, rp=3, ssd=3km', fontsize=8, transform=plt.gcf().transFigure)
     plt.xlabel('Surveillance Radius (m)')
     plt.ylabel('Field Coverage (%)')
-    plt.title('Field Coverage vs. Surveillance Radius')
+    plt.title('Field Coverage vs. Surveillance Radius (Varying Speed)')
     plt.legend()
     plt.grid(True)
+    plt.savefig('coverage_vs_radius.png')
     plt.show()
+
 
 # TODO: Plot 2 is percent coverage vs robot speed for H1, H2
 # Keep constant: speed = 0.2 m/s, time = 30s, time step = 0.1s, vary number of robots and speed -> three lines for different number of robots (8, 64, 1024)
@@ -76,16 +80,19 @@ def plot_coverage_vs_speed():
         for num_robots, data in mode_data.items():
             speed = [entry[0]*100 for entry in data]
             coverage = [entry[1] for entry in data]
-            plt.plot(speed, coverage, label=f'{mode.upper()}, Robots: {num_robots}')
+            line_style = '-' if mode != "h1" or num_robots != 1024 else ':'
+            plt.plot(speed, coverage, linestyle=line_style, marker='o', label=f'{mode.upper()}, Robots: {num_robots}')
 
     plt.ylim(0, 100)
-    plt.text(0.15, 0.15, 'Constants: n_a = 10, fcr = 1.5, rp = 3, ssd = 3', fontsize=8, transform=plt.gcf().transFigure)
+    plt.text(0.15, 0.15, 'Constants: radius=212.13m, fcr=1.5, rp=3, ssd=3km', fontsize=8, transform=plt.gcf().transFigure)
     plt.xlabel('Robot Speed (m/s)')
     plt.ylabel('Field Coverage (%)')
     plt.title('Field Coverage vs. Robot Speed (Varying Number of Robots)')
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig('coverage_vs_speed.png')
+    # plt.show()
+
 
 # TODO: Plot 3 is percent coverage vs number of robots for H1, H2, varing surveillance
 # For this, speed will be constant 0.5 m/s -> three lines for different surveillance radii
@@ -118,19 +125,21 @@ def plot_coverage_vs_num_robots():
             radius_m = 3000 / (n_a * sqrt(2))
             num_robots = [entry[0] for entry in data]
             coverage = [entry[1] for entry in data]
-            plt.plot(num_robots, coverage, label=f'{mode.upper()}, Surveillance Radius: {radius_m:.2f} m')
+            plt.plot(num_robots, coverage, marker='o', label=f'{mode.upper()}, Surveillance Radius: {radius_m:.2f} m')
 
     plt.xscale('log', base=2)
+    plt.gca().xaxis.set_major_formatter(ScalarFormatter())
 
     plt.ylim(0, 100)
-    plt.text(0.45, 0.43, 'Constants: fcr = 1.5, rp = 3, ssd = 3 v = 20 m/s', fontsize=8, transform=plt.gcf().transFigure)
+    plt.text(0.45, 0.43, 'Constants: fcr=1.5, rp=3, ssd=3km, v=20m/s', fontsize=8, transform=plt.gcf().transFigure)
 
     plt.xlabel('Number of Robots')
     plt.ylabel('Field Coverage (%)')
     plt.title('Field Coverage vs. Number of Robots (Varying Surveillance Radius)')
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig('coverage_vs_num_robots.png')
+    # plt.show()
 
 
 # TODO: Plot 4 is percent coverage vs number of robots = 1.5, 5, 10 for H1, H2 varing L_min
@@ -166,21 +175,29 @@ def plot_coverage_vs_fuel_capacity():
         for L_min, data_points in fuel_data.items():
             num_robots = [entry[0] for entry in data_points]
             coverage = [entry[1] for entry in data_points]
-            plt.plot(num_robots, coverage, label=f'{mode.upper()}, Fuel: {L_min*8.48 :.2f} km')
+            line_style = '-' if mode != "h2" or L_min != 3 else ':'  # Use dotted line for specific mode and L_min because it overlaps
+            plt.plot(num_robots, coverage, linestyle=line_style, marker='o', label=f'{mode.upper()}, Fuel: {L_min*8.48 :.2f} km')
 
     plt.xscale('log', base=2)
+    plt.gca().xaxis.set_major_formatter(ScalarFormatter())
     # plt.xlim(0, 1024)
     plt.ylim(0, 100)
 
-    plt.text(0.15, 0.15, 'Constants: n_a = 30, rp = 3, ssd = 3 km, v = 20 m/s', fontsize=8, transform=plt.gcf().transFigure)
+    plt.text(0.13, 0.15, 'Constants: radius=70.71m, rp=3, ssd=3km, v=20m/s', fontsize=8, transform=plt.gcf().transFigure)
     plt.xlabel('Number of Robots')
     plt.ylabel('Field Coverage (%)')
     plt.title('Field Coverage vs. Number of Robots (Varying Fuel Capacities)')
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig('coverage_vs_fuel_capacity.png')
+    # plt.show()
 
-plot_coverage_vs_radius()
-plot_coverage_vs_speed()
-plot_coverage_vs_num_robots()
-plot_coverage_vs_fuel_capacity()
+
+if __name__ == "__main__":
+    plot_coverage_vs_radius()
+    plot_coverage_vs_speed()
+    plot_coverage_vs_num_robots()
+    plot_coverage_vs_fuel_capacity()
+#%%
+
+
