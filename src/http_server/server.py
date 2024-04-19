@@ -184,7 +184,7 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=False):
                         "t": 300.,
                         "dt": 0.1,
                         "lookback_time": 30.}
-            edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(n_a), int(ssd),
+            edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(n_a), float(ssd),
                                                                                            float(fcr), int(rp), None,
                                                                                            None,
                                                                                            metadata)  # Run the other heuristic solver
