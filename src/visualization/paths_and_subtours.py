@@ -40,7 +40,7 @@ def visualize_paths(paths, metadata):
         else:
             ax = axs[hor_i][vert_i]
 
-        nodes, _, _, _ = construct_map(metadata["n_a"], metadata["ssd"])
+        nodes, _, _, _ = construct_map(metadata["n_a"], metadata["ssd"], metadata["ssd_discrete"])
 
         ax.scatter(nodes[:-1, 0], nodes[:-1, 1], c='blue', s=10)
         ax.scatter(nodes[-1, 0], nodes[-1, 1], c='red', s=100)  # Last node is depot

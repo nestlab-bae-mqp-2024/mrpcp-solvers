@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def construct_map(n, d, milp=False, gfx_sanity_check=False):
+def construct_map(n, ssd, d, milp=False, gfx_sanity_check=False):
     # nodes = targets + depots
     # Create a uniform (n*n, 2) numpy target grid for MAXIMUM SPEED
     targets = np.mgrid[-1:1:n * 1j, -1.:1:n * 1j] * (d / 2.)
@@ -35,6 +35,8 @@ def construct_map(n, d, milp=False, gfx_sanity_check=False):
         plt.figure()
         plt.scatter(targets[:, 0], targets[:, 1], c='blue', s=10)
         plt.scatter(depots[:, 0], depots[:, 1], c='red', s=50)
+        plt.xlim(-ssd / 2., ssd / 2.)
+        plt.ylim(-ssd / 2., ssd / 2.)
         plt.grid()
         plt.show()
 

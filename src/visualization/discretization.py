@@ -2,7 +2,7 @@ import numpy as np
 import itertools
 
 def discretize_world_points(all_world_points, metadata):
-    ssd = metadata["ssd"]
+    ssd = metadata["ssd_discrete"]
     n_a = metadata["n_a"]
     k = len(all_world_points)
     dist_betw_each_node = ssd/(n_a-1)
