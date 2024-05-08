@@ -13,7 +13,7 @@ def get_next_nodes(edges, node, node_indices):
 
 
 def visualize_paths(paths, metadata):
-    print("Visualizing paths for heuristic 1 or MILP")
+    print(f"\tVisualizing {'subtours' if 'is_subtour' in metadata else 'paths'} for heuristic 1 or MILP...")
     # Only plot the paths for the robots that were assigned a path
     active_robots = []
     for ki in range(len(paths)):

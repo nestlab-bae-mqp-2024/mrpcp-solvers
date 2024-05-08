@@ -62,5 +62,5 @@ def pseudo_simulate(robot_world_paths, metadata):
             robot_world_points.append(datum)
         all_robot_world_points.append(np.array(robot_world_points))
 
-    print(np.array(all_robot_world_points))
+    # print(np.array(all_robot_world_points))
     return np.array(all_robot_world_points)

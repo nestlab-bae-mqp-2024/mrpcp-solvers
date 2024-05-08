@@ -4,6 +4,8 @@ from matplotlib import ticker
 
 
 def visualize_visitation_frequency(all_robot_world_points, metadata=None):
+    print("\tVisualizing visitation heatmap...")
+
     all_world_points = []
     for robot_world_points in all_robot_world_points:
         # print(f"{robot_world_points=}")

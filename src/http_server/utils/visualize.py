@@ -2,6 +2,7 @@ import numpy as np
 from matplotlib import colors, cm, ticker, pyplot as plt, pyplot
 import itertools
 from src.http_server.utils.conversions import convertToNodePaths
+from tqdm import tqdm
 
 
 def visualize_paths_edges_brute_force(edges, nodes, node_indices, target_indices, depot_indices, cost, save_path=None):
@@ -245,18 +246,14 @@ def visualize_paths(paths, nodes, node_indices, target_indices, depot_indices, c
 
 # visualizes percent coverage over time
 def visualize_coverage_stepwise(world_paths, metadata, plot=True):
-    #time :: seconds
-
-    print("Visualizing coverage over time")
-    timestep = 2
-    ssd = metadata["ssd"]
+    print("\tVisualizing coverage over time...")
     n_a = metadata["n_a"]
     t = metadata["t"]
     dt = metadata["dt"]
     lookback_time = metadata["lookback_time"]
 
     coverage_list = []
-    for curr_time in np.arange(0., t + dt, dt):
+    for curr_time in tqdm(np.arange(0., t + dt, dt)):
         covered_nodes = set()
         for robot_path in world_paths:
             for path in robot_path:
@@ -287,6 +284,7 @@ def visualize_coverage_stepwise(world_paths, metadata, plot=True):
         r = np.arange(0., t + dt, dt)
         coverage_ax.plot(r, coverage_list)
         plt.axhline(y=average_coverage, color='r', linestyle='--')
+        plt.show()
 
     metadata["average_coverage"] = average_coverage
 
