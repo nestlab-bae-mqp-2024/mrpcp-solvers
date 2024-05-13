@@ -10,15 +10,14 @@ If not, it runs the MILP solver function 'solve_milp_with_optimizations' with th
 Once the solver completes, it saves the result to a JSON file in the cache folder and returns the result to the client.
 """
 import json
-import os
 import threading
 import time
 
-from flask import Flask, json, jsonify, request
+from flask import Flask, jsonify, request
 
-from src.http_server import heuristic2
 from src.http_server.json_handlers import *
 from src.http_server.utils.metric_calculations import calculate_mean_distance_per_path
+from src.solvers.heuristics.cams_heuristic.cams_heuristic import generate_robot_paths_redundancy
 from src.solvers.heuristics.yasars_heuristic.yasars_heuristic import yasars_heuristic
 from src.solvers.milp.mqp_milp import solve_milp_with_optimizations
 from src.visualization.visualization_pipeline import run_visualization_pipeline
@@ -183,7 +182,7 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=False):
                         "t": 300.,
                         "dt": 0.1,
                         "lookback_time": 30.}
-            edges, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(int(k), int(n_a), float(ssd),
+            edges, robot_world_path, metadata = generate_robot_paths_redundancy(int(k), int(n_a), float(ssd),
                                                                                            float(fcr), int(rp), None,
                                                                                            None,
                                                                                            metadata)  # Run the other heuristic solver
@@ -240,7 +239,7 @@ def recalc_endpoint():
                 "t": 300.,
                 "dt": 0.1,
                 "lookback_time": 30.}
-    robot_node_path, robot_world_path, metadata = heuristic2.generate_robot_paths_redundancy(
+    robot_node_path, robot_world_path, metadata = generate_robot_paths_redundancy(
         int(len(curr_robots_pos)), int(n_a), float(ssd), float(fcr), int(rp), curr_robots_pos,
         curr_fuel_levels, metadata)  # Run the other heuristic solver
     print(len(robot_node_path))

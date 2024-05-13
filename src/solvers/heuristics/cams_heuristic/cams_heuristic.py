@@ -4,6 +4,7 @@ from typing import Dict
 
 import numpy as np
 from collections import Counter
+import time
 
 from src.http_server.utils.conversions import convertToWorldPath
 
@@ -29,9 +30,17 @@ def generate_robot_paths_redundancy(num_of_robots: int,
 
     # Define the parameters
     print("Initializing parameters...")
-    k = num_of_robots  # number of robots
-    n_a = nodes_per_axis  # number of nodes per axis
-    d = square_side_dist  # Chose the length of distance of each side of the square arena
+    # 0. Set params
+    # Chose number of robots
+    k = num_of_robots
+    # Chose the number of targets in an axis
+    n_a = nodes_per_axis
+    # Chose the length of distance of each side of the square arena
+    ssd = square_side_dist
+    # Chose the length of distance between the outermost nodes of each axis
+    sr = ssd / (np.sqrt(2.) * n_a)
+    d = ssd - np.sqrt(2.) * sr
+    # Choose the redundancy parameter (have each target be visited by exactly that many robots)
     rp = min(rp, k)
     # Fuel Capacity Parameters
     max_fuel_cost_to_node = d * np.sqrt(2)  # √8 is the max possible distance between our nodes (-1, -1) and (1, 1)
@@ -41,12 +50,12 @@ def generate_robot_paths_redundancy(num_of_robots: int,
     # meta data given params
     metadata["k"] = k
     metadata["n_a"] = n_a
-    metadata["ssd"] = square_side_dist
+    metadata["ssd"] = ssd
+    metadata["ssd_discrete"] = d
     metadata["fcr"] = fuel_capacity_ratio
     metadata["rp"] = rp
     # metadata derived params
-    metadata["L_min"] = L_min
-    metadata["L"] = L
+    metadata["L_min"] = L
     metadata["mode"] = "h2"
 
     # Initialize the nodes
@@ -221,10 +230,11 @@ if __name__ == "__main__":
                 "v": 0.2,
                 "t": 100.,
                 "dt": 0.1,
-                "lookback_time": 50.
+                "lookback_time": 30.
                 # "visualize_paths_graph_path": saveGraphPath("yasars-heuristic-main", "all_robot_paths.png"),
                 # "visitation_frequency_graph_path": saveGraphPath("yasars-heuristic-main", "visitation_frequency.png")
                 }
+    start = time.time()
     optimized_node_paths, optimized_world_paths, metadata = generate_robot_paths_redundancy(num_of_robots,
                                                                                             n_a,
                                                                                             square_side_dist,
@@ -232,9 +242,6 @@ if __name__ == "__main__":
                                                                                             rp,
                                                                                             None,
                                                                                             None,
-                                                                                            None,
                                                                                             metadata)
+    print(f"took {time.time() - start} seconds")
 
-    from src.visualization.visualization_pipeline import run_visualization_pipeline
-
-    run_visualization_pipeline(optimized_node_paths, optimized_world_paths, metadata)
