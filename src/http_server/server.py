@@ -10,20 +10,18 @@ If not, it runs the MILP solver function 'solve_milp_with_optimizations' with th
 Once the solver completes, it saves the result to a JSON file in the cache folder and returns the result to the client.
 """
 import json
+import os
 import threading
 import time
 
-from flask import Flask, request, jsonify
-from src.http_server.json_handlers import *
-from src.heuristic_attempts.yasars_heuristic_attempts.yasars_heuristic import yasars_heuristic
+from flask import Flask, json, jsonify, request
+
 from src.http_server import heuristic2
-
-from src.mrpcp_2015.modified_mrpcp import solve_milp_with_optimizations
-import os
+from src.http_server.json_handlers import *
 from src.http_server.utils.metric_calculations import calculate_mean_distance_per_path
+from src.solvers.heuristics.yasars_heuristic.yasars_heuristic import yasars_heuristic
+from src.solvers.milp.mqp_milp import solve_milp_with_optimizations
 from src.visualization.visualization_pipeline import run_visualization_pipeline
-
-from tqdm import tqdm
 
 app = Flask(__name__)
 analysis_file = "runtime_analysis.txt"  # File path for storing runtime analysis
@@ -109,7 +107,8 @@ def run_solver(k, n_a, ssd, fcr, rp, mode, job_id, skip_vis=False):
                         "dt": 0.1,
                         "lookback_time": 30.,
                         "job_id": job_id,
-                        "saveResultsToCache": saveResultsToCache}
+                        "saveResultsToCache": saveResultsToCache,
+                        "TimeLimit": 100}
             print(
                 f"Running MILP solver function with parameters: k={k}, n_a={n_a}, ssd={ssd}, fcr={fcr}, rp={rp}, job_id={job_id}, mode=m...")
             robot_node_path_w_subtours, robot_world_path, metadata = solve_milp_with_optimizations(int(k), int(n_a), float(ssd), float(fcr), int(rp), metadata)
@@ -286,22 +285,11 @@ def log_runtime(func_name, params, runtime):
         f.write("\n")
 
 
-import os
-
-from flask import json, jsonify
-
-from src.visualization.pseudo_simulate import pseudo_simulate
-from src.http_server.utils.visualize import visualize_coverage_stepwise_no_plotting
-
-from src.http_server.server import run_solver
-from src.visualization.discretization import discretize_world_points
-
 if __name__ == '__main__':
     # Create or overwrite the analysis file
     with open(analysis_file, "w") as f:
         f.write("Runtime Analysis\n")
         f.write("----------------\n\n")
     print("Waiting for a request...")  # Added waiting message
-    app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
+    app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
 
-#%%

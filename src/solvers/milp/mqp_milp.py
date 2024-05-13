@@ -251,7 +251,7 @@ def solve_milp_with_optimizations(num_of_robots: int,
 
                     # Save result in a JSON file within the cache folder
                     result_data = {'job_id': metadata["job_id"],
-                                   'params': {'k': k, 'n_a': n_a, 'ssd': square_side_dist, 'fcr': fuel_capacity_ratio, 'rp': rp, 'mode': 'm'},
+                                   'params': {'k': k, 'n_a': n, 'ssd': square_side_dist, 'fcr': fuel_capacity_ratio, 'rp': rp, 'mode': 'm'},
                                    'robot_node_path': MILPSolver.opt_node_paths, 'robot_world_path': MILPSolver.opt_world_paths,
                                    'status': 'in-progress'}
                     stats_data = {'job_id': metadata["job_id"], 'runtime': time.time() - MILPSolver.start_time,
