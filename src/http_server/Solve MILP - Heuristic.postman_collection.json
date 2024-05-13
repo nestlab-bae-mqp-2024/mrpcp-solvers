@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "d87a2f01-bba2-4beb-8e06-cdd4b5fedc7b",
+		"_postman_id": "f6dc13b4-2568-4078-b840-1bd4455615d1",
 		"name": "Solve MILP / Heuristic",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "32818331"
+		"_exporter_id": "29369016"
 	},
 	"item": [
 		{
@@ -18,7 +18,7 @@
 					}
 				],
 				"url": {
-					"raw": "http://127.0.0.1:5000/solve?n_a=3&k=5&q_k=0.65&rp=1&l=1&mode=h&d=3",
+					"raw": "http://127.0.0.1:8000/solve?k=8&n_a=8&rp=3&mode=h2&ssd=3&fcr=1.5",
 					"protocol": "http",
 					"host": [
 						"127",
@@ -26,38 +26,34 @@
 						"0",
 						"1"
 					],
-					"port": "5000",
+					"port": "8000",
 					"path": [
 						"solve"
 					],
 					"query": [
 						{
-							"key": "n_a",
-							"value": "3"
-						},
-						{
 							"key": "k",
-							"value": "5"
+							"value": "8"
 						},
 						{
-							"key": "q_k",
-							"value": "0.65"
+							"key": "n_a",
+							"value": "8"
 						},
 						{
 							"key": "rp",
-							"value": "1"
-						},
-						{
-							"key": "l",
-							"value": "1"
+							"value": "3"
 						},
 						{
 							"key": "mode",
-							"value": "h"
+							"value": "h2"
 						},
 						{
-							"key": "d",
+							"key": "ssd",
 							"value": "3"
+						},
+						{
+							"key": "fcr",
+							"value": "1.5"
 						}
 					]
 				}
